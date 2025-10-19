@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Branch{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Branch</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-primary">All Branches</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="branchForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Basic Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Branch Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Branch Code <span class="text-danger">*</span></label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Manager</label>
+                                {{ form.manager }}
+                                {% if form.manager.errors %}
+                                    <div class="text-danger">{{ form.manager.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Address Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Address Line 1</label>
+                                {{ form.address_line1 }}
+                                {% if form.address_line1.errors %}
+                                    <div class="text-danger">{{ form.address_line1.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Address Line 2</label>
+                                {{ form.address_line2 }}
+                                {% if form.address_line2.errors %}
+                                    <div class="text-danger">{{ form.address_line2.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">City</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                    <div class="text-danger">{{ form.city.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">State</label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                    <div class="text-danger">{{ form.state.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Postal Code</label>
+                                {{ form.postal_code }}
+                                {% if form.postal_code.errors %}
+                                    <div class="text-danger">{{ form.postal_code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Country</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                    <div class="text-danger">{{ form.country.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Contact Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Phone</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger">{{ form.phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Email</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Branch</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-generate branch code
+document.getElementById('id_name').addEventListener('input', function() {
+    const name = this.value;
+    const codeField = document.getElementById('id_code');
+    
+    if (name && !codeField.value) {
+        const code = name.substring(0, 3).toUpperCase() + '001';
+        codeField.value = code;
+    }
+});
+</script>
+{% endblock %}

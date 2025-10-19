@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Employee{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Add Employee</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-primary">All Employee</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="employeeForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>User Account Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Username <span class="text-danger">*</span></label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                    <div class="text-danger">{{ form.username.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                {{ form.password }}
+                                {% if form.password.errors %}
+                                    <div class="text-danger">{{ form.password.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                {{ form.confirm_password }}
+                                {% if form.confirm_password.errors %}
+                                    <div class="text-danger">{{ form.confirm_password.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Basic Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Employee ID <span class="text-danger">*</span></label>
+                                {{ form.employee_id }}
+                                {% if form.employee_id.errors %}
+                                    <div class="text-danger">{{ form.employee_id.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger">{{ form.first_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Middle Name</label>
+                                {{ form.middle_name }}
+                                {% if form.middle_name.errors %}
+                                    <div class="text-danger">{{ form.middle_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger">{{ form.last_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Profile Picture</label>
+                                {{ form.profile_picture }}
+                                {% if form.profile_picture.errors %}
+                                    <div class="text-danger">{{ form.profile_picture.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Gender</label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                    <div class="text-danger">{{ form.gender.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Date of Birth</label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="text-danger">{{ form.date_of_birth.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Blood Group</label>
+                                {{ form.blood_group }}
+                                {% if form.blood_group.errors %}
+                                    <div class="text-danger">{{ form.blood_group.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Marital Status</label>
+                                {{ form.marital_status }}
+                                {% if form.marital_status.errors %}
+                                    <div class="text-danger">{{ form.marital_status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Nationality</label>
+                                {{ form.nationality }}
+                                {% if form.nationality.errors %}
+                                    <div class="text-danger">{{ form.nationality.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Organizational Structure</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Branch</label>
+                                {{ form.branch }}
+                                {% if form.branch.errors %}
+                                    <div class="text-danger">{{ form.branch.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Department</label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger">{{ form.department.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Designation</label>
+                                {{ form.designation }}
+                                {% if form.designation.errors %}
+                                    <div class="text-danger">{{ form.designation.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Employee Role</label>
+                                {{ form.employee_role }}
+                                {% if form.employee_role.errors %}
+                                    <div class="text-danger">{{ form.employee_role.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Reporting Manager</label>
+                                {{ form.reporting_manager }}
+                                {% if form.reporting_manager.errors %}
+                                    <div class="text-danger">{{ form.reporting_manager.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Contact Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Personal Email</label>
+                                {{ form.personal_email }}
+                                {% if form.personal_email.errors %}
+                                    <div class="text-danger">{{ form.personal_email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Personal Phone</label>
+                                {{ form.personal_phone }}
+                                {% if form.personal_phone.errors %}
+                                    <div class="text-danger">{{ form.personal_phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Work Phone</label>
+                                {{ form.work_phone }}
+                                {% if form.work_phone.errors %}
+                                    <div class="text-danger">{{ form.work_phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Current Address</label>
+                                {{ form.current_address }}
+                                {% if form.current_address.errors %}
+                                    <div class="text-danger">{{ form.current_address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Permanent Address</label>
+                                {{ form.permanent_address }}
+                                {% if form.permanent_address.errors %}
+                                    <div class="text-danger">{{ form.permanent_address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Employment Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Employment Status</label>
+                                {{ form.employment_status }}
+                                {% if form.employment_status.errors %}
+                                    <div class="text-danger">{{ form.employment_status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Hire Date <span class="text-danger">*</span></label>
+                                {{ form.hire_date }}
+                                {% if form.hire_date.errors %}
+                                    <div class="text-danger">{{ form.hire_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Confirmation Date</label>
+                                {{ form.confirmation_date }}
+                                {% if form.confirmation_date.errors %}
+                                    <div class="text-danger">{{ form.confirmation_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Probation Period (Months)</label>
+                                {{ form.probation_period_months }}
+                                {% if form.probation_period_months.errors %}
+                                    <div class="text-danger">{{ form.probation_period_months.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Salary Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Basic Salary</label>
+                                {{ form.basic_salary }}
+                                {% if form.basic_salary.errors %}
+                                    <div class="text-danger">{{ form.basic_salary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Gross Salary</label>
+                                {{ form.gross_salary }}
+                                {% if form.gross_salary.errors %}
+                                    <div class="text-danger">{{ form.gross_salary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Net Salary</label>
+                                {{ form.net_salary }}
+                                {% if form.net_salary.errors %}
+                                    <div class="text-danger">{{ form.net_salary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Emergency Contact</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Contact Name</label>
+                                {{ form.emergency_contact_name }}
+                                {% if form.emergency_contact_name.errors %}
+                                    <div class="text-danger">{{ form.emergency_contact_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Contact Phone</label>
+                                {{ form.emergency_contact_phone }}
+                                {% if form.emergency_contact_phone.errors %}
+                                    <div class="text-danger">{{ form.emergency_contact_phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Relationship</label>
+                                {{ form.emergency_contact_relationship }}
+                                {% if form.emergency_contact_relationship.errors %}
+                                    <div class="text-danger">{{ form.emergency_contact_relationship.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Contact Address</label>
+                                {{ form.emergency_contact_address }}
+                                {% if form.emergency_contact_address.errors %}
+                                    <div class="text-danger">{{ form.emergency_contact_address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Bank Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Bank Name</label>
+                                {{ form.bank_name }}
+                                {% if form.bank_name.errors %}
+                                    <div class="text-danger">{{ form.bank_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Account Number</label>
+                                {{ form.bank_account_number }}
+                                {% if form.bank_account_number.errors %}
+                                    <div class="text-danger">{{ form.bank_account_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Routing Number</label>
+                                {{ form.bank_routing_number }}
+                                {% if form.bank_routing_number.errors %}
+                                    <div class="text-danger">{{ form.bank_routing_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Additional Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Skills</label>
+                                {{ form.skills }}
+                                {% if form.skills.errors %}
+                                    <div class="text-danger">{{ form.skills.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">Save Employee</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Password confirmation validation
+document.getElementById('id_confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('id_password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// Auto-generate employee ID
+document.getElementById('id_first_name').addEventListener('input', function() {
+    const firstName = this.value;
+    const lastName = document.getElementById('id_last_name').value;
+    const employeeIdField = document.getElementById('id_employee_id');
+    
+    if (firstName && lastName && !employeeIdField.value) {
+        const empId = (firstName.charAt(0) + lastName.charAt(0) + '001').toUpperCase();
+        employeeIdField.value = empId;
+    }
+});
+
+document.getElementById('id_last_name').addEventListener('input', function() {
+    const lastName = this.value;
+    const firstName = document.getElementById('id_first_name').value;
+    const employeeIdField = document.getElementById('id_employee_id');
+    
+    if (firstName && lastName && !employeeIdField.value) {
+        const empId = (firstName.charAt(0) + lastName.charAt(0) + '001').toUpperCase();
+        employeeIdField.value = empId;
+    }
+});
+
+// Auto-generate username
+document.getElementById('id_first_name').addEventListener('input', function() {
+    const firstName = this.value;
+    const lastName = document.getElementById('id_last_name').value;
+    const usernameField = document.getElementById('id_username');
+    
+    if (firstName && lastName && !usernameField.value) {
+        const username = (firstName.toLowerCase() + '_' + lastName.toLowerCase());
+        usernameField.value = username;
+    }
+});
+
+document.getElementById('id_last_name').addEventListener('input', function() {
+    const lastName = this.value;
+    const firstName = document.getElementById('id_first_name').value;
+    const usernameField = document.getElementById('id_username');
+    
+    if (firstName && lastName && !usernameField.value) {
+        const username = (firstName.toLowerCase() + '_' + lastName.toLowerCase());
+        usernameField.value = username;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,175 @@
+from django.db import models
+from django.contrib.auth import get_user_model
+from decimal import Decimal
+
+User = get_user_model()
+
+
+class BaseOrganizationModel(models.Model):
+    """
+    Abstract base model for organization-specific data
+    All Payroll models inherit from this for data isolation
+    """
+    organization = models.ForeignKey('organization.Organization', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    class Meta:
+        abstract = True
+
+
+class PayrollPeriod(BaseOrganizationModel):
+    """
+    Payroll periods for each organization
+    """
+    PERIOD_TYPE_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('biweekly', 'Bi-weekly'),
+        ('weekly', 'Weekly'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    period_type = models.CharField(max_length=20, choices=PERIOD_TYPE_CHOICES, default='monthly')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    pay_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    
+    class Meta:
+        unique_together = ['organization', 'start_date', 'end_date']
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"{self.name} ({self.start_date} to {self.end_date})"
+
+
+class SalaryStructure(BaseOrganizationModel):
+    """
+    Salary structures for employees within organization
+    """
+    employee = models.ForeignKey('hrm.Employee', on_delete=models.CASCADE, related_name='salary_structures')
+    basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
+    house_rent_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    transport_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    medical_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    other_allowances = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    # Deductions
+    provident_fund = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    tax_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    other_deductions = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    effective_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-effective_date']
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.effective_date}"
+    
+    @property
+    def gross_salary(self):
+        return (self.basic_salary + self.house_rent_allowance + 
+                self.transport_allowance + self.medical_allowance + 
+                self.other_allowances)
+    
+    @property
+    def total_deductions(self):
+        return (self.provident_fund + self.tax_deduction + 
+                self.other_deductions)
+    
+    @property
+    def net_salary(self):
+        return self.gross_salary - self.total_deductions
+
+
+class Payslip(BaseOrganizationModel):
+    """
+    Individual payslips for employees
+    """
+    employee = models.ForeignKey('hrm.Employee', on_delete=models.CASCADE, related_name='payslips')
+    payroll_period = models.ForeignKey(PayrollPeriod, on_delete=models.CASCADE, related_name='payslips')
+    salary_structure = models.ForeignKey(SalaryStructure, on_delete=models.CASCADE)
+    
+    # Earnings
+    basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
+    allowances = models.DecimalField(max_digits=12, decimal_places=2)
+    overtime_pay = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    bonus = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    other_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    # Deductions
+    provident_fund = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    tax_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    late_attendance_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    other_deductions = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    # Calculations
+    gross_salary = models.DecimalField(max_digits=12, decimal_places=2)
+    total_deductions = models.DecimalField(max_digits=12, decimal_places=2)
+    net_salary = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    # Status
+    is_generated = models.BooleanField(default=False)
+    generated_at = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        unique_together = ['organization', 'employee', 'payroll_period']
+        ordering = ['-payroll_period__start_date']
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.payroll_period.name}"
+    
+    def calculate_totals(self):
+        """Calculate gross, deductions, and net salary"""
+        self.gross_salary = (self.basic_salary + self.allowances + 
+                           self.overtime_pay + self.bonus + self.other_earnings)
+        
+        self.total_deductions = (self.provident_fund + self.tax_deduction + 
+                               self.late_attendance_deduction + self.other_deductions)
+        
+        self.net_salary = self.gross_salary - self.total_deductions
+        self.save()
+
+
+class Allowance(BaseOrganizationModel):
+    """
+    Allowance types for organization
+    """
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    is_taxable = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'name']
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.organization.name})"
+
+
+class Deduction(BaseOrganizationModel):
+    """
+    Deduction types for organization
+    """
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    is_taxable = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'name']
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.organization.name})"

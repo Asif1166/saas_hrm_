@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Menu Item{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Create Menu Item</h2>
+        <div class="btn-box">
+            <a href="{% url 'organization:menu_items' %}" class="btn btn-sm btn-secondary">Back to Menu Items</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Basic Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Title <span class="text-danger">*</span></label>
+                                <input type="text" name="title" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Category <span class="text-danger">*</span></label>
+                                <select name="category" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Parent Menu Item</label>
+                                <select name="parent" class="form-control">
+                                    <option value="">No Parent (Root Item)</option>
+                                    {% for item in parent_items %}
+                                        <option value="{{ item.id }}">{{ item.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Order</label>
+                                <input type="number" name="order" class="form-control" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Link Configuration</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">URL Name (Django URL)</label>
+                                <input type="text" name="url_name" class="form-control" placeholder="e.g., hrm:employee_list">
+                                <small class="form-text text-muted">Use Django URL name format: app_name:view_name</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Direct URL Path</label>
+                                <input type="text" name="url_path" class="form-control" placeholder="e.g., /admin/ or https://example.com">
+                                <small class="form-text text-muted">Use for external links or direct paths</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Icon Class</label>
+                                <input type="text" name="icon" class="form-control" placeholder="e.g., fa-solid fa-user">
+                                <small class="form-text text-muted">Font Awesome icon class</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Target</label>
+                                <select name="target" class="form-control">
+                                    <option value="_self">Same Window</option>
+                                    <option value="_blank">New Window</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_external" class="form-check-input" id="is_external">
+                                    <label class="form-check-label" for="is_external">
+                                        External Link
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Visibility & Permissions</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Visibility</label>
+                                <select name="visibility" class="form-control">
+                                    <option value="all">All Users</option>
+                                    <option value="super_admin">Super Admin Only</option>
+                                    <option value="organization_admin">Organization Admin Only</option>
+                                    <option value="employee">Employee Only</option>
+                                    <option value="custom">Custom Permissions</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Organizations</label>
+                                <select name="organizations" class="form-control" multiple>
+                                    <option value="">All Organizations (if none selected)</option>
+                                    {% for org in organizations %}
+                                        <option value="{{ org.id }}">{{ org.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple. Leave empty for all organizations.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Status</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" checked>
+                            <label class="form-check-label" for="is_active">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'organization:menu_items' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-primary">Create Menu Item</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-fill URL path when URL name is entered
+document.querySelector('input[name="url_name"]').addEventListener('input', function() {
+    const urlPathField = document.querySelector('input[name="url_path"]');
+    if (this.value && !urlPathField.value) {
+        urlPathField.value = `{% url 'hrm:dashboard' %}`.replace('hrm:dashboard', this.value);
+    }
+});
+
+// Toggle external link checkbox when URL path starts with http
+document.querySelector('input[name="url_path"]').addEventListener('input', function() {
+    const externalCheckbox = document.querySelector('input[name="is_external"]');
+    if (this.value.startsWith('http')) {
+        externalCheckbox.checked = true;
+    }
+});
+</script>
+{% endblock %}

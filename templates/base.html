@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en" data-menu="vertical" data-nav-size="nav-default">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard | Digiboard</title>
+
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+
+    {% comment %} <link rel="stylesheet" href="{% static 'assets/vendor/css/all.min.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'assets/vendor/css/OverlayScrollbars.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/css/jquery.dataTables.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/css/daterangepicker.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" id="primaryColor" href="{% static 'assets/css/blue-color.css' %}">
+
+    <link rel="stylesheet" id="rtlStyle" href="#">
+</head>
+
+<body class="body-padding body-p-top light-theme">
+    <!-- preloader start -->
+    <div class="preloader d-none">
+        <div class="loader">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+    <!-- preloader end -->
+
+        {% include "header.html" %}
+
+        {% include "sidebar.html" %}
+
+
+            {% block content %}
+
+    {% endblock content %}
+
+
+
+
+
+
+  <script src="{% static 'assets/vendor/js/jquery-3.6.0.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/js/jquery.overlayScrollbars.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/js/apexcharts.js' %}"></script>
+  <script src="{% static 'assets/vendor/js/jquery.dataTables.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/js/moment.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/js/daterangepicker.js' %}"></script>
+  <script src="{% static 'assets/vendor/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/js/dashboard.js' %}"></script>
+  <script src="{% static 'assets/js/main.js' %}"></script>
+
+</body>
+
+</html>

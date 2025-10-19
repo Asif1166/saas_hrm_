@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Organization{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Create New Organization</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'super_admin:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'super_admin:organization_list' %}">Organizations</a></li>
+                                <li class="breadcrumb-item active">Create</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Organization Information</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Organization Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="name" name="name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" id="email" name="email" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="phone" class="form-label">Phone</label>
+                                            <input type="tel" class="form-control" id="phone" name="phone">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="website" class="form-label">Website</label>
+                                            <input type="url" class="form-control" id="website" name="website">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="mt-4 mb-3">Address Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="address_line1" class="form-label">Address Line 1</label>
+                                            <input type="text" class="form-control" id="address_line1" name="address_line1">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="address_line2" class="form-label">Address Line 2</label>
+                                            <input type="text" class="form-control" id="address_line2" name="address_line2">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="city" class="form-label">City</label>
+                                            <input type="text" class="form-control" id="city" name="city">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="state" class="form-label">State</label>
+                                            <input type="text" class="form-control" id="state" name="state">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="postal_code" class="form-label">Postal Code</label>
+                                            <input type="text" class="form-control" id="postal_code" name="postal_code">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="country" class="form-label">Country</label>
+                                            <input type="text" class="form-control" id="country" name="country">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="subscription_plan" class="form-label">Subscription Plan</label>
+                                            <select class="form-select" id="subscription_plan" name="subscription_plan">
+                                                {% for plan in subscription_plans %}
+                                                    <option value="{{ plan }}">{{ plan|title }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max_employees" class="form-label">Max Employees</label>
+                                            <input type="number" class="form-control" id="max_employees" name="max_employees" value="10" min="1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+                                <h6 class="mb-3">Organization Admin User</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="admin_username" class="form-label">Admin Username <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="admin_username" name="admin_username" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="admin_email" class="form-label">Admin Email <span class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" id="admin_email" name="admin_email" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="admin_first_name" class="form-label">Admin First Name</label>
+                                            <input type="text" class="form-control" id="admin_first_name" name="admin_first_name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="admin_last_name" class="form-label">Admin Last Name</label>
+                                            <input type="text" class="form-control" id="admin_last_name" name="admin_last_name">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="admin_password" class="form-label">Admin Password <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control" id="admin_password" name="admin_password" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    <a href="{% url 'super_admin:organization_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Create Organization</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('admin_password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}

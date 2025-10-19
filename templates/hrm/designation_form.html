@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Designation{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Designation</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:designation_list' %}" class="btn btn-sm btn-primary">All Designations</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="designationForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Basic Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Designation Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Designation Code <span class="text-danger">*</span></label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Level <span class="text-danger">*</span></label>
+                                {{ form.level }}
+                                {% if form.level.errors %}
+                                    <div class="text-danger">{{ form.level.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Hierarchy level (1=lowest, 10=highest)</small>
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Department</label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger">{{ form.department.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'hrm:designation_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Designation</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-generate designation code
+document.getElementById('id_name').addEventListener('input', function() {
+    const name = this.value;
+    const codeField = document.getElementById('id_code');
+    
+    if (name && !codeField.value) {
+        const code = name.substring(0, 3).toUpperCase() + '001';
+        codeField.value = code;
+    }
+});
+</script>
+{% endblock %}

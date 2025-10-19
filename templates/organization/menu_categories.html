@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Menu Categories{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Menu Categories</h2>
+        <div class="btn-box">
+            <a href="{% url 'organization:create_menu_category' %}" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-plus"></i> Add Category
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>All Menu Categories</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Icon</th>
+                                    <th>Order</th>
+                                    <th>Status</th>
+                                    <th>Menu Items</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ category.name }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if category.icon %}
+                                                <i class="{{ category.icon }}"></i> {{ category.icon }}
+                                            {% else %}
+                                                <span class="text-muted">No icon</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ category.order }}</td>
+                                        <td>
+                                            {% if category.is_active %}
+                                                <span class="badge badge-success">Active</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-info">{{ category.menu_items.count }} items</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'organization:menu_items' %}?category={{ category.id }}" class="btn btn-sm btn-primary">
+                                                    <i class="fa-solid fa-eye"></i> View Items
+                                                </a>
+                                                <a href="#" class="btn btn-sm btn-secondary">
+                                                    <i class="fa-solid fa-edit"></i> Edit
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            No menu categories found. <a href="{% url 'organization:create_menu_category' %}">Create one now</a>.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

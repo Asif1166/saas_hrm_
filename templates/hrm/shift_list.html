@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load organization_tags %}
+
+{% block title %}Shifts - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'hrm:dashboard' %}">HRM</a></li>
+                        <li class="breadcrumb-item active">Shifts</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">
+                    <i class="fa-solid fa-clock me-2"></i>Shift Management
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'hrm:create_shift' %}" class="btn btn-primary">
+                                    <i class="fa-solid fa-plus me-1"></i> Add Shift
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-md-end">
+                                <span class="text-muted">Total Shifts: <strong>{{ page_obj.paginator.count }}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shifts List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Code</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Working Hours</th>
+                                        <th>Break Hours</th>
+                                        <th>Grace Period</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for shift in page_obj %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                    <i class="fa-solid fa-clock text-white"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ shift.name }}</h6>
+                                                    {% if shift.description %}
+                                                        <small class="text-muted">{{ shift.description|truncatechars:50 }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ shift.code }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-success fw-bold">{{ shift.start_time }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-danger fw-bold">{{ shift.end_time }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ shift.working_hours }} hrs</span>
+                                        </td>
+                                        <td>
+                                            {% if shift.break_hours > 0 %}
+                                                <span class="badge bg-warning">{{ shift.break_hours }} hrs</span>
+                                            {% else %}
+                                                <span class="text-muted">No break</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ shift.grace_period_minutes }} min</span>
+                                        </td>
+                                        <td>
+                                            {% if shift.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fa-solid fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a href="{% url 'hrm:update_shift' shift.id %}" class="dropdown-item">
+                                                            <span class="dropdown-icon"><i class="fa-solid fa-pen-to-square"></i></span> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#" class="dropdown-item text-danger" onclick="confirmDelete('{{ shift.name }}', '{% url 'hrm:update_shift' shift.id %}')">
+                                                            <span class="dropdown-icon"><i class="fa-solid fa-trash"></i></span> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <nav aria-label="Shifts pagination">
+                                    <ul class="pagination justify-content-center">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1">&laquo; First</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                            </li>
+                                        {% endif %}
+
+                                        <li class="page-item active">
+                                            <span class="page-link">
+                                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                            </span>
+                                        </li>
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fa-solid fa-clock text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">No Shifts Found</h5>
+                            <p class="text-muted">Get started by creating your first shift.</p>
+                            <a href="{% url 'hrm:create_shift' %}" class="btn btn-primary">
+                                <i class="fa-solid fa-plus me-1"></i> Create First Shift
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(shiftName, deleteUrl) {
+    if (confirm(`Are you sure you want to delete the shift "${shiftName}"?`)) {
+        // For now, just redirect to edit page
+        // In a real implementation, you would have a delete endpoint
+        window.location.href = deleteUrl;
+    }
+}
+</script>
+{% endblock %}

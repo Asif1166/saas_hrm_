@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load organization_tags %}
+
+{% block title %}Dynamic Table Configuration - {{ table.display_name }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>{{ table.display_name }} - Column Permissions</h5>
+                    <div class="btn-box d-flex flex-wrap gap-2">
+                        <a href="{% url 'organization:setup_default_permissions' table.name %}" 
+                           class="btn btn-sm btn-success" 
+                           onclick="return confirm('This will setup default permissions for all roles. Continue?')">
+                            <i class="fa-solid fa-magic"></i> Setup Defaults
+                        </a>
+                        <a href="{% url 'organization:organization_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form method="post" action="{% url 'organization:update_table_permissions' table.name %}" id="permissionsForm">
+                                {% csrf_token %}
+                                
+                                <!-- Table Permissions -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Table Permissions</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Role</th>
+                                                        <th>View</th>
+                                                        <th>Edit</th>
+                                                        <th>Delete</th>
+                                                        <th>Export</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for role in roles %}
+                                                    <tr>
+                                                        <td>{{ role.name }}</td>
+                                                        {% for perm_type in 'view,edit,delete,export'|split:',' %}
+                                                        <td>
+                                                            <div class="form-check">
+                                                                {% for perm in table_permissions %}
+                                                                    {% if perm.role.id == role.id and perm.permission_type == perm_type %}
+                                                                        <input class="form-check-input" type="checkbox" 
+                                                                               name="table_permissions[{{ role.id }}][{{ perm_type }}]"
+                                                                               value="true"
+                                                                               {% if perm.can_access %}checked{% endif %}>
+                                                                    {% endif %}
+                                                                {% empty %}
+                                                                    <input class="form-check-input" type="checkbox" 
+                                                                           name="table_permissions[{{ role.id }}][{{ perm_type }}]"
+                                                                           value="true">
+                                                                {% endfor %}
+                                                            </div>
+                                                        </td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Column Permissions -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Column Permissions</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Column</th>
+                                                        <th>Type</th>
+                                                        {% for role in roles %}
+                                                        <th class="text-center">{{ role.name }}</th>
+                                                        {% endfor %}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for column in columns %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ column.display_name }}</strong><br>
+                                                            <small class="text-muted">{{ column.field_name }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-secondary">{{ column.column_type }}</span>
+                                                        </td>
+                                                        {% for role in roles %}
+                                                        <td class="text-center">
+                                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                                <!-- View Permission -->
+                                                                <div class="form-check">
+                                                                    {% for perm in column_permissions %}
+                                                                        {% if perm.role.id == role.id and perm.column.id == column.id and perm.permission_type == 'view' %}
+                                                                            <input class="form-check-input" type="checkbox" 
+                                                                                   name="column_permissions[{{ role.id }}][{{ column.id }}][view][can_access]"
+                                                                                   value="true"
+                                                                                   {% if perm.can_access %}checked{% endif %}>
+                                                                            <label class="form-check-label">View</label>
+                                                                        {% endif %}
+                                                                    {% empty %}
+                                                                        <input class="form-check-input" type="checkbox" 
+                                                                               name="column_permissions[{{ role.id }}][{{ column.id }}][view][can_access]"
+                                                                               value="true">
+                                                                        <label class="form-check-label">View</label>
+                                                                    {% endfor %}
+                                                                </div>
+                                                                
+                                                                <!-- Edit Permission -->
+                                                                <div class="form-check">
+                                                                    {% for perm in column_permissions %}
+                                                                        {% if perm.role.id == role.id and perm.column.id == column.id and perm.permission_type == 'edit' %}
+                                                                            <input class="form-check-input" type="checkbox" 
+                                                                                   name="column_permissions[{{ role.id }}][{{ column.id }}][edit][can_access]"
+                                                                                   value="true"
+                                                                                   {% if perm.can_access %}checked{% endif %}>
+                                                                            <label class="form-check-label">Edit</label>
+                                                                        {% endif %}
+                                                                    {% empty %}
+                                                                        <input class="form-check-input" type="checkbox" 
+                                                                               name="column_permissions[{{ role.id }}][{{ column.id }}][edit][can_access]"
+                                                                               value="true">
+                                                                        <label class="form-check-label">Edit</label>
+                                                                    {% endfor %}
+                                                                </div>
+                                                                
+                                                                <!-- Hide Permission -->
+                                                                <div class="form-check">
+                                                                    {% for perm in column_permissions %}
+                                                                        {% if perm.role.id == role.id and perm.column.id == column.id and perm.permission_type == 'hide' %}
+                                                                            <input class="form-check-input" type="checkbox" 
+                                                                                   name="column_permissions[{{ role.id }}][{{ column.id }}][hide][can_access]"
+                                                                                   value="true"
+                                                                                   {% if perm.can_access %}checked{% endif %}>
+                                                                            <label class="form-check-label">Hide</label>
+                                                                        {% endif %}
+                                                                    {% empty %}
+                                                                        <input class="form-check-input" type="checkbox" 
+                                                                               name="column_permissions[{{ role.id }}][{{ column.id }}][hide][can_access]"
+                                                                               value="true">
+                                                                        <label class="form-check-label">Hide</label>
+                                                                    {% endfor %}
+                                                                </div>
+                                                                
+                                                                <!-- Column Order -->
+                                                                <div class="form-group mt-1">
+                                                                    {% for perm in column_permissions %}
+                                                                        {% if perm.role.id == role.id and perm.column.id == column.id and perm.permission_type == 'view' %}
+                                                                            <input type="number" class="form-control form-control-sm" 
+                                                                                   name="column_permissions[{{ role.id }}][{{ column.id }}][view][column_order]"
+                                                                                   value="{% if perm.column_order %}{{ perm.column_order }}{% else %}{{ column.order }}{% endif %}"
+                                                                                   placeholder="Order" min="1" max="100">
+                                                                        {% endif %}
+                                                                    {% empty %}
+                                                                        <input type="number" class="form-control form-control-sm" 
+                                                                               name="column_permissions[{{ role.id }}][{{ column.id }}][view][column_order]"
+                                                                               value="{{ column.order }}"
+                                                                               placeholder="Order" min="1" max="100">
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa-solid fa-save"></i> Save Permissions
+                                    </button>
+                                    <a href="{% url 'organization:organization_dashboard' %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Table Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Name:</dt>
+                                        <dd class="col-sm-8">{{ table.name }}</dd>
+                                        
+                                        <dt class="col-sm-4">Display Name:</dt>
+                                        <dd class="col-sm-8">{{ table.display_name }}</dd>
+                                        
+                                        <dt class="col-sm-4">Type:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge bg-info">{{ table.get_table_type_display }}</span>
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">Columns:</dt>
+                                        <dd class="col-sm-8">{{ columns|length }}</dd>
+                                        
+                                        <dt class="col-sm-4">Roles:</dt>
+                                        <dd class="col-sm-8">{{ roles|length }}</dd>
+                                        
+                                        <dt class="col-sm-4">Status:</dt>
+                                        <dd class="col-sm-8">
+                                            {% if table.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </dd>
+                                    </dl>
+                                    
+                                    {% if table.description %}
+                                    <div class="mt-3">
+                                        <strong>Description:</strong>
+                                        <p class="text-muted">{{ table.description }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Quick Actions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAllPermissions('view')">
+                                            <i class="fa-solid fa-check-square"></i> Select All View
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAllPermissions('edit')">
+                                            <i class="fa-solid fa-edit"></i> Select All Edit
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllPermissions()">
+                                            <i class="fa-solid fa-square"></i> Clear All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectAllPermissions(permissionType) {
+    // Select all checkboxes for a specific permission type
+    document.querySelectorAll(`input[name*="[${permissionType}][can_access]"]`).forEach(function(checkbox) {
+        checkbox.checked = true;
+    });
+}
+
+function clearAllPermissions() {
+    // Clear all permission checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+        checkbox.checked = false;
+    });
+}
+
+// Form submission with JSON data
+document.getElementById('permissionsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const permissions = {};
+    
+    // Convert form data to JSON structure
+    for (let [key, value] of formData.entries()) {
+        const parts = key.split(/\[|\]/).filter(part => part);
+        
+        if (parts[0] === 'table_permissions') {
+            if (!permissions.table_permissions) permissions.table_permissions = {};
+            if (!permissions.table_permissions[parts[1]]) permissions.table_permissions[parts[1]] = {};
+            permissions.table_permissions[parts[1]][parts[2]] = value === 'true';
+        } else if (parts[0] === 'column_permissions') {
+            if (!permissions.column_permissions) permissions.column_permissions = {};
+            if (!permissions.column_permissions[parts[1]]) permissions.column_permissions[parts[1]] = {};
+            if (!permissions.column_permissions[parts[1]][parts[2]]) permissions.column_permissions[parts[1]][parts[2]] = {};
+            if (!permissions.column_permissions[parts[1]][parts[2]][parts[3]]) permissions.column_permissions[parts[1]][parts[2]][parts[3]] = {};
+            permissions.column_permissions[parts[1]][parts[2]][parts[3]][parts[4]] = value === 'true' ? true : value;
+        }
+    }
+    
+    // Add hidden inputs for JSON data
+    const tablePermissionsInput = document.createElement('input');
+    tablePermissionsInput.type = 'hidden';
+    tablePermissionsInput.name = 'table_permissions';
+    tablePermissionsInput.value = JSON.stringify(permissions.table_permissions || {});
+    
+    const columnPermissionsInput = document.createElement('input');
+    columnPermissionsInput.type = 'hidden';
+    columnPermissionsInput.name = 'column_permissions';
+    columnPermissionsInput.value = JSON.stringify(permissions.column_permissions || {});
+    
+    this.appendChild(tablePermissionsInput);
+    this.appendChild(columnPermissionsInput);
+    
+    // Submit form
+    this.submit();
+});
+</script>
+
+{% endblock %}

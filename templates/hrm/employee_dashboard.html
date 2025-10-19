@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Employee Dashboard</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'hrm:employee_dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">{{ employee.full_name }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Employee Info Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                {% if employee.profile_picture %}
+                                    <img src="{{ employee.profile_picture.url }}" alt="" class="avatar-lg rounded me-3">
+                                {% else %}
+                                    <div class="avatar-lg rounded bg-primary-subtle me-3">
+                                        <span class="avatar-title rounded bg-primary text-white font-size-20">
+                                            {{ employee.first_name|first|upper }}{{ employee.last_name|first|upper }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">{{ employee.full_name }}</h5>
+                                    <p class="text-muted mb-0">{{ employee.employee_id }} | {{ employee.designation.name|default:"No Designation" }}</p>
+                                    <div class="mt-2">
+                                        <span class="badge bg-{% if employee.employment_status == 'active' %}success{% elif employee.employment_status == 'inactive' %}warning{% else %}danger{% endif %}-subtle text-{% if employee.employment_status == 'active' %}success{% elif employee.employment_status == 'inactive' %}warning{% else %}danger{% endif %}">
+                                            {{ employee.get_employment_status_display }}
+                                        </span>
+                                        <span class="badge bg-info-subtle text-info ms-2">
+                                            {{ employee.department.name|default:"No Department" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xl-4 col-md-6">
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Today's Attendance</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    {% if today_attendance %}
+                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                            {{ today_attendance.check_in_time|default:"Not Checked In" }}
+                                        </h4>
+                                        <span class="badge bg-success-subtle text-success mb-0">
+                                            <i class="ri-check-line align-middle"></i> Present
+                                        </span>
+                                    {% else %}
+                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">Absent</h4>
+                                        <span class="badge bg-danger-subtle text-danger mb-0">
+                                            <i class="ri-close-line align-middle"></i> Not Marked
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-info-subtle rounded fs-3">
+                                        <i class="ri-calendar-check-line text-info"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-md-6">
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Experience</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ employee.experience_years }} Years</h4>
+                                    <span class="badge bg-primary-subtle text-primary mb-0">
+                                        <i class="ri-calendar-line align-middle"></i> Since {{ employee.hire_date|date:"Y" }}
+                                    </span>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-primary-subtle rounded fs-3">
+                                        <i class="ri-time-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-md-6">
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Salary</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        {% if employee.gross_salary %}
+                                            ৳{{ employee.gross_salary|floatformat:0 }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </h4>
+                                    <span class="badge bg-success-subtle text-success mb-0">
+                                        <i class="ri-money-dollar-circle-line align-middle"></i> Gross
+                                    </span>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-success-subtle rounded fs-3">
+                                        <i class="ri-money-dollar-circle-line text-success"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h5 class="card-title mb-0 flex-grow-1">Recent Attendance</h5>
+                                <div class="flex-shrink-0">
+                                    <a href="{% url 'hrm:attendance_list' %}" class="btn btn-primary btn-sm">
+                                        View All
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-nowrap align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Check In</th>
+                                            <th scope="col">Check Out</th>
+                                            <th scope="col">Total Hours</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for attendance in recent_attendance %}
+                                        <tr>
+                                            <td>{{ attendance.date|date:"M d, Y" }}</td>
+                                            <td>{{ attendance.check_in_time|default:"--" }}</td>
+                                            <td>{{ attendance.check_out_time|default:"--" }}</td>
+                                            <td>{{ attendance.total_hours }}h</td>
+                                            <td>
+                                                {% if attendance.status == 'present' %}
+                                                    <span class="badge bg-success-subtle text-success">Present</span>
+                                                {% elif attendance.status == 'late' %}
+                                                    <span class="badge bg-warning-subtle text-warning">Late</span>
+                                                {% elif attendance.status == 'absent' %}
+                                                    <span class="badge bg-danger-subtle text-danger">Absent</span>
+                                                {% else %}
+                                                    <span class="badge bg-info-subtle text-info">{{ attendance.status|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No attendance records found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'hrm:attendance_list' %}" class="btn btn-primary">
+                                    <i class="ri-calendar-check-line me-1"></i> View Attendance
+                                </a>
+                                <a href="{% url 'hrm:leave_list' %}" class="btn btn-outline-primary">
+                                    <i class="ri-calendar-event-line me-1"></i> Leave Requests
+                                </a>
+                                <a href="{% url 'authentication:profile' %}" class="btn btn-outline-info">
+                                    <i class="ri-user-settings-line me-1"></i> My Profile
+                                </a>
+                                <a href="{% url 'authentication:logout' %}" class="btn btn-outline-danger">
+                                    <i class="ri-logout-box-line me-1"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Leave Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-nowrap align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Leave Type</th>
+                                            <th scope="col">Start Date</th>
+                                            <th scope="col">End Date</th>
+                                            <th scope="col">Days</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for leave in recent_leaves %}
+                                        <tr>
+                                            <td>{{ leave.get_leave_type_display }}</td>
+                                            <td>{{ leave.start_date|date:"M d, Y" }}</td>
+                                            <td>{{ leave.end_date|date:"M d, Y" }}</td>
+                                            <td>{{ leave.days_requested }}</td>
+                                            <td>
+                                                {% if leave.status == 'approved' %}
+                                                    <span class="badge bg-success-subtle text-success">Approved</span>
+                                                {% elif leave.status == 'pending' %}
+                                                    <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                                {% elif leave.status == 'rejected' %}
+                                                    <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                                                {% else %}
+                                                    <span class="badge bg-info-subtle text-info">{{ leave.status|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No leave requests found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

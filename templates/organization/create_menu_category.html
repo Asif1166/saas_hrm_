@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Menu Category{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Create Menu Category</h2>
+        <div class="btn-box">
+            <a href="{% url 'organization:menu_categories' %}" class="btn btn-sm btn-secondary">Back to Categories</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Category Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" required placeholder="e.g., Dashboard, HRM, Administration">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Icon Class</label>
+                                <input type="text" name="icon" class="form-control" placeholder="e.g., fa-solid fa-tachometer-alt">
+                                <small class="form-text text-muted">Font Awesome icon class</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Order</label>
+                                <input type="number" name="order" class="form-control" value="0">
+                                <small class="form-text text-muted">Lower numbers appear first</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'organization:menu_categories' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-primary">Create Category</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

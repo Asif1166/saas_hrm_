@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Employee Role{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Employee Role</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:employee_role_list' %}" class="btn btn-sm btn-primary">All Employee Roles</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="employeeRoleForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Basic Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Role Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Role Code <span class="text-danger">*</span></label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-6 col-lg-8">
+                                <label class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Permissions</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Permissions</label>
+                                {{ form.permissions }}
+                                {% if form.permissions.errors %}
+                                    <div class="text-danger">{{ form.permissions.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Enter permissions as JSON format or comma-separated values.<br>
+                                    Example: {"hrm.view_employee": true, "hrm.edit_employee": false} or "view_employee,edit_employee"
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'hrm:employee_role_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Employee Role</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-generate role code
+document.getElementById('id_name').addEventListener('input', function() {
+    const name = this.value;
+    const codeField = document.getElementById('id_code');
+    
+    if (name && !codeField.value) {
+        const code = name.substring(0, 3).toUpperCase() + '001';
+        codeField.value = code;
+    }
+});
+
+// Format permissions field
+document.getElementById('id_permissions').addEventListener('blur', function() {
+    const value = this.value.trim();
+    if (value && !value.startsWith('{') && !value.startsWith('[')) {
+        // Convert comma-separated values to JSON array
+        const permissions = value.split(',').map(p => p.trim()).filter(p => p);
+        this.value = JSON.stringify(permissions);
+    }
+});
+</script>
+{% endblock %}

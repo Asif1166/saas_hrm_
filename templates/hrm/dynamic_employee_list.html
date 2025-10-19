@@ -1,0 +1,517 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load organization_tags %}
+
+{% block title %}Employee List - Dynamic{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>All Employees - Dynamic Table</h5>
+                    <div class="btn-box d-flex flex-wrap gap-2">
+                        <div id="tableSearch"></div>
+                        <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-icon btn-outline-primary"><i class="fa-solid fa-arrows-rotate"></i></a>
+                        
+                        <!-- Dynamic Column Visibility Controls -->
+                        <div class="digi-dropdown dropdown">
+                            <button class="btn btn-sm btn-icon btn-outline-primary" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <i class="fa-solid fa-columns"></i> Columns
+                            </button>
+                            <ul class="digi-dropdown-menu dropdown-menu" id="columnVisibilityMenu">
+                                <li class="dropdown-title">Show/Hide Columns</li>
+                                {% for column in table_columns %}
+                                <li>
+                                    <div class="form-check">
+                                        <input class="form-check-input column-toggle" type="checkbox" 
+                                               id="show{{ column.field_name|title }}" 
+                                               data-column="{{ column.field_name }}"
+                                               {% if column.default_visible %}checked{% endif %}>
+                                        <label class="form-check-label" for="show{{ column.field_name|title }}">
+                                            {{ column.display_name }}
+                                        </label>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item" onclick="resetColumnVisibility()">
+                                        <i class="fa-solid fa-undo"></i> Reset to Default
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" onclick="saveColumnPreferences()">
+                                        <i class="fa-solid fa-save"></i> Save Preferences
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Table Configuration (Admin Only) -->
+                        {% if user.is_organization_admin %}
+                        <div class="digi-dropdown dropdown">
+                            <button class="btn btn-sm btn-icon btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-cog"></i> Configure
+                            </button>
+                            <ul class="digi-dropdown-menu dropdown-menu">
+                                <li>
+                                    <a href="{% url 'organization:dynamic_table_config' 'employee_list' %}" class="dropdown-item">
+                                        <i class="fa-solid fa-table-columns"></i> Column Permissions
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'organization:setup_default_permissions' 'employee_list' %}" class="dropdown-item">
+                                        <i class="fa-solid fa-magic"></i> Setup Default Permissions
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if can_edit %}
+                        <a href="{% url 'hrm:create_employee' %}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add New
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="panel-body">
+                    <!-- Filter Section -->
+                    <div class="table-filter-option">
+                        <form method="get" class="row g-3" id="filterForm">
+                            <div class="col-xl-10 col-9 col-xs-12">
+                                <div class="row g-3">
+                                    <div class="col">
+                                        <select name="branch" class="form-control form-control-sm">
+                                            <option value="">All Branches</option>
+                                            {% for branch in branches %}
+                                                <option value="{{ branch.id }}" {% if branch_filter == branch.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ branch.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select name="department" class="form-control form-control-sm">
+                                            <option value="">All Departments</option>
+                                            {% for dept in departments %}
+                                                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ dept.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select name="designation" class="form-control form-control-sm">
+                                            <option value="">All Designations</option>
+                                            {% for desig in designations %}
+                                                <option value="{{ desig.id }}" {% if designation_filter == desig.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ desig.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select name="role" class="form-control form-control-sm">
+                                            <option value="">All Roles</option>
+                                            {% for role in roles %}
+                                                <option value="{{ role.id }}" {% if role_filter == role.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ role.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select name="status" class="form-control form-control-sm">
+                                            <option value="">All Status</option>
+                                            {% for status_code, status_name in status_choices %}
+                                                <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                                                    {{ status_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search name or email" value="{{ search_query|default:'' }}">
+                                    </div>
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
+                                    </div>
+                                    <div class="col">
+                                        <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-3 col-xs-12 d-flex justify-content-end">
+                                <div id="employeeTableLength"></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Dynamic Table -->
+                    <div class="table-responsive">
+                        <table class="table table-dashed table-hover digi-dataTable all-employee-table table-striped" id="dynamicEmployeeTable">
+                            <thead>
+                                <tr id="tableHeader">
+                                    <th class="no-sort">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="markAllEmployee">
+                                        </div>
+                                    </th>
+                                    <th>Action</th>
+                                    {% for column in table_columns %}
+                                        <th class="{% if not column.is_sortable %}no-sort{% endif %}" 
+                                            data-column="{{ column.field_name }}"
+                                            style="{% if column.width %}width: {{ column.width }};{% endif %}"
+                                            {% if column.css_class %}class="{{ column.css_class }}"{% endif %}>
+                                            {{ column.display_name }}
+                                        </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                {% for employee in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="employee_ids" value="{{ employee.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="digi-dropdown dropdown d-inline-block">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Action <i class="fa-solid fa-angle-down"></i>
+                                            </button>
+                                            <ul class="digi-dropdown-menu dropdown-menu dropdown-slim dropdown-menu-sm">
+                                                <li>
+                                                    <a href="{% url 'hrm:employee_detail' employee.id %}" class="dropdown-item">
+                                                        <span class="dropdown-icon"><i class="fa-solid fa-eye"></i></span> View
+                                                    </a>
+                                                </li>
+                                                {% if can_edit %}
+                                                <li>
+                                                    <a href="{% url 'hrm:update_employee' employee.id %}" class="dropdown-item">
+                                                        <span class="dropdown-icon"><i class="fa-solid fa-pen-to-square"></i></span> Edit
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                <li>
+                                                    <a href="#" class="dropdown-item">
+                                                        <span class="dropdown-icon"><i class="fa-solid fa-id-card"></i></span> ID Card
+                                                    </a>
+                                                </li>
+                                                {% if employee.employment_status == 'active' and can_edit %}
+                                                <li>
+                                                    <a href="#" class="dropdown-item">
+                                                        <span class="dropdown-icon"><i class="fa-solid fa-pen-nib"></i></span> Resign
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if employee.employment_status != 'terminated' and can_delete %}
+                                                <li>
+                                                    <a href="#" class="dropdown-item">
+                                                        <span class="dropdown-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span> Terminate
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if can_delete %}
+                                                <li>
+                                                    <a href="#" class="dropdown-item text-danger" 
+                                                       onclick="return confirm('Are you sure you want to delete this employee?')">
+                                                        <span class="dropdown-icon"><i class="fa-solid fa-trash-can"></i></span> Delete
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </td>
+                                    {% for column in table_columns %}
+                                        <td data-column="{{ column.field_name }}" 
+                                            {% if column.css_class %}class="{{ column.css_class }}"{% endif %}>
+                                            {% if column.column_type == 'image' %}
+                                                {% if employee|getattr:column.field_name %}
+                                                    <div class="avatar">
+                                                        <img src="{{ employee|getattr:column.field_name|default:'/static/assets/images/avatar-2.png' }}" alt="Avatar">
+                                                    </div>
+                                                {% else %}
+                                                    <div class="avatar">
+                                                        <img src="{% static 'assets/images/avatar-2.png' %}" alt="Default Avatar">
+                                                    </div>
+                                                {% endif %}
+                                            {% elif column.column_type == 'foreign_key' %}
+                                                {% with field_value=employee|getattr:column.field_name %}
+                                                    {% if field_value %}
+                                                        {{ field_value.name|default:field_value }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% elif column.column_type == 'date' %}
+                                                {% with field_value=employee|getattr:column.field_name %}
+                                                    {% if field_value %}
+                                                        {{ field_value|date:"M d, Y" }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% elif column.column_type == 'number' %}
+                                                {% with field_value=employee|getattr:column.field_name %}
+                                                    {% if field_value %}
+                                                        {{ field_value|floatformat:2 }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% else %}
+                                                {% with field_value=employee|getattr:column.field_name %}
+                                                    {% if field_value %}
+                                                        {{ field_value }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{{ table_columns|length|add:2 }}" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fa-solid fa-users fa-2x mb-3"></i>
+                                            <p>No employees found.</p>
+                                            {% if can_edit %}
+                                            <a href="{% url 'hrm:create_employee' %}" class="btn btn-sm btn-primary">Add First Employee</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="table-bottom-control">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                                            <span aria-hidden="true">&laquo;&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                                            <span aria-hidden="true">&raquo;&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        <div class="pagination-info text-center mt-2">
+                            <span class="text-muted">
+                                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Dynamic Table JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize column visibility based on user preferences
+    initializeColumnVisibility();
+    
+    // Setup column toggle event listeners
+    setupColumnToggleListeners();
+    
+    // Load saved preferences
+    loadUserPreferences();
+});
+
+function initializeColumnVisibility() {
+    const columns = {{ table_columns|length }};
+    const userPreferences = {{ user_preferences|default:"null"|safe }};
+    
+    // Apply saved column visibility or defaults
+    document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
+        const columnName = checkbox.dataset.column;
+        
+        if (userPreferences && userPreferences.column_visibility) {
+            checkbox.checked = userPreferences.column_visibility[columnName] !== false;
+        } else {
+            checkbox.checked = checkbox.checked; // Use default checked state
+        }
+        
+        toggleColumnVisibility(columnName, checkbox.checked);
+    });
+}
+
+function setupColumnToggleListeners() {
+    document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const columnName = this.dataset.column;
+            toggleColumnVisibility(columnName, this.checked);
+        });
+    });
+}
+
+function toggleColumnVisibility(columnName, isVisible) {
+    // Hide/show table header
+    const headerCells = document.querySelectorAll(`th[data-column="${columnName}"]`);
+    headerCells.forEach(function(cell) {
+        cell.style.display = isVisible ? '' : 'none';
+    });
+    
+    // Hide/show table body cells
+    const bodyCells = document.querySelectorAll(`td[data-column="${columnName}"]`);
+    bodyCells.forEach(function(cell) {
+        cell.style.display = isVisible ? '' : 'none';
+    });
+}
+
+function resetColumnVisibility() {
+    document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
+        const columnName = checkbox.dataset.column;
+        checkbox.checked = true; // Reset to default visible
+        toggleColumnVisibility(columnName, true);
+    });
+}
+
+function saveColumnPreferences() {
+    const preferences = {
+        column_visibility: {},
+        column_order: [],
+        page_size: 20,
+        saved_filters: {}
+    };
+    
+    // Collect column visibility preferences
+    document.querySelectorAll('.column-toggle').forEach(function(checkbox) {
+        preferences.column_visibility[checkbox.dataset.column] = checkbox.checked;
+    });
+    
+    // Save preferences via AJAX
+    fetch('{% url "organization:save_table_preferences" "employee_list" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: new URLSearchParams({
+            'column_visibility': JSON.stringify(preferences.column_visibility),
+            'column_order': JSON.stringify(preferences.column_order),
+            'page_size': preferences.page_size.toString(),
+            'saved_filters': JSON.stringify(preferences.saved_filters)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showNotification('Preferences saved successfully!', 'success');
+        } else {
+            showNotification('Failed to save preferences: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error saving preferences: ' + error.message, 'error');
+    });
+}
+
+function loadUserPreferences() {
+    fetch('{% url "organization:get_table_preferences" "employee_list" %}')
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success' && data.preferences) {
+            // Apply loaded preferences
+            const preferences = data.preferences;
+            
+            if (preferences.column_visibility) {
+                Object.keys(preferences.column_visibility).forEach(function(columnName) {
+                    const checkbox = document.querySelector(`input[data-column="${columnName}"]`);
+                    if (checkbox) {
+                        checkbox.checked = preferences.column_visibility[columnName];
+                        toggleColumnVisibility(columnName, checkbox.checked);
+                    }
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading preferences:', error);
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message, type) {
+    // Simple notification system
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(function() {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+</script>
+
+{% endblock %}

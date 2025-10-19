@@ -1,0 +1,606 @@
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+User = get_user_model()
+
+
+class BaseOrganizationModel(models.Model):
+    """
+    Abstract base model for organization-specific data
+    All HRM and Payroll models should inherit from this
+    """
+    organization = models.ForeignKey('organization.Organization', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Branch(BaseOrganizationModel):
+    """
+    Branch model for organization-specific branches/offices
+    """
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=10, help_text="Branch code (e.g., BR001)")
+    description = models.TextField(blank=True, null=True)
+    
+    # Address
+    address_line1 = models.CharField(max_length=255, blank=True, null=True)
+    address_line2 = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Contact Information
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    
+    # Manager
+    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_branches')
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'code']
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.organization.name})"
+
+
+class Department(BaseOrganizationModel):
+    """
+    Department model for organization-specific departments
+    """
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=10, help_text="Department code (e.g., DEP001)")
+    description = models.TextField(blank=True, null=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='departments', null=True, blank=True)
+    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_departments')
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'code']
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.organization.name})"
+
+
+class Designation(BaseOrganizationModel):
+    """
+    Designation/Job Title model for organization-specific designations
+    """
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=10, help_text="Designation code (e.g., DES001)")
+    description = models.TextField(blank=True, null=True)
+    level = models.PositiveIntegerField(default=1, help_text="Hierarchy level (1=lowest)")
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='designations', null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'code']
+        ordering = ['level', 'name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.organization.name})"
+
+
+class EmployeeRole(BaseOrganizationModel):
+    """
+    Employee role model for organization-specific roles
+    """
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=10, help_text="Role code (e.g., ROL001)")
+    description = models.TextField(blank=True, null=True)
+    permissions = models.JSONField(default=dict, blank=True, help_text="Role-specific permissions")
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'code']
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.organization.name})"
+
+
+class Employee(BaseOrganizationModel):
+    """
+    Employee model for organization-specific employees
+    """
+    EMPLOYMENT_STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('terminated', 'Terminated'),
+        ('on_leave', 'On Leave'),
+    ]
+    
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+    
+    MARITAL_STATUS_CHOICES = [
+        ('single', 'Single'),
+        ('married', 'Married'),
+        ('divorced', 'Divorced'),
+        ('widowed', 'Widowed'),
+    ]
+    
+    BLOOD_GROUP_CHOICES = [
+        ('A+', 'A+'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B-', 'B-'),
+        ('AB+', 'AB+'),
+        ('AB-', 'AB-'),
+        ('O+', 'O+'),
+        ('O-', 'O-'),
+    ]
+    
+    # User Account
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
+    employee_id = models.CharField(max_length=50, unique=True)
+    
+    # Organizational Structure
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    designation = models.ForeignKey(Designation, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    employee_role = models.ForeignKey(EmployeeRole, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    
+    # Personal Information
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    middle_name = models.CharField(max_length=100, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='employee_profiles/', blank=True, null=True)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, blank=True, null=True)
+    marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
+    nationality = models.CharField(max_length=100, default='Bangladeshi')
+    
+    # Contact Information
+    personal_email = models.EmailField(blank=True, null=True)
+    personal_phone = models.CharField(max_length=15, blank=True, null=True)
+    work_phone = models.CharField(max_length=15, blank=True, null=True)
+    
+    # Address Information
+    current_address = models.TextField(blank=True, null=True)
+    permanent_address = models.TextField(blank=True, null=True)
+    
+    # Employment Information
+    employment_status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUS_CHOICES, default='active')
+    hire_date = models.DateField()
+    confirmation_date = models.DateField(blank=True, null=True)
+    termination_date = models.DateField(blank=True, null=True)
+    probation_period_months = models.PositiveIntegerField(default=3)
+    
+    # Salary Information
+    basic_salary = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    gross_salary = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    net_salary = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    
+    # Reporting Structure
+    reporting_manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subordinates')
+    
+    # Emergency Contact
+    emergency_contact_name = models.CharField(max_length=200, blank=True, null=True)
+    emergency_contact_phone = models.CharField(max_length=15, blank=True, null=True)
+    emergency_contact_relationship = models.CharField(max_length=100, blank=True, null=True)
+    emergency_contact_address = models.TextField(blank=True, null=True)
+    
+    # Bank Information
+    bank_name = models.CharField(max_length=200, blank=True, null=True)
+    bank_account_number = models.CharField(max_length=50, blank=True, null=True)
+    bank_routing_number = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Additional Information
+    skills = models.TextField(blank=True, null=True, help_text="Comma-separated skills")
+    notes = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    
+
+    device_user_id = models.CharField(
+        max_length=20, 
+        blank=True, 
+        null=True,
+        help_text='UID from attendance device'
+    )
+    device_enrollment_id = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text='Enrollment ID from attendance device'
+    )
+
+    class Meta:
+        unique_together = ['organization', 'employee_id']
+        ordering = ['last_name', 'first_name']
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.employee_id})"
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def age(self):
+        if self.date_of_birth:
+            from datetime import date
+            today = date.today()
+            return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+        return None
+    
+    @property
+    def experience_years(self):
+        if self.hire_date:
+            from datetime import date
+            today = date.today()
+            end_date = self.termination_date if self.termination_date else today
+            return end_date.year - self.hire_date.year - ((end_date.month, end_date.day) < (self.hire_date.month, self.hire_date.day))
+        return 0
+
+
+class Shift(BaseOrganizationModel):
+    """
+    Shift model for organization-specific work shifts
+    """
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10, help_text="Shift code (e.g., SH001)")
+    description = models.TextField(blank=True, null=True)
+    
+    # Shift timings
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    break_start_time = models.TimeField(blank=True, null=True)
+    break_end_time = models.TimeField(blank=True, null=True)
+    
+    # Working hours
+    working_hours = models.DecimalField(max_digits=5, decimal_places=2, help_text="Total working hours per day")
+    break_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Break hours")
+    
+    # Grace period
+    grace_period_minutes = models.PositiveIntegerField(default=15, help_text="Grace period for late arrival in minutes")
+    
+    # Overtime settings
+    overtime_start_after_hours = models.DecimalField(max_digits=5, decimal_places=2, default=8.00, help_text="Overtime starts after these hours")
+    
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'code']
+        ordering = ['start_time']
+    
+    def __str__(self):
+        return f"{self.name} ({self.start_time} - {self.end_time})"
+
+
+class Timetable(BaseOrganizationModel):
+    """
+    Timetable model for employee work schedules
+    """
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='timetables')
+    shift = models.ForeignKey(Shift, on_delete=models.CASCADE, related_name='timetables')
+    
+    # Schedule period
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True, help_text="Leave blank for indefinite schedule")
+    
+    # Working days
+    monday = models.BooleanField(default=True)
+    tuesday = models.BooleanField(default=True)
+    wednesday = models.BooleanField(default=True)
+    thursday = models.BooleanField(default=True)
+    friday = models.BooleanField(default=True)
+    saturday = models.BooleanField(default=False)
+    sunday = models.BooleanField(default=False)
+    
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['employee', 'start_date']
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.shift.name} ({self.start_date})"
+    
+    @property
+    def working_days(self):
+        """Return list of working days"""
+        days = []
+        if self.monday: days.append('Monday')
+        if self.tuesday: days.append('Tuesday')
+        if self.wednesday: days.append('Wednesday')
+        if self.thursday: days.append('Thursday')
+        if self.friday: days.append('Friday')
+        if self.saturday: days.append('Saturday')
+        if self.sunday: days.append('Sunday')
+        return days
+
+
+class AttendanceDevice(BaseOrganizationModel):
+    """
+    Attendance device model for ZKTeco integration
+    """
+    DEVICE_TYPES = [
+        ('zkteco', 'ZKTeco'),
+        ('manual', 'Manual Entry'),
+        ('mobile', 'Mobile App'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    device_type = models.CharField(max_length=20, choices=DEVICE_TYPES, default='zkteco')
+    
+    # Device connection details
+    ip_address = models.GenericIPAddressField()
+    port = models.PositiveIntegerField(default=4370)
+    timeout = models.IntegerField(default=10, help_text='Connection timeout in seconds')
+    password = models.IntegerField(default=0, help_text='Device password (usually 0)')
+    mac_address = models.CharField(max_length=17, blank=True)
+    platform = models.CharField(max_length=50, blank=True)
+    device_id = models.PositiveIntegerField(default=1)
+    
+    # Device information
+    serial_number = models.CharField(max_length=100, blank=True, null=True)
+    model = models.CharField(max_length=100, blank=True, null=True)
+    firmware_version = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Location
+    location = models.CharField(max_length=200, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    is_online = models.BooleanField(default=False)
+    last_sync = models.DateTimeField(blank=True, null=True)
+    
+    # Sync settings
+    auto_sync_enabled = models.BooleanField(default=True)
+    sync_interval_minutes = models.PositiveIntegerField(default=30)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.ip_address})"
+
+
+class AttendanceRecord(BaseOrganizationModel):
+    """
+    Detailed attendance record model
+    """
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendance_records')
+    device = models.ForeignKey(AttendanceDevice, on_delete=models.SET_NULL, null=True, blank=True, related_name='attendance_records')
+    
+    # Date and time
+    date = models.DateField()
+    check_in_time = models.TimeField(blank=True, null=True)
+    check_out_time = models.TimeField(blank=True, null=True)
+    
+    # Break times
+    break_start_time = models.TimeField(blank=True, null=True)
+    break_end_time = models.TimeField(blank=True, null=True)
+    
+    # Calculated times
+    total_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    working_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    break_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    overtime_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    
+    # Status
+    STATUS_CHOICES = [
+        ('present', 'Present'),
+        ('absent', 'Absent'),
+        ('late', 'Late'),
+        ('half_day', 'Half Day'),
+        ('on_leave', 'On Leave'),
+        ('holiday', 'Holiday'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    
+    # Late arrival
+    is_late = models.BooleanField(default=False)
+    late_minutes = models.PositiveIntegerField(default=0)
+    
+    # Early departure
+    is_early_departure = models.BooleanField(default=False)
+    early_departure_minutes = models.PositiveIntegerField(default=0)
+    
+    # Notes
+    notes = models.TextField(blank=True, null=True)
+    
+    # Device sync info
+    device_user_id = models.CharField(max_length=50, blank=True, null=True, help_text="User ID from device")
+    sync_timestamp = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        unique_together = ['organization', 'employee', 'date']
+        ordering = ['-date', 'employee']
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.date} ({self.status})"
+    
+    def calculate_hours(self):
+        """Calculate working hours, break hours, and overtime"""
+        if not self.check_in_time or not self.check_out_time:
+            return
+        
+        # Calculate total time
+        from datetime import datetime, date
+        check_in_datetime = datetime.combine(self.date, self.check_in_time)
+        check_out_datetime = datetime.combine(self.date, self.check_out_time)
+        
+        if check_out_datetime <= check_in_datetime:
+            # Handle overnight shifts
+            check_out_datetime = datetime.combine(self.date.replace(day=self.date.day + 1), self.check_out_time)
+        
+        total_seconds = (check_out_datetime - check_in_datetime).total_seconds()
+        self.total_hours = round(total_seconds / 3600, 2)
+        
+        # Calculate break hours
+        if self.break_start_time and self.break_end_time:
+            break_start_datetime = datetime.combine(self.date, self.break_start_time)
+            break_end_datetime = datetime.combine(self.date, self.break_end_time)
+            
+            if break_end_datetime <= break_start_datetime:
+                break_end_datetime = datetime.combine(self.date.replace(day=self.date.day + 1), self.break_end_time)
+            
+            break_seconds = (break_end_datetime - break_start_datetime).total_seconds()
+            self.break_hours = round(break_seconds / 3600, 2)
+        
+        # Calculate working hours (total - break)
+        self.working_hours = self.total_hours - self.break_hours
+        
+        # Get employee's shift for overtime calculation
+        try:
+            timetable = Timetable.objects.filter(
+                employee=self.employee,
+                start_date__lte=self.date,
+                is_active=True
+            ).order_by('-start_date').first()
+            
+            if timetable and timetable.shift:
+                shift = timetable.shift
+                if self.working_hours > shift.overtime_start_after_hours:
+                    self.overtime_hours = self.working_hours - shift.overtime_start_after_hours
+                else:
+                    self.overtime_hours = 0.00
+        except:
+            pass
+        
+        self.save()
+
+
+class Payhead(BaseOrganizationModel):
+    """
+    Payhead model for salary components
+    """
+    PAYHEAD_TYPES = [
+        ('earning', 'Earning'),
+        ('deduction', 'Deduction'),
+    ]
+    
+    CALCULATION_TYPES = [
+        ('fixed', 'Fixed Amount'),
+        ('percentage', 'Percentage of Basic'),
+        ('attendance', 'Based on Attendance'),
+        ('overtime', 'Based on Overtime'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, help_text="Payhead code (e.g., BASIC, HRA, PF)")
+    description = models.TextField(blank=True, null=True)
+    
+    # Type and calculation
+    payhead_type = models.CharField(max_length=20, choices=PAYHEAD_TYPES)
+    calculation_type = models.CharField(max_length=20, choices=CALCULATION_TYPES, default='fixed')
+    
+    # Amount settings
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Percentage for percentage-based calculation")
+    
+    # Attendance-based settings
+    attendance_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, help_text="Rate per hour for attendance-based calculation")
+    overtime_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, help_text="Rate per hour for overtime-based calculation")
+    
+    # Tax settings
+    is_taxable = models.BooleanField(default=True)
+    is_pf_applicable = models.BooleanField(default=False)
+    is_esi_applicable = models.BooleanField(default=False)
+    
+    # Display settings
+    display_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'code']
+        ordering = ['display_order', 'name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_payhead_type_display()})"
+
+
+class EmployeePayhead(BaseOrganizationModel):
+    """
+    Employee-specific payhead assignments
+    """
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='employee_payheads')
+    payhead = models.ForeignKey(Payhead, on_delete=models.CASCADE, related_name='employee_payheads')
+    
+    # Amount settings
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    
+    # Effective dates
+    effective_from = models.DateField()
+    effective_to = models.DateField(blank=True, null=True)
+    
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['organization', 'employee', 'payhead', 'effective_from']
+        ordering = ['employee', 'payhead']
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.payhead.name}"
+
+
+class AttendanceHoliday(BaseOrganizationModel):
+    """
+    Holiday model for attendance calculation
+    """
+    name = models.CharField(max_length=200)
+    date = models.DateField()
+    is_recurring = models.BooleanField(default=False, help_text="Recurring yearly")
+    description = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        unique_together = ['organization', 'date']
+        ordering = ['date']
+    
+    def __str__(self):
+        return f"{self.name} ({self.date})"
+
+
+class LeaveRequest(BaseOrganizationModel):
+    """
+    Leave requests for employees
+    """
+    LEAVE_TYPE_CHOICES = [
+        ('sick', 'Sick Leave'),
+        ('vacation', 'Vacation Leave'),
+        ('personal', 'Personal Leave'),
+        ('maternity', 'Maternity Leave'),
+        ('paternity', 'Paternity Leave'),
+        ('emergency', 'Emergency Leave'),
+        ('other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='leave_requests')
+    leave_type = models.CharField(max_length=20, choices=LEAVE_TYPE_CHOICES)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    days_requested = models.PositiveIntegerField()
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_leave_requests')
+    approved_at = models.DateTimeField(blank=True, null=True)
+    rejection_reason = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.leave_type} ({self.start_date} to {self.end_date})"
