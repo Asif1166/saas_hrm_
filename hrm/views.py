@@ -13,6 +13,7 @@ from .forms import EmployeeForm, BranchForm, DepartmentForm, DesignationForm, Em
 from .zkteco_utils import *
 from datetime import date, datetime
 from django.utils import timezone
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -706,41 +707,89 @@ def employee_dashboard(request):
 @login_required
 @organization_member_required
 def attendance_list(request):
-    """List attendance for the organization"""
+    """List attendance records for the organization"""
     organization = request.organization
-    
-    # If user is employee, show only their attendance
+
+    # Base queryset
+    attendances = AttendanceRecord.objects.filter(organization=organization).select_related(
+        'employee', 'employee__branch', 'employee__department', 'employee__designation'
+    ).order_by('-date')
+
+    # --- Filters ---
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    branch_id = request.GET.get('branch')
+    department_id = request.GET.get('department')
+    designation_id = request.GET.get('designation')
+    employee_id = request.GET.get('employee')
+    search_query = request.GET.get('search', '').strip()
+
+    # If user is an employee → restrict to their own records
     if request.user.is_employee:
         try:
             employee = Employee.objects.get(user=request.user, organization=organization)
-            # attendances = Attendance.objects.filter(employee=employee).order_by('-date')
+            attendances = attendances.filter(employee=employee)
         except Employee.DoesNotExist:
             messages.error(request, 'Employee profile not found.')
             return redirect('authentication:login')
-    else:
-        # Admin can see all attendance
-        # attendances = Attendance.objects.filter(organization=organization).order_by('-date')
-        pass
-    
-    # Filter by date range
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    
-    if start_date:
+
+    # --- Date range filter ---
+    if start_date and end_date:
+        attendances = attendances.filter(date__range=[start_date, end_date])
+    elif start_date:
         attendances = attendances.filter(date__gte=start_date)
-    if end_date:
+    elif end_date:
         attendances = attendances.filter(date__lte=end_date)
-    
+
+    # --- Branch filter ---
+    if branch_id:
+        attendances = attendances.filter(employee__branch_id=branch_id)
+
+    # --- Department filter ---
+    if department_id:
+        attendances = attendances.filter(employee__department_id=department_id)
+
+    # --- Designation filter ---
+    if designation_id:
+        attendances = attendances.filter(employee__designation_id=designation_id)
+
+    # --- Employee filter ---
+    if employee_id:
+        attendances = attendances.filter(employee_id=employee_id)
+
+    # --- Search filter (by name, ID, or email) ---
+    if search_query:
+        attendances = attendances.filter(
+            Q(employee__full_name__icontains=search_query) |
+            Q(employee__employee_id__icontains=search_query) |
+            Q(employee__user__email__icontains=search_query)
+        )
+
+    # --- Pagination ---
     paginator = Paginator(attendances, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'organization': organization,
         'page_obj': page_obj,
+
+        # For dropdowns
+        'branches': Branch.objects.filter(organization=organization),
+        'departments': Department.objects.filter(organization=organization),
+        'designations': Designation.objects.filter(organization=organization),
+        'employees': Employee.objects.filter(organization=organization),
+
+        # For keeping selected filters active
+        'branch_filter': branch_id,
+        'department_filter': department_id,
+        'designation_filter': designation_id,
+        'employee_filter': employee_id,
+        'search_query': search_query,
         'start_date': start_date,
         'end_date': end_date,
     }
+
     return render(request, 'hrm/attendance_list.html', context)
 
 
@@ -778,6 +827,42 @@ def leave_list(request):
         'status_choices': LeaveRequest.STATUS_CHOICES,
     }
     return render(request, 'hrm/leave_list.html', context)
+
+
+
+@login_required
+@organization_member_required
+def leave_detail(request, pk):
+    leave = get_object_or_404(LeaveRequest, pk=pk, organization=request.organization)
+    return render(request, 'hrm/leave_detail.html', {'leave': leave})
+
+
+@login_required
+@organization_member_required
+def leave_approve(request, pk):
+    leave = get_object_or_404(LeaveRequest, pk=pk, organization=request.organization)
+    if not request.user.is_employee:
+        leave.status = 'approved'
+        leave.approved_by = request.user
+        leave.approved_at = timezone.now()
+        leave.save()
+        messages.success(request, f"Leave request for {leave.employee.full_name} approved.")
+    return redirect('hrm:leave_list')
+
+
+@login_required
+@organization_member_required
+def leave_reject(request, pk):
+    leave = get_object_or_404(LeaveRequest, pk=pk, organization=request.organization)
+    if not request.user.is_employee:
+        leave.status = 'rejected'
+        leave.rejection_reason = request.GET.get('reason', 'Rejected by admin.')
+        leave.approved_by = request.user
+        leave.approved_at = timezone.now()
+        leave.save()
+        messages.warning(request, f"Leave request for {leave.employee.full_name} rejected.")
+    return redirect('hrm:leave_list')
+
 
 
 # Shift Management Views
@@ -1066,10 +1151,22 @@ def sync_device_data(request, device_id):
         
         # Sync device info
         if sync_manager.sync_device_info():
-            messages.success(request, f'✓ Device info updated')
+            messages.info(request, '✓ Device info updated')
         
-        # Sync users
-        users_synced = sync_manager.sync_users()
+        # Sync users (auto-create enabled by default)
+        user_stats = sync_manager.sync_users(auto_create=True)
+        
+        # Build user sync message
+        msg_parts = []
+        if user_stats['synced'] > 0:
+            msg_parts.append(f"{user_stats['synced']} matched")
+        if user_stats['created'] > 0:
+            msg_parts.append(f"{user_stats['created']} created")
+        if user_stats['failed'] > 0:
+            msg_parts.append(f"{user_stats['failed']} failed")
+        
+        if msg_parts:
+            messages.success(request, f"✓ Users: {', '.join(msg_parts)}")
         
         # Sync attendance (last 30 days)
         from datetime import date, timedelta
@@ -1077,7 +1174,7 @@ def sync_device_data(request, device_id):
         start_date = end_date - timedelta(days=30)
         attendance_synced = sync_manager.sync_attendance(start_date, end_date)
         
-        messages.success(request, f'✓ Sync completed: {users_synced} users, {attendance_synced} attendance records')
+        messages.success(request, f'✓ Attendance: {attendance_synced} records synced')
         
     except Exception as e:
         messages.error(request, f'✗ Error syncing device: {str(e)}')
@@ -1219,6 +1316,13 @@ def update_payhead(request, payhead_id):
     }
     return render(request, 'hrm/payhead_form.html', context)
 
+@login_required
+def payhead_delete(request, pk):
+    if request.method == "POST":
+        payhead = get_object_or_404(Payhead, pk=pk, organization=request.organization)
+        payhead.delete()
+        return JsonResponse({"success": True, "message": f"Payhead '{payhead.name}' deleted successfully."})
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
 # Holiday Management Views
 @login_required
@@ -1291,3 +1395,15 @@ def update_holiday(request, holiday_id):
         'is_update': True,
     }
     return render(request, 'hrm/holiday_form.html', context)
+
+
+@login_required
+@organization_admin_required
+def delete_holiday(request, holiday_id):
+    """Delete a holiday"""
+    if request.method == "POST":
+        holiday = get_object_or_404(AttendanceHoliday, id=holiday_id, organization=request.organization)
+        name = holiday.name
+        holiday.delete()
+        return JsonResponse({"success": True, "message": f"Holiday '{name}' deleted successfully."})
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)

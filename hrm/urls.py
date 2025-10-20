@@ -59,15 +59,20 @@ urlpatterns = [
     path('payheads/', views.payhead_list, name='payhead_list'),
     path('payheads/create/', views.create_payhead, name='create_payhead'),
     path('payheads/<int:payhead_id>/update/', views.update_payhead, name='update_payhead'),
-    
+    path('payheads/<int:pk>/delete/', views.payhead_delete, name='payhead_delete'),
+
     # Holiday Management URLs
     path('holidays/', views.holiday_list, name='holiday_list'),
     path('holidays/create/', views.create_holiday, name='create_holiday'),
     path('holidays/<int:holiday_id>/update/', views.update_holiday, name='update_holiday'),
-    
+    path('holidays/<int:holiday_id>/delete/', views.delete_holiday, name='delete_holiday'),
+
     # Attendance Management (Legacy)
     path('attendance/', views.attendance_list, name='attendance_list'),
     
     # Leave Management
     path('leaves/', views.leave_list, name='leave_list'),
+    path('leaves/<int:pk>/', views.leave_detail, name='leave_detail'),
+    path('leaves/<int:pk>/approve/', views.leave_approve, name='leave_approve'),
+    path('leaves/<int:pk>/reject/', views.leave_reject, name='leave_reject'),
 ]

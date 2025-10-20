@@ -344,56 +344,141 @@ class AttendanceSyncManager:
         finally:
             self.zk_device.disconnect()
 
-    def sync_users(self) -> int:
+    def sync_users(self, auto_create: bool = True) -> Dict[str, int]:
         """
         Sync users from device to database
-        Returns number of users synced
+        
+        Args:
+            auto_create: If True, automatically create employees for unmatched device users
+            
+        Returns:
+            Dictionary with sync statistics: {'synced': int, 'created': int, 'failed': int}
         """
         try:
             if not self.zk_device.connect():
-                return 0
+                return {'synced': 0, 'created': 0, 'failed': 0}
 
             device_users = self.zk_device.get_users()
             synced_count = 0
+            created_count = 0
+            failed_count = 0
 
             from .models import Employee
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
 
             for device_user in device_users:
                 try:
-                    # Find employee by device user_id
+                    employee = None
+                    
+                    # Strategy 1: Find by device_enrollment_id
                     employee = Employee.objects.filter(
                         organization=self.device.organization,
-                        employee_id=str(device_user['user_id'])
+                        device_enrollment_id=str(device_user['user_id'])
                     ).first()
-
+                    
+                    # Strategy 2: Find by employee_id matching device user_id
                     if not employee:
-                        # Try to find by name
+                        employee = Employee.objects.filter(
+                            organization=self.device.organization,
+                            employee_id=str(device_user['user_id'])
+                        ).first()
+                    
+                    # Strategy 3: Try to match by name
+                    if not employee and device_user['name'].strip():
                         name_parts = device_user['name'].strip().split()
                         if name_parts:
                             employee = Employee.objects.filter(
                                 organization=self.device.organization,
-                                first_name__iexact=name_parts[0]
+                                first_name__iexact=name_parts[0],
+                                is_active=True
                             ).first()
 
                     if employee:
-                        # Store the UID from device
+                        # Update existing employee with device IDs
                         employee.device_user_id = str(device_user['uid'])
                         employee.device_enrollment_id = str(device_user['user_id'])
                         employee.save()
                         synced_count += 1
-                        logger.info(f"Synced user: {device_user['name']} -> {employee.full_name}")
+                        logger.info(f"✓ Synced user: {device_user['name']} -> {employee.full_name}")
+                    
+                    elif auto_create:
+                        # Create new employee from device user
+                        try:
+                            # Parse name
+                            name_parts = device_user['name'].strip().split()
+                            first_name = name_parts[0] if name_parts else device_user['name'][:50]
+                            last_name = ' '.join(name_parts[1:])[:50] if len(name_parts) > 1 else ''
+                            
+                            # Generate unique username
+                            base_username = first_name.lower().replace(' ', '')
+                            username = base_username
+                            counter = 1
+                            while User.objects.filter(username=username).exists():
+                                username = f"{base_username}{counter}"
+                                counter += 1
+                            
+                            # Generate unique employee_id for organization
+                            employee_id = str(device_user['user_id'])
+                            original_employee_id = employee_id
+                            counter = 1
+                            while Employee.objects.filter(
+                                organization=self.device.organization,
+                                employee_id=employee_id
+                            ).exists():
+                                employee_id = f"{original_employee_id}_{counter}"
+                                counter += 1
+                            
+                            # Create user account with password
+                            password = f"{username}123"  # username + 123
+                            user = User.objects.create_user(
+                                username=username,
+                                password=password,
+                                first_name=first_name,
+                                last_name=last_name,
+                                email=f"{username}@{self.device.organization.name.lower().replace(' ', '')}.local"
+                            )
+                            
+                            # Create employee
+                            from datetime import date
+                            employee = Employee.objects.create(
+                                organization=self.device.organization,
+                                user=user,
+                                employee_id=employee_id,
+                                first_name=first_name,
+                                last_name=last_name,
+                                hire_date=date.today(),
+                                employment_status='active',
+                                is_active=True,
+                                device_user_id=str(device_user['uid']),
+                                device_enrollment_id=str(device_user['user_id']),
+                            )
+                            
+                            created_count += 1
+                            logger.info(f"✓ Created employee: {employee.full_name} (ID: {employee_id}, Username: {username}, Password: {password})")
+                        
+                        except Exception as e:
+                            failed_count += 1
+                            logger.error(f"✗ Failed to create employee for '{device_user['name']}': {str(e)}")
                     else:
-                        logger.warning(f"No matching employee found for device user: {device_user['name']} (ID: {device_user['user_id']})")
+                        logger.warning(f"⚠ No match for device user: {device_user['name']} (ID: {device_user['user_id']}, UID: {device_user['uid']})")
 
                 except Exception as e:
-                    logger.error(f"Error syncing user {device_user.get('name', 'unknown')}: {str(e)}")
+                    failed_count += 1
+                    logger.error(f"✗ Error syncing user {device_user.get('name', 'unknown')}: {str(e)}")
                     continue
 
-            return synced_count
+            logger.info(f"User sync completed: {synced_count} matched, {created_count} created, {failed_count} failed out of {len(device_users)} total")
+            
+            return {
+                'synced': synced_count,
+                'created': created_count,
+                'failed': failed_count
+            }
 
         except Exception as e:
             logger.error(f"Failed to sync users: {str(e)}")
-            return 0
+            return {'synced': 0, 'created': 0, 'failed': 0}
         finally:
             self.zk_device.disconnect()
 
@@ -454,6 +539,16 @@ class AttendanceSyncManager:
                     # Punch: 0 = Check In, 1 = Check Out, 2 = Break Out, 3 = Break In, etc.
                     punch_time = log['timestamp'].time()
                     
+
+                            # ✅ Append all punch times to notes field
+                    current_notes = attendance_record.notes or ""
+                    all_times = [t.strip() for t in current_notes.split(",") if t.strip()]
+                    time_str = punch_time.strftime("%H:%M:%S")
+                    if time_str not in all_times:
+                        all_times.append(time_str)
+                        attendance_record.notes = ",".join(sorted(all_times))
+
+
                     if log['punch'] in [0, 2, 4]:  # Check-in types
                         if not attendance_record.check_in_time or punch_time < attendance_record.check_in_time:
                             attendance_record.check_in_time = punch_time
@@ -547,72 +642,72 @@ class AttendanceSyncManager:
             self.zk_device.disconnect()
 
 
-def test_device_connection(ip_address: str, port: int = 4370) -> Dict:
-    """
-    Test connection to ZKTeco device
-    """
-    result = {
-        'connected': False,
-        'device_info': {},
-        'error': None,
-        'user_count': 0,
-        'attendance_count': 0
-    }
+# def test_device_connection(ip_address: str, port: int = 4370) -> Dict:
+#     """
+#     Test connection to ZKTeco device
+#     """
+#     result = {
+#         'connected': False,
+#         'device_info': {},
+#         'error': None,
+#         'user_count': 0,
+#         'attendance_count': 0
+#     }
 
-    device = ZKTecoDevice(ip_address, port)
+#     device = ZKTecoDevice(ip_address, port)
 
-    try:
-        print(f"\nTesting connection to {ip_address}:{port}...")
+#     try:
+#         print(f"\nTesting connection to {ip_address}:{port}...")
         
-        if device.connect():
-            print("✓ Connected successfully!\n")
-            result['connected'] = True
+#         if device.connect():
+#             print("✓ Connected successfully!\n")
+#             result['connected'] = True
 
-            # Get device info
-            print("Getting device information...")
-            info = device.get_device_info()
-            result['device_info'] = info
+#             # Get device info
+#             print("Getting device information...")
+#             info = device.get_device_info()
+#             result['device_info'] = info
             
-            for key, value in info.items():
-                print(f"  {key}: {value}")
+#             for key, value in info.items():
+#                 print(f"  {key}: {value}")
 
-            # Get user count
-            print("\nGetting users...")
-            users = device.get_users()
-            result['user_count'] = len(users)
-            print(f"  Total users: {len(users)}")
+#             # Get user count
+#             print("\nGetting users...")
+#             users = device.get_users()
+#             result['user_count'] = len(users)
+#             print(f"  Total users: {len(users)}")
             
-            if users:
-                print("\n  Sample users:")
-                for user in users[:3]:
-                    print(f"    - {user['name']} (ID: {user['user_id']}, UID: {user['uid']})")
+#             if users:
+#                 print("\n  Sample users:")
+#                 for user in users[:3]:
+#                     print(f"    - {user['name']} (ID: {user['user_id']}, UID: {user['uid']})")
 
-            # Get attendance count
-            print("\nGetting attendance records...")
-            attendance = device.get_attendance()
-            result['attendance_count'] = len(attendance)
-            print(f"  Total records: {len(attendance)}")
+#             # Get attendance count
+#             print("\nGetting attendance records...")
+#             attendance = device.get_attendance()
+#             result['attendance_count'] = len(attendance)
+#             print(f"  Total records: {len(attendance)}")
             
-            if attendance:
-                print("\n  Sample records:")
-                for record in attendance[:3]:
-                    print(f"    - User {record['user_id']}: {record['timestamp']} (Punch: {record['punch']})")
+#             if attendance:
+#                 print("\n  Sample records:")
+#                 for record in attendance[:3]:
+#                     print(f"    - User {record['user_id']}: {record['timestamp']} (Punch: {record['punch']})")
 
-            print("\n✓ Test completed successfully!")
+#             print("\n✓ Test completed successfully!")
 
-        else:
-            print("✗ Connection failed")
-            result['error'] = "Unable to connect to device"
+#         else:
+#             print("✗ Connection failed")
+#             result['error'] = "Unable to connect to device"
 
-    except Exception as e:
-        print(f"✗ Error: {str(e)}")
-        result['error'] = str(e)
-    finally:
-        device.disconnect()
+#     except Exception as e:
+#         print(f"✗ Error: {str(e)}")
+#         result['error'] = str(e)
+#     finally:
+#         device.disconnect()
 
-    return result
+#     return result
 
 
-if __name__ == "__main__":
-    # Quick test
-    test_device_connection("192.168.68.3", 4370)
+# if __name__ == "__main__":
+#     # Quick test
+#     test_device_connection("192.168.68.3", 4370)
