@@ -4,9 +4,17 @@
             <div class="col-xxl-6 col-xl-5 col-4 d-flex align-items-center gap-20">
                 <div class="main-logo d-lg-block d-none">
                     <div class="logo-big">
-                        <a href="index.html">
-                            <img src="/static/assets/images/logo-black.png" alt="Logo">
+                         {% if organization.logo %}
+                        <a href="/">
+                            <img src="{{ organization.logo.url }}" alt="Logo">
                         </a>
+                        {% else %}
+                 <div class="avatar-lg bg-primary-subtle me-3">
+                                        <span class="avatar-title rounded bg-primary text-white font-size-20">
+                                            {{ organization.name|first|upper }}
+                                        </span>
+                                    </div>
+                        {% endif %}
                     </div>
                     <div class="logo-small">
                         <a href="index.html">
@@ -30,10 +38,16 @@
                 <div class="header-right-btns d-flex justify-content-end align-items-center">
                     <div class="header-collapse-group">
                         <div class="header-right-btns d-flex justify-content-end align-items-center p-0">
-                            <form class="header-form">
-                                <input type="search" name="search" placeholder="Search..." required>
-                                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-                            </form>
+                          <form class="header-form position-relative" id="menu-search-form">
+    <input type="search" name="search" id="menu-search-input" placeholder="Search..." autocomplete="off" required>
+    <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+    <!-- Dropdown for search results -->
+    <ul class="dropdown-menu w-100 mt-1" id="menu-search-results" style="display: none; max-height: 300px; overflow-y: auto;">
+        <!-- AJAX results will be inserted here -->
+    </ul>
+</form>
+
                             <div class="header-right-btns d-flex justify-content-end align-items-center p-0">
                                 <div class="lang-select">
                                     <span>Language:</span>
@@ -220,8 +234,8 @@
                         <ul class="dropdown-menu profile-dropdown-menu">
                             <li>
                                 <div class="dropdown-txt text-center">
-                                    <p class="mb-0">{{ organization.full_name }}</p>
-                                    <span class="d-block">Web Developer</span>
+                                    <p class="mb-0">{{ organization.name }}</p>
+                                    <span class="d-block">{{ organization.description|default:"No description provided" }}</span>
                                     <div class="d-flex justify-content-center">
                                         <div class="form-check pt-3">
                                             <input class="form-check-input" type="checkbox" id="seeProfileAsSidebar">
@@ -244,3 +258,52 @@
         </div>
     </div>
     <!-- header end -->
+
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('menu-search-input');
+    const resultsDropdown = document.getElementById('menu-search-results');
+
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+
+        clearTimeout(debounceTimer);
+        if (query.length === 0) {
+            resultsDropdown.style.display = 'none';
+            resultsDropdown.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`/menu/search/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDropdown.innerHTML = '';
+
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const li = document.createElement('li');
+                            li.classList.add('dropdown-item');
+                            li.innerHTML = `<a href="${item.url}">${item.title}</a>`;
+                            resultsDropdown.appendChild(li);
+                        });
+                        resultsDropdown.style.display = 'block';
+                    } else {
+                        resultsDropdown.innerHTML = '<li class="dropdown-item text-muted">No results found</li>';
+                        resultsDropdown.style.display = 'block';
+                    }
+                });
+        }, 300); // debounce 300ms
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('menu-search-form').contains(e.target)) {
+            resultsDropdown.style.display = 'none';
+        }
+    });
+});
+</script>

@@ -550,6 +550,26 @@ class EmployeePayhead(BaseOrganizationModel):
         return f"{self.employee.full_name} - {self.payhead.name}"
 
 
+class HolidayCalendar(BaseOrganizationModel):
+    class HolidayTypes(models.TextChoices):
+        governmental = 'governmental'
+        offical = 'official'
+    name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True)
+    holiday_type = models.CharField(max_length=255, choices=HolidayTypes.choices, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        verbose_name_plural = 'Holiday Calendar'
+        ordering = ['-id']
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class AttendanceHoliday(BaseOrganizationModel):
     """
     Holiday model for attendance calculation

@@ -7,6 +7,8 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
+
+from hrm.models import LeaveRequest
 from .models import (
     Organization, OrganizationMembership, MenuCategory, MenuItem, UserMenuPermission,
     DynamicTable, TableColumn, RoleTablePermission, RoleColumnPermission, UserTablePreference
@@ -245,12 +247,30 @@ def organization_dashboard(request):
         organizationmembership__organization=organization,
         role='employee'
     ).order_by('-date_joined')[:5]
+
+ 
+    total_leaves = LeaveRequest.objects.filter(organization=organization).count()
+    pending_leaves = LeaveRequest.objects.filter(organization=organization, status='pending').count()
+    approved_leaves = LeaveRequest.objects.filter(organization=organization, status='approved').count()
+    rejected_leaves = LeaveRequest.objects.filter(organization=organization, status='rejected').count()
+
+    # --- Recent Leave Requests ---
+    recent_leaves = LeaveRequest.objects.filter(
+        organization=organization
+    ).select_related('employee').order_by('-created_at')[:5]
     
     context = {
         'organization': organization,
         'total_employees': total_employees,
         'total_departments': total_departments,
         'recent_employees': recent_employees,
+
+        # Leave statistics
+        'total_leaves': total_leaves,
+        'pending_leaves': pending_leaves,
+        'approved_leaves': approved_leaves,
+        'rejected_leaves': rejected_leaves,
+        'recent_leaves': recent_leaves,
     }
     
     return render(request, 'organization/dashboard.html', context)
@@ -405,6 +425,9 @@ def create_menu_item(request):
     return render(request, 'organization/create_menu_item.html', context)
 
 
+
+
+
 @login_required
 @super_admin_required
 def edit_menu_item(request, item_id):
@@ -528,6 +551,34 @@ def get_user_menu_items(user, organization=None):
             menu_dict[item.category.name]['items'].append(item)
     
     return menu_dict
+
+
+
+
+
+@login_required
+def menu_search(request):
+    query = request.GET.get('q', '').strip()
+    user = request.user
+    organization = getattr(user, 'organization', None)  # adjust if using OrganizationMembership
+
+    if not query:
+        return JsonResponse([], safe=False)
+
+    menu_items = MenuItem.objects.filter(title__icontains=query, is_active=True)
+
+    # filter based on user visibility
+    menu_items = [item for item in menu_items if item.is_visible_to_user(user, organization)]
+
+    results = []
+    for item in menu_items:
+        results.append({
+            'title': item.title,
+            'url': item.get_url,
+        })
+
+    return JsonResponse(results, safe=False)
+
 
 
 # Dynamic Table Management Views

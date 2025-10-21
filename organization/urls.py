@@ -27,6 +27,8 @@ urlpatterns = [
     path('menu/items/<int:item_id>/delete/', views.delete_menu_item, name='delete_menu_item'),
     path('menu/items/<int:item_id>/toggle/', views.toggle_menu_item_status, name='toggle_menu_item_status'),
     
+    path('menu/search/', views.menu_search, name='menu_search'),
+
     # Dynamic Table Management URLs
     path('tables/<str:table_name>/config/', views.dynamic_table_config, name='dynamic_table_config'),
     path('tables/<str:table_name>/permissions/', views.update_table_permissions, name='update_table_permissions'),

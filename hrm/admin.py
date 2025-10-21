@@ -98,3 +98,7 @@ class AttendanceRecordAdmin(admin.ModelAdmin):
     list_filter = ('employee__organization', 'status', 'date')
     search_fields = ('employee__first_name', 'employee__last_name', 'employee__employee_id')
     readonly_fields = ('created_at', 'updated_at')
+
+@admin.register(HolidayCalendar)
+class HolidayCalendarAdmin(admin.ModelAdmin):
+	list_display = [field.name for field in HolidayCalendar._meta.fields]
