@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Shift{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Shift</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:shift_list' %}" class="btn btn-sm btn-primary">All Shifts</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="shiftForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Basic Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-6 col-sm-6">
+                                <label class="form-label">Shift Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-4 col-lg-6 col-sm-6">
+                                <label class="form-label">Shift Code <span class="text-danger">*</span></label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-4 col-lg-12">
+                                <label class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Shift Timings</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                {{ form.start_time }}
+                                {% if form.start_time.errors %}
+                                    <div class="text-danger">{{ form.start_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}
+                                    <div class="text-danger">{{ form.end_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Break Start Time</label>
+                                {{ form.break_start_time }}
+                                {% if form.break_start_time.errors %}
+                                    <div class="text-danger">{{ form.break_start_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Break End Time</label>
+                                {{ form.break_end_time }}
+                                {% if form.break_end_time.errors %}
+                                    <div class="text-danger">{{ form.break_end_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Working Hours & Settings</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Working Hours <span class="text-danger">*</span></label>
+                                {{ form.working_hours }}
+                                {% if form.working_hours.errors %}
+                                    <div class="text-danger">{{ form.working_hours.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Total working hours per day</small>
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Break Hours</label>
+                                {{ form.break_hours }}
+                                {% if form.break_hours.errors %}
+                                    <div class="text-danger">{{ form.break_hours.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Break hours</small>
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Grace Period (minutes)</label>
+                                {{ form.grace_period_minutes }}
+                                {% if form.grace_period_minutes.errors %}
+                                    <div class="text-danger">{{ form.grace_period_minutes.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Grace period for late arrival</small>
+                            </div>
+                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                <label class="form-label">Overtime Start After (hours)</label>
+                                {{ form.overtime_start_after_hours }}
+                                {% if form.overtime_start_after_hours.errors %}
+                                    <div class="text-danger">{{ form.overtime_start_after_hours.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Overtime starts after these hours</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'hrm:shift_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Shift</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-generate shift code
+document.getElementById('id_name').addEventListener('input', function() {
+    const name = this.value;
+    const codeField = document.getElementById('id_code');
+    
+    if (name && !codeField.value) {
+        const code = 'SH' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        codeField.value = code;
+    }
+});
+
+// Calculate working hours automatically when times change
+function calculateWorkingHours() {
+    const startTime = document.getElementById('id_start_time').value;
+    const endTime = document.getElementById('id_end_time').value;
+    const breakHours = document.getElementById('id_break_hours').value || 0;
+    
+    if (startTime && endTime) {
+        const start = new Date('1970-01-01T' + startTime + 'Z');
+        const end = new Date('1970-01-01T' + endTime + 'Z');
+        
+        // Handle overnight shifts
+        let diffMs = end - start;
+        if (diffMs < 0) {
+            diffMs += 24 * 60 * 60 * 1000; // Add 24 hours for overnight shifts
+        }
+        
+        const diffHours = (diffMs / (1000 * 60 * 60) - parseFloat(breakHours)).toFixed(2);
+        
+        if (!isNaN(diffHours) && diffHours >= 0) {
+            document.getElementById('id_working_hours').value = diffHours;
+        }
+    }
+}
+
+// Add event listeners for time fields
+document.getElementById('id_start_time').addEventListener('change', calculateWorkingHours);
+document.getElementById('id_end_time').addEventListener('change', calculateWorkingHours);
+document.getElementById('id_break_hours').addEventListener('change', calculateWorkingHours);
+
+// Calculate break hours if break times are provided
+function calculateBreakHours() {
+    const breakStart = document.getElementById('id_break_start_time').value;
+    const breakEnd = document.getElementById('id_break_end_time').value;
+    
+    if (breakStart && breakEnd) {
+        const start = new Date('1970-01-01T' + breakStart + 'Z');
+        const end = new Date('1970-01-01T' + breakEnd + 'Z');
+        
+        let diffMs = end - start;
+        if (diffMs < 0) {
+            diffMs += 24 * 60 * 60 * 1000; // Add 24 hours for overnight breaks
+        }
+        
+        const diffHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
+        
+        if (!isNaN(diffHours) && diffHours >= 0) {
+            document.getElementById('id_break_hours').value = diffHours;
+            calculateWorkingHours(); // Recalculate working hours
+        }
+    }
+}
+
+// Add event listeners for break time fields
+document.getElementById('id_break_start_time').addEventListener('change', calculateBreakHours);
+document.getElementById('id_break_end_time').addEventListener('change', calculateBreakHours);
+</script>
+{% endblock %}

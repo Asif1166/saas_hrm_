@@ -1,6 +1,8 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -490,10 +492,13 @@ class Payhead(BaseOrganizationModel):
         ('percentage', 'Percentage of Basic'),
         ('attendance', 'Based on Attendance'),
         ('overtime', 'Based on Overtime'),
+        ('production', 'Based on Production/Performance'),
+        ('custom', 'Custom Calculation'),
     ]
     
     name = models.CharField(max_length=200)
     code = models.CharField(max_length=20, help_text="Payhead code (e.g., BASIC, HRA, PF)")
+    short_name = models.CharField(max_length=50, blank=True, null=True, help_text="Short name for display")
     description = models.TextField(blank=True, null=True)
     
     # Type and calculation
@@ -502,52 +507,212 @@ class Payhead(BaseOrganizationModel):
     
     # Amount settings
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Percentage for percentage-based calculation")
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
+                                   help_text="Percentage for percentage-based calculation")
+    percentage_base = models.CharField(max_length=50, default='basic', 
+                                     help_text="Base for percentage calculation (basic, gross, etc.)")
     
-    # Attendance-based settings
-    attendance_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, help_text="Rate per hour for attendance-based calculation")
-    overtime_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, help_text="Rate per hour for overtime-based calculation")
+    # Rate-based settings
+    attendance_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, 
+                                                 help_text="Rate per hour for attendance-based calculation")
+    overtime_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, 
+                                               help_text="Rate per hour for overtime-based calculation")
+    production_rate_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=0.00,
+                                                 help_text="Rate per unit for production-based calculation")
     
-    # Tax settings
+    # Limits and constraints
+    min_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, 
+                                   help_text="Minimum amount limit")
+    max_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, 
+                                   help_text="Maximum amount limit")
+    max_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00,
+                                       help_text="Maximum percentage limit")
+    
+    # Tax and statutory settings
     is_taxable = models.BooleanField(default=True)
     is_pf_applicable = models.BooleanField(default=False)
     is_esi_applicable = models.BooleanField(default=False)
+    is_gratuity_applicable = models.BooleanField(default=False)
+    statutory_code = models.CharField(max_length=20, blank=True, null=True, 
+                                    help_text="Statutory code for compliance reporting")
     
-    # Display settings
+    # Display and ordering
     display_order = models.PositiveIntegerField(default=0)
+    show_in_payslip = models.BooleanField(default=True)
+    is_auto_calculated = models.BooleanField(default=True, 
+                                           help_text="Whether this payhead is automatically calculated")
+    
+    # Activation settings
     is_active = models.BooleanField(default=True)
+    effective_from = models.DateField(default=timezone.now, help_text="Date from which this payhead is effective")
+    effective_to = models.DateField(blank=True, null=True, help_text="Date until which this payhead is effective")
     
     class Meta:
         unique_together = ['organization', 'code']
         ordering = ['display_order', 'name']
+        indexes = [
+            models.Index(fields=['organization', 'is_active', 'payhead_type']),
+            models.Index(fields=['organization', 'calculation_type', 'is_active']),
+        ]
     
     def __str__(self):
         return f"{self.name} ({self.get_payhead_type_display()})"
+    
+    @property
+    def is_effective(self):
+        """Check if payhead is currently effective"""
+        today = timezone.now().date()
+        if self.effective_from and self.effective_from > today:
+            return False
+        if self.effective_to and self.effective_to < today:
+            return False
+        return self.is_active
+    
+    def clean(self):
+        """Validate payhead configuration"""
+        from django.core.exceptions import ValidationError
+        
+        if self.calculation_type == 'percentage' and self.percentage <= 0:
+            raise ValidationError({
+                'percentage': 'Percentage must be greater than 0 for percentage-based calculation.'
+            })
+        
+        if self.calculation_type == 'fixed' and self.amount <= 0:
+            raise ValidationError({
+                'amount': 'Amount must be greater than 0 for fixed amount calculation.'
+            })
+        
+        if self.max_amount > 0 and self.min_amount > self.max_amount:
+            raise ValidationError({
+                'min_amount': 'Minimum amount cannot be greater than maximum amount.'
+            })
 
 
 class EmployeePayhead(BaseOrganizationModel):
     """
-    Employee-specific payhead assignments
+    Employee-specific payhead assignments and overrides
     """
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='employee_payheads')
     payhead = models.ForeignKey(Payhead, on_delete=models.CASCADE, related_name='employee_payheads')
     
-    # Amount settings
+    # Amount settings (override organization defaults)
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    
+    # Employee-specific rates
+    attendance_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    overtime_rate_per_hour = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    production_rate_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    
+    # Employee-specific limits
+    min_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    max_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    max_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     
     # Effective dates
     effective_from = models.DateField()
     effective_to = models.DateField(blank=True, null=True)
     
+    # Status
     is_active = models.BooleanField(default=True)
+    
+    # Audit fields
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                 related_name='created_employee_payheads')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='modified_employee_payheads')
     
     class Meta:
         unique_together = ['organization', 'employee', 'payhead', 'effective_from']
-        ordering = ['employee', 'payhead']
+        ordering = ['employee', 'payhead__display_order', '-effective_from']
+        indexes = [
+            models.Index(fields=['employee', 'is_active', 'effective_from']),
+            models.Index(fields=['payhead', 'is_active']),
+        ]
+        verbose_name = "Employee Payhead"
+        verbose_name_plural = "Employee Payheads"
     
     def __str__(self):
-        return f"{self.employee.full_name} - {self.payhead.name}"
+        return f"{self.employee.full_name} - {self.payhead.name} ({self.effective_from})"
+    
+    @property
+    def is_effective(self):
+        """Check if employee payhead is currently effective"""
+        today = timezone.now().date()
+        if self.effective_from > today:
+            return False
+        if self.effective_to and self.effective_to < today:
+            return False
+        return self.is_active and self.payhead.is_effective
+    
+    def get_effective_amount(self, base_amount=0, attendance_hours=0, overtime_hours=0, production_units=0):
+        """Calculate effective amount based on payhead configuration"""
+        if not self.is_effective:
+            return Decimal('0.00')
+        
+        # Use employee-specific values if set, otherwise use payhead defaults
+        calculation_type = self.payhead.calculation_type
+        amount = self.amount if self.amount > 0 else self.payhead.amount
+        percentage = self.percentage if self.percentage > 0 else self.payhead.percentage
+        
+        if calculation_type == 'fixed':
+            result = amount
+        
+        elif calculation_type == 'percentage':
+            result = (base_amount * percentage) / Decimal('100')
+        
+        elif calculation_type == 'attendance':
+            rate = (self.attendance_rate_per_hour if self.attendance_rate_per_hour > 0 
+                   else self.payhead.attendance_rate_per_hour)
+            result = rate * Decimal(str(attendance_hours))
+        
+        elif calculation_type == 'overtime':
+            rate = (self.overtime_rate_per_hour if self.overtime_rate_per_hour > 0 
+                   else self.payhead.overtime_rate_per_hour)
+            result = rate * Decimal(str(overtime_hours))
+        
+        elif calculation_type == 'production':
+            rate = (self.production_rate_per_unit if self.production_rate_per_unit > 0 
+                   else self.payhead.production_rate_per_unit)
+            result = rate * Decimal(str(production_units))
+        
+        else:
+            result = Decimal('0.00')
+        
+        # Apply limits
+        min_amt = self.min_amount if self.min_amount > 0 else self.payhead.min_amount
+        max_amt = self.max_amount if self.max_amount > 0 else self.payhead.max_amount
+        
+        if min_amt > 0:
+            result = max(result, min_amt)
+        if max_amt > 0:
+            result = min(result, max_amt)
+        
+        return result
+    
+    def clean(self):
+        """Validate employee payhead configuration"""
+        from django.core.exceptions import ValidationError
+        
+        if self.effective_to and self.effective_to < self.effective_from:
+            raise ValidationError({
+                'effective_to': 'Effective to date cannot be before effective from date.'
+            })
+        
+        # Check for overlapping effective periods
+        overlapping = EmployeePayhead.objects.filter(
+            organization=self.organization,
+            employee=self.employee,
+            payhead=self.payhead,
+            is_active=True
+        ).exclude(pk=self.pk).filter(
+            models.Q(effective_to__isnull=True) | models.Q(effective_to__gte=self.effective_from)
+        ).exists()
+        
+        if overlapping:
+            raise ValidationError(
+                "An active payhead assignment already exists for this employee with overlapping effective period."
+            )
 
 
 class HolidayCalendar(BaseOrganizationModel):

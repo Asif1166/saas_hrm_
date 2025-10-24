@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payslip Details - {{ payslip.employee.full_name }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Payslip Details</h2>
+        <div class="btn-box">
+            <a href="{% url 'payroll:generate_payslip_pdf' payslip.id %}" class="btn btn-sm btn-danger me-2">
+                <i class="fa-solid fa-file-pdf"></i> Generate PDF
+            </a>
+            <a href="{% url 'payroll:payslips' %}" class="btn btn-sm btn-primary">All Payslips</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Payslip Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4 class="text-primary">{{ organization.name }}</h4>
+                            <p class="mb-1">{{ organization.address_line1 }}</p>
+                            <p class="mb-1">{{ organization.city }}, {{ organization.country }}</p>
+                            <p class="mb-0">Phone: {{ organization.phone }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h3 class="text-success">PAYSLIP</h3>
+                            <p class="mb-1"><strong>Period:</strong> {{ payslip.payroll_period.name }}</p>
+                            <p class="mb-1"><strong>Pay Date:</strong> {{ payslip.payroll_period.pay_date|date:"M d, Y" }}</p>
+                            <p class="mb-0"><strong>Generated:</strong> {{ payslip.generated_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Employee Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Employee Information</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>{{ payslip.employee.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Employee ID:</strong></td>
+                                    <td>{{ payslip.employee.employee_id }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Department:</strong></td>
+                                    <td>{{ payslip.employee.department.name|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Designation:</strong></td>
+                                    <td>{{ payslip.employee.designation.name|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Salary Details</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Bank:</strong></td>
+                                    <td>{{ payslip.employee.bank_name|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Account No:</strong></td>
+                                    <td>{{ payslip.employee.bank_account_number|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tax ID:</strong></td>
+                                    <td>{{ payslip.employee.employee_id }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Salary Breakdown -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">Earnings</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>Basic Salary</td>
+                                            <td class="text-end">৳{{ payslip.basic_salary }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Allowances</td>
+                                            <td class="text-end">৳{{ payslip.allowances }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Overtime Pay</td>
+                                            <td class="text-end">৳{{ payslip.overtime_pay }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Bonus</td>
+                                            <td class="text-end">৳{{ payslip.bonus }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Other Earnings</td>
+                                            <td class="text-end">৳{{ payslip.other_earnings }}</td>
+                                        </tr>
+                                        <tr class="table-success">
+                                            <td><strong>Gross Salary</strong></td>
+                                            <td class="text-end"><strong>৳{{ payslip.gross_salary }}</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">Deductions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>Provident Fund</td>
+                                            <td class="text-end">৳{{ payslip.provident_fund }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tax Deduction</td>
+                                            <td class="text-end">৳{{ payslip.tax_deduction }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Late Attendance</td>
+                                            <td class="text-end">৳{{ payslip.late_attendance_deduction }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Other Deductions</td>
+                                            <td class="text-end">৳{{ payslip.other_deductions }}</td>
+                                        </tr>
+                                        <tr class="table-danger">
+                                            <td><strong>Total Deductions</strong></td>
+                                            <td class="text-end"><strong>৳{{ payslip.total_deductions }}</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Net Salary -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h4 class="mb-0">Net Salary: ৳{{ payslip.net_salary }}</h4>
+                                    <p class="mb-0">Amount in Words: {{ payslip.net_salary|floatformat:0 }} Taka Only</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <p class="mb-1">Employee Signature</p>
+                            <div style="border-bottom: 1px solid #000; width: 200px; height: 30px;"></div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p class="mb-1">Authorized Signature</p>
+                            <div style="border-bottom: 1px solid #000; width: 200px; height: 30px; margin-left: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

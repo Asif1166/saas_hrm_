@@ -102,3 +102,5 @@ class AttendanceRecordAdmin(admin.ModelAdmin):
 @admin.register(HolidayCalendar)
 class HolidayCalendarAdmin(admin.ModelAdmin):
 	list_display = [field.name for field in HolidayCalendar._meta.fields]
+
+admin.site.register(Payhead)

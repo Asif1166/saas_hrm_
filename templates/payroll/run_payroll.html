@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Run Payroll{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Run Payroll</h2>
+        <div class="btn-box">
+            <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-sm btn-primary">All Periods</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Payroll Run Confirmation</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Period Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Period Name:</strong> {{ period.name }}</p>
+                                            <p><strong>Period Type:</strong> {{ period.get_period_type_display }}</p>
+                                            <p><strong>Start Date:</strong> {{ period.start_date|date:"M d, Y" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>End Date:</strong> {{ period.end_date|date:"M d, Y" }}</p>
+                                            <p><strong>Pay Date:</strong> {{ period.pay_date|date:"M d, Y" }}</p>
+                                            <p><strong>Status:</strong> 
+                                                <span class="badge bg-{% if period.status == 'draft' %}warning{% elif period.status == 'processing' %}info{% else %}success{% endif %}">
+                                                    {{ period.get_status_display }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Employees to Process</h6>
+                                    <h2 class="display-4">{{ employee_count }}</h2>
+                                    <p class="mb-0">Active Employees</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <h6><i class="fa-solid fa-exclamation-triangle me-2"></i>Important Notes</h6>
+                        <ul class="mb-0">
+                            <li>This action will calculate salaries for all active employees</li>
+                            <li>Payslips will be generated automatically</li>
+                            <li>Process may take several minutes depending on employee count</li>
+                            <li>Ensure all attendance data is up to date before running payroll</li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-lg btn-success me-3" 
+                                    onclick="return confirm('Are you sure you want to run payroll for this period?')">
+                                <i class="fa-solid fa-play me-2"></i> Run Payroll Now
+                            </button>
+                            <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-lg btn-secondary">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 
+from hrm.models import Payhead
+
 User = get_user_model()
 
 
@@ -131,14 +133,40 @@ class Payslip(BaseOrganizationModel):
     
     def calculate_totals(self):
         """Calculate gross, deductions, and net salary"""
-        self.gross_salary = (self.basic_salary + self.allowances + 
-                           self.overtime_pay + self.bonus + self.other_earnings)
+        # Earnings
+        total_earnings = (self.basic_salary + self.allowances + 
+                         self.overtime_pay + self.bonus + self.other_earnings)
         
-        self.total_deductions = (self.provident_fund + self.tax_deduction + 
-                               self.late_attendance_deduction + self.other_deductions)
+        # Deductions
+        total_deductions = (self.provident_fund + self.tax_deduction + 
+                           self.late_attendance_deduction + self.other_deductions)
         
-        self.net_salary = self.gross_salary - self.total_deductions
-        self.save()
+        self.gross_salary = total_earnings
+        self.total_deductions = total_deductions
+        self.net_salary = total_earnings - total_deductions
+
+
+class PayslipComponent(BaseOrganizationModel):
+    """Detailed breakdown of payslip earnings and deductions"""
+    payslip = models.ForeignKey(Payslip, on_delete=models.CASCADE, related_name='components')
+    payhead = models.ForeignKey(Payhead, on_delete=models.CASCADE, null=True, blank=True)
+    
+    component_type = models.CharField(max_length=20, choices=[
+        ('earning', 'Earning'),
+        ('deduction', 'Deduction')
+    ])
+    component_name = models.CharField(max_length=200)
+    component_code = models.CharField(max_length=20)
+    calculation_type = models.CharField(max_length=20, default='fixed')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    display_order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['component_type', 'display_order', 'component_name']
+    
+    def __str__(self):
+        return f"{self.component_name}: ₹{self.amount}"
+
 
 
 class Allowance(BaseOrganizationModel):

@@ -19,7 +19,7 @@ def login_view(request):
     Login view for all user types (Super Admin, Organization Admin, Employee)
     """
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('authentication:dashboard_redirect')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -36,7 +36,7 @@ def login_view(request):
                     if user.is_super_admin:
                         return redirect('super_admin:dashboard')
                     elif user.is_organization_admin:
-                        return redirect('organization:dashboard')
+                        return redirect('organization:organization_dashboard')
                     else:
                         return redirect('hrm:employee_dashboard')
                 else:

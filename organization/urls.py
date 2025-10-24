@@ -13,7 +13,7 @@ urlpatterns = [
     path('super-admin/organizations/<int:organization_id>/update/', views.update_organization, name='update_organization'),
     
     # Organization Admin URLs
-    path('dashboard/', views.organization_dashboard, name='organization_dashboard'),
+    path('organization/dashboard/', views.organization_dashboard, name='organization_dashboard'),
     
     # Debug URLs
     path('debug/', views.debug_user_info, name='debug'),

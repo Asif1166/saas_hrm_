@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Timetable{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Timetable</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:timetable_list' %}" class="btn btn-sm btn-primary">All Timetables</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="timetableForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Employee & Shift Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-6 col-sm-6">
+                                <label class="form-label">Employee <span class="text-danger">*</span></label>
+                                {{ form.employee }}
+                                {% if form.employee.errors %}
+                                    <div class="text-danger">{{ form.employee.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-4 col-lg-6 col-sm-6">
+                                <label class="form-label">Shift <span class="text-danger">*</span></label>
+                                {{ form.shift }}
+                                {% if form.shift.errors %}
+                                    <div class="text-danger">{{ form.shift.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Schedule Period</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-6 col-sm-6">
+                                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xxl-4 col-lg-6 col-sm-6">
+                                <label class="form-label">End Date</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger">{{ form.end_date.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Leave blank for indefinite schedule</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Working Days</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <p class="text-muted mb-3">Select the days when this employee will work:</p>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.monday }}
+                                    <label class="form-check-label" for="{{ form.monday.id_for_label }}">
+                                        Monday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.tuesday }}
+                                    <label class="form-check-label" for="{{ form.tuesday.id_for_label }}">
+                                        Tuesday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.wednesday }}
+                                    <label class="form-check-label" for="{{ form.wednesday.id_for_label }}">
+                                        Wednesday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.thursday }}
+                                    <label class="form-check-label" for="{{ form.thursday.id_for_label }}">
+                                        Thursday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.friday }}
+                                    <label class="form-check-label" for="{{ form.friday.id_for_label }}">
+                                        Friday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.saturday }}
+                                    <label class="form-check-label" for="{{ form.saturday.id_for_label }}">
+                                        Saturday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-xxl-2 col-lg-3 col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ form.sunday }}
+                                    <label class="form-check-label" for="{{ form.sunday.id_for_label }}">
+                                        Sunday
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectWeekdays">
+                                        Select Weekdays
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectWeekend">
+                                        Select Weekend
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAll">
+                                        Select All
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAll">
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Schedule Preview</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <div id="schedulePreview" class="alert alert-info">
+                                    <strong>Selected Working Days:</strong>
+                                    <span id="selectedDaysText" class="ms-2">No days selected</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'hrm:timetable_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Timetable</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Update schedule preview
+function updateSchedulePreview() {
+    const days = [
+        { id: '{{ form.monday.id_for_label }}', name: 'Monday' },
+        { id: '{{ form.tuesday.id_for_label }}', name: 'Tuesday' },
+        { id: '{{ form.wednesday.id_for_label }}', name: 'Wednesday' },
+        { id: '{{ form.thursday.id_for_label }}', name: 'Thursday' },
+        { id: '{{ form.friday.id_for_label }}', name: 'Friday' },
+        { id: '{{ form.saturday.id_for_label }}', name: 'Saturday' },
+        { id: '{{ form.sunday.id_for_label }}', name: 'Sunday' }
+    ];
+
+    const selectedDays = days.filter(day => {
+        const checkbox = document.getElementById(day.id);
+        return checkbox && checkbox.checked;
+    }).map(day => day.name);
+
+    const selectedDaysText = document.getElementById('selectedDaysText');
+    if (selectedDays.length > 0) {
+        selectedDaysText.textContent = selectedDays.join(', ');
+    } else {
+        selectedDaysText.textContent = 'No days selected';
+    }
+}
+
+// Add event listeners to all day checkboxes
+const dayCheckboxes = [
+    '{{ form.monday.id_for_label }}',
+    '{{ form.tuesday.id_for_label }}',
+    '{{ form.wednesday.id_for_label }}',
+    '{{ form.thursday.id_for_label }}',
+    '{{ form.friday.id_for_label }}',
+    '{{ form.saturday.id_for_label }}',
+    '{{ form.sunday.id_for_label }}'
+];
+
+dayCheckboxes.forEach(id => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) {
+        checkbox.addEventListener('change', updateSchedulePreview);
+    }
+});
+
+// Button handlers
+document.getElementById('selectWeekdays').addEventListener('click', function() {
+    ['{{ form.monday.id_for_label }}', '{{ form.tuesday.id_for_label }}', 
+     '{{ form.wednesday.id_for_label }}', '{{ form.thursday.id_for_label }}', 
+     '{{ form.friday.id_for_label }}'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = true;
+    });
+    ['{{ form.saturday.id_for_label }}', '{{ form.sunday.id_for_label }}'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = false;
+    });
+    updateSchedulePreview();
+});
+
+document.getElementById('selectWeekend').addEventListener('click', function() {
+    ['{{ form.saturday.id_for_label }}', '{{ form.sunday.id_for_label }}'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = true;
+    });
+    ['{{ form.monday.id_for_label }}', '{{ form.tuesday.id_for_label }}', 
+     '{{ form.wednesday.id_for_label }}', '{{ form.thursday.id_for_label }}', 
+     '{{ form.friday.id_for_label }}'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = false;
+    });
+    updateSchedulePreview();
+});
+
+document.getElementById('selectAll').addEventListener('click', function() {
+    dayCheckboxes.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = true;
+    });
+    updateSchedulePreview();
+});
+
+document.getElementById('clearAll').addEventListener('click', function() {
+    dayCheckboxes.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = false;
+    });
+    updateSchedulePreview();
+});
+
+// Initialize preview on page load
+document.addEventListener('DOMContentLoaded', updateSchedulePreview);
+
+// End date validation
+document.getElementById('{{ form.start_date.id_for_label }}').addEventListener('change', function() {
+    const startDate = new Date(this.value);
+    const endDateField = document.getElementById('{{ form.end_date.id_for_label }}');
+    
+    if (endDateField.value) {
+        const endDate = new Date(endDateField.value);
+        if (endDate < startDate) {
+            endDateField.value = '';
+            alert('End date cannot be before start date');
+        }
+    }
+    
+    // Set min attribute for end date
+    endDateField.min = this.value;
+});
+
+// Auto-fill end date to 30 days from start if empty
+document.getElementById('{{ form.start_date.id_for_label }}').addEventListener('change', function() {
+    const endDateField = document.getElementById('{{ form.end_date.id_for_label }}');
+    if (!endDateField.value && this.value) {
+        const startDate = new Date(this.value);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 30); // 30 days from start
+        endDateField.value = endDate.toISOString().split('T')[0];
+    }
+});
+</script>
+
+<style>
+.form-check {
+    padding: 8px 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+}
+
+.form-check-input:checked ~ .form-check-label {
+    font-weight: 600;
+    color: #007bff;
+}
+
+#schedulePreview {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+</style>
+{% endblock %}
