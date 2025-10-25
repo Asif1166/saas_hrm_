@@ -16,7 +16,12 @@
                     <div class="btn-box d-flex flex-wrap gap-2">
                         <div id="tableSearch"></div>
                         <a href="{% url 'payroll:payslips' %}" class="btn btn-sm btn-icon btn-outline-primary"><i class="fa-solid fa-arrows-rotate"></i></a>
+                      <button class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'payroll:payslip_create' %}'">
+                            <i class="fa-solid fa-plus"></i> Add New
+                        </button>
+                    
                     </div>
+                   
                 </div>
                 <div class="panel-body">
                     <!-- Filter Section -->
@@ -68,12 +73,27 @@
                     <div class="table-responsive">
                         <table class="table table-dashed table-hover digi-dataTable all-payslip-table table-striped" id="allPayslipTable">
                             <thead>
+
+
+                                <div class="btn-box d-flex flex-wrap gap-2">
+    <div id="tableSearch"></div>
+<button id="deleteSelectedBtn" class="btn btn-danger btn-sm" style="display:none;">
+    <i class="fas fa-trash-alt"></i> Delete Selected
+</button>
+
+
+</div>
+
+
                                 <tr id="tableHeader">
-                                    <th class="no-sort">
+                                      <th class="no-sort">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="markAllPayslips">
                                         </div>
                                     </th>
+                                    <th>SL</th>
+
+                                  
                                     <th>Action</th>
                                     <th>Employee</th>
                                     <th>Employee ID</th>
@@ -87,13 +107,19 @@
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                {% for payslip in payslips %}
+                            {% for payslip in page_obj %}
+
+
+
+
                                 <tr>
-                                    <td>
+                                      <td>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="payslip_ids" value="{{ payslip.id }}">
+<input class="form-check-input payslip-checkbox" type="checkbox" name="payslip_ids" value="{{ payslip.id }}">
                                         </div>
                                     </td>
+<td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                  
                                     <td>
                                         <div class="digi-dropdown dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">
@@ -111,7 +137,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="#" class="dropdown-item">
+                                                    <a href="{% url 'payroll:payslip_update' payslip.id %}" class="dropdown-item">
                                                         <span class="dropdown-icon"><i class="fa-solid fa-pen-to-square"></i></span> Edit
                                                     </a>
                                                 </li>
@@ -157,13 +183,52 @@
                                     </td>
                                 </tr>
                                 {% endfor %}
+
+  
                             </tbody>
+
+                            
                         </table>
+
+                        
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+
+                                                              <!-- Pagination -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+        Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} payslips
+    </div>
+    <nav>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if period_filter %}&period={{ period_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if period_filter %}&period={{ period_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if period_filter %}&period={{ period_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 
     <!-- footer start -->
     <div class="footer">
@@ -172,5 +237,118 @@
     <!-- footer end -->
 </div>
 <!-- main content end -->
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const markAll = document.getElementById('markAllPayslips');
+    const checkboxes = document.querySelectorAll('.payslip-checkbox');
+
+    // Mark all when master is clicked
+    markAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => cb.checked = markAll.checked);
+    });
+
+    // Update master when any single checkbox changes
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            markAll.checked = [...checkboxes].every(c => c.checked);
+        });
+    });
+});
+</script>
+
+
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const markAll = document.getElementById("markAllPayslips");
+    const checkboxes = document.querySelectorAll(".payslip-checkbox");
+    const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+
+    // Toggle all checkboxes
+    markAll.addEventListener("change", function() {
+        checkboxes.forEach(cb => cb.checked = markAll.checked);
+        toggleDeleteButton();
+    });
+
+    // Show/hide delete button
+    checkboxes.forEach(cb => {
+        cb.addEventListener("change", toggleDeleteButton);
+    });
+
+    function toggleDeleteButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        deleteSelectedBtn.style.display = anyChecked ? "inline-block" : "none";
+    }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Handle Delete
+    deleteSelectedBtn.addEventListener("click", function() {
+        const selectedIds = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => parseInt(cb.value));
+
+        if (selectedIds.length === 0) return;
+
+        Swal.fire({
+            title: "Are you sure?",
+            html: `You are about to delete <b>${selectedIds.length}</b> payslip(s).<br>This action cannot be undone!`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, Delete",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/payslips/delete-multiple/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: JSON.stringify({ ids: selectedIds }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: "Deleted!",
+                            text: data.message,
+                            icon: "success",
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        Swal.fire("Error", data.message, "error");
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+
+
 
 {% endblock %}

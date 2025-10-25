@@ -403,34 +403,45 @@ class ShiftForm(forms.ModelForm):
         self.fields['working_hours'].required = True
 
 
+# forms.py
 class TimetableForm(forms.ModelForm):
+    designation = forms.ModelChoiceField(
+        queryset=Designation.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
+    )
+
     class Meta:
         model = Timetable
-        fields = ['employee', 'shift', 'start_date', 'end_date', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        fields = [
+            'designation', 'employees', 'shift', 'start_date', 'end_date',
+            'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+        ]
         widgets = {
-            'employee': forms.Select(attrs={'class': 'form-control form-control-sm'}),
+            'employees': forms.SelectMultiple(attrs={'class': 'form-control form-control-sm'}),
             'shift': forms.Select(attrs={'class': 'form-control form-control-sm'}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
-            'monday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'tuesday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'wednesday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'thursday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'friday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'saturday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'sunday': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         organization = kwargs.pop('organization', None)
+        designation_id = kwargs.pop('designation_id', None)
         super().__init__(*args, **kwargs)
-        self.fields['employee'].required = True
-        self.fields['shift'].required = True
-        self.fields['start_date'].required = True
-        
+
         if organization:
-            self.fields['employee'].queryset = Employee.objects.filter(organization=organization, is_active=True)
-            self.fields['shift'].queryset = Shift.objects.filter(organization=organization, is_active=True)
+            self.fields['designation'].queryset = Designation.objects.filter(
+                organization=organization, is_active=True
+            )
+            self.fields['shift'].queryset = Shift.objects.filter(
+                organization=organization, is_active=True
+            )
+
+            employee_qs = Employee.objects.filter(organization=organization, is_active=True)
+            if designation_id:
+                employee_qs = employee_qs.filter(designation_id=designation_id)
+            self.fields['employees'].queryset = employee_qs
+
 
 
 class AttendanceDeviceForm(forms.ModelForm):

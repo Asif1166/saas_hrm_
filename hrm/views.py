@@ -14,6 +14,8 @@ from .zkteco_utils import *
 from datetime import date, datetime
 from django.utils import timezone
 from django.urls import reverse
+from datetime import timedelta
+from django.utils.dateparse import parse_date
 
 User = get_user_model()
 
@@ -942,73 +944,119 @@ def update_shift(request, shift_id):
 @login_required
 @organization_admin_required
 def timetable_list(request):
-    """List timetables for the organization"""
+    """List timetables for the organization (supports multi-employee timetables)"""
     organization = request.organization
-    
-    timetables = Timetable.objects.filter(organization=organization).order_by('employee', 'start_date')
-    
-    paginator = Paginator(timetables, 20)
+
+    timetables = Timetable.objects.filter(organization=organization).prefetch_related('employees', 'shift')
+
+    # --- Filtering ---
+    employee_filter = request.GET.get('employee')
+    shift_filter = request.GET.get('shift')
+    status_filter = request.GET.get('status')
+    search_query = request.GET.get('search')
+
+    if employee_filter:
+        timetables = timetables.filter(employees__id=employee_filter)
+
+    if shift_filter:
+        timetables = timetables.filter(shift_id=shift_filter)
+
+    if status_filter == 'active':
+        timetables = timetables.filter(is_active=True)
+    elif status_filter == 'inactive':
+        timetables = timetables.filter(is_active=False)
+
+    if search_query:
+        timetables = timetables.filter(
+            Q(employees__full_name__icontains=search_query) |
+            Q(shift__name__icontains=search_query)
+        ).distinct()
+
+    timetables = timetables.order_by('start_date')
+
+    # Pagination
+    paginator = Paginator(timetables.distinct(), 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
+    # Dropdowns
+    employees = Employee.objects.filter(organization=organization, is_active=True)
+    shifts = Shift.objects.filter(organization=organization, is_active=True)
+
     context = {
         'organization': organization,
         'page_obj': page_obj,
+        'employees': employees,
+        'shifts': shifts,
+        'employee_filter': employee_filter,
+        'shift_filter': shift_filter,
+        'status_filter': status_filter,
+        'search_query': search_query,
     }
     return render(request, 'hrm/timetable_list.html', context)
 
 
+
+# views.py
 @login_required
 @organization_admin_required
 def create_timetable(request):
     """Create new timetable"""
+    organization = request.organization
+
+    # Handle AJAX request to filter employees
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        designation_id = request.GET.get('designation_id')
+        employees = Employee.objects.filter(
+            organization=organization, is_active=True, designation_id=designation_id
+        ).values('id', 'full_name')
+        return JsonResponse(list(employees), safe=False)
+
     if request.method == 'POST':
-        form = TimetableForm(request.POST, organization=request.organization)
+        form = TimetableForm(request.POST, organization=organization)
         if form.is_valid():
             timetable = form.save(commit=False)
-            timetable.organization = request.organization
+            timetable.organization = organization
             timetable.created_by = request.user
             timetable.save()
-            messages.success(request, f'Timetable for "{timetable.employee.full_name}" created successfully!')
+            form.save_m2m()  # save employees many-to-many
+            messages.success(request, "Timetable created successfully!")
             return redirect('hrm:timetable_list')
     else:
-        form = TimetableForm(organization=request.organization)
-    
-    context = {
-        'organization': request.organization,
+        form = TimetableForm(organization=organization)
+
+    return render(request, 'hrm/timetable_form.html', {
+        'organization': organization,
         'form': form,
-    }
-    return render(request, 'hrm/timetable_form.html', context)
+    })
 
 
 @login_required
 @organization_admin_required
 def update_timetable(request, timetable_id):
-    """Update existing timetable"""
-    try:
-        timetable = get_object_or_404(Timetable, id=timetable_id, organization=request.organization)
-    except Timetable.DoesNotExist:
-        messages.error(request, 'Timetable not found.')
-        return redirect('hrm:timetable_list')
+    """Update timetable"""
+    organization = request.organization
+    timetable = get_object_or_404(Timetable, id=timetable_id, organization=organization)
 
     if request.method == 'POST':
-        form = TimetableForm(request.POST, instance=timetable, organization=request.organization)
+        form = TimetableForm(request.POST, instance=timetable, organization=organization)
         if form.is_valid():
             timetable = form.save(commit=False)
             timetable.updated_by = request.user
             timetable.save()
-            messages.success(request, f'Timetable for "{timetable.employee.full_name}" updated successfully!')
+            form.save_m2m()
+            messages.success(request, "Timetable updated successfully!")
             return redirect('hrm:timetable_list')
     else:
-        form = TimetableForm(instance=timetable, organization=request.organization)
+        form = TimetableForm(instance=timetable, organization=organization)
 
-    context = {
-        'organization': request.organization,
+    return render(request, 'hrm/timetable_form.html', {
+        'organization': organization,
         'form': form,
         'timetable': timetable,
         'is_update': True,
-    }
-    return render(request, 'hrm/timetable_form.html', context)
+    })
+
 
 
 # Attendance Device Management Views
@@ -1242,6 +1290,51 @@ def attendance_record_list(request):
         'status_choices': AttendanceRecord.STATUS_CHOICES,
     }
     return render(request, 'hrm/attendance_record_list.html', context)
+
+
+@login_required
+def calculate_attendance_records(request):
+    """Auto-calculate attendance for all employees from timetable & shift"""
+    timetables = Timetable.objects.filter(is_active=True)
+    print("timetables:", timetables)
+
+    if not timetables.exists():
+        messages.warning(request, "No active timetables found.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    count_created, count_updated = 0, 0
+
+    for timetable in timetables:
+        shift = timetable.shift
+        employees = timetable.employees.all()
+
+        start_date = timetable.start_date
+        print("start_date:", start_date)
+        end_date = timetable.end_date or date.today()  # if no end date, calculate up to today
+        print("end_date:", end_date)
+
+        current_date = start_date
+        while current_date <= end_date:
+            weekday = current_date.strftime("%A").lower()
+            if getattr(timetable, weekday):  # Only process working days
+                for emp in employees:
+                    record, created = AttendanceRecord.objects.get_or_create(
+                        organization=timetable.organization,
+                        employee=emp,
+                        date=current_date
+                    )
+                    record.calculate_hours()
+                    if created:
+                        count_created += 1
+                    else:
+                        count_updated += 1
+            current_date += timedelta(days=1)
+
+    messages.success(
+        request,
+        f"✅ Attendance calculated successfully — Created: {count_created}, Updated: {count_updated}"
+    )
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 # Payhead Management Views

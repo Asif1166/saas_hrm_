@@ -25,31 +25,38 @@
         {% csrf_token %}
         
         <div class="row">
-            <div class="col-12">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Employee & Shift Information</h5>
-                    </div>
-                    <div class="panel-body">
-                        <div class="row g-3">
-                            <div class="col-xxl-4 col-lg-6 col-sm-6">
-                                <label class="form-label">Employee <span class="text-danger">*</span></label>
-                                {{ form.employee }}
-                                {% if form.employee.errors %}
-                                    <div class="text-danger">{{ form.employee.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-xxl-4 col-lg-6 col-sm-6">
-                                <label class="form-label">Shift <span class="text-danger">*</span></label>
-                                {{ form.shift }}
-                                {% if form.shift.errors %}
-                                    <div class="text-danger">{{ form.shift.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+
+
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Employee & Shift Information</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row g-3">
+                        <div class="col-xxl-4 col-lg-6 col-sm-6">
+                            <label class="form-label">Designation</label>
+                            {{ form.designation }}
+                        </div>
+                        <div class="col-xxl-4 col-lg-6 col-sm-6">
+                            <label class="form-label">Employees <span class="text-danger">*</span></label>
+                            {{ form.employees }}
+                            {% if form.employees.errors %}
+                                <div class="text-danger">{{ form.employees.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-xxl-4 col-lg-6 col-sm-6">
+                            <label class="form-label">Shift <span class="text-danger">*</span></label>
+                            {{ form.shift }}
+                            {% if form.shift.errors %}
+                                <div class="text-danger">{{ form.shift.errors.0 }}</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+
 
             <div class="col-12">
                 <div class="panel">
@@ -239,11 +246,11 @@ dayCheckboxes.forEach(id => {
 document.getElementById('selectWeekdays').addEventListener('click', function() {
     ['{{ form.monday.id_for_label }}', '{{ form.tuesday.id_for_label }}', 
      '{{ form.wednesday.id_for_label }}', '{{ form.thursday.id_for_label }}', 
-     '{{ form.friday.id_for_label }}'].forEach(id => {
+     '{{ form.sunday.id_for_label }}'].forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = true;
     });
-    ['{{ form.saturday.id_for_label }}', '{{ form.sunday.id_for_label }}'].forEach(id => {
+    ['{{ form.saturday.id_for_label }}', '{{ form.friday.id_for_label }}'].forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = false;
     });
@@ -251,13 +258,13 @@ document.getElementById('selectWeekdays').addEventListener('click', function() {
 });
 
 document.getElementById('selectWeekend').addEventListener('click', function() {
-    ['{{ form.saturday.id_for_label }}', '{{ form.sunday.id_for_label }}'].forEach(id => {
+    ['{{ form.saturday.id_for_label }}', '{{ form.friday.id_for_label }}'].forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = true;
     });
     ['{{ form.monday.id_for_label }}', '{{ form.tuesday.id_for_label }}', 
      '{{ form.wednesday.id_for_label }}', '{{ form.thursday.id_for_label }}', 
-     '{{ form.friday.id_for_label }}'].forEach(id => {
+     '{{ form.sunday.id_for_label }}'].forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = false;
     });
@@ -311,6 +318,38 @@ document.getElementById('{{ form.start_date.id_for_label }}').addEventListener('
     }
 });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const designationSelect = document.getElementById("id_designation");
+    const employeeSelect = document.getElementById("id_employees");
+
+    if (designationSelect) {
+        designationSelect.addEventListener("change", function() {
+            const designationId = this.value;
+            employeeSelect.innerHTML = '<option>Loading...</option>';
+
+            fetch(`?designation_id=${designationId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                employeeSelect.innerHTML = '';
+                data.forEach(emp => {
+                    const option = document.createElement("option");
+                    option.value = emp.id;
+                    option.textContent = emp.full_name;
+                    employeeSelect.appendChild(option);
+                });
+            })
+            .catch(() => {
+                employeeSelect.innerHTML = '<option>Error loading employees</option>';
+            });
+        });
+    }
+});
+</script>
+
 
 <style>
 .form-check {

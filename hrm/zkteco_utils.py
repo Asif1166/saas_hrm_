@@ -540,7 +540,7 @@ class AttendanceSyncManager:
                     punch_time = log['timestamp'].time()
                     
 
-                            # ✅ Append all punch times to notes field
+                    # ✅ Append all punch times to notes field
                     current_notes = attendance_record.notes or ""
                     all_times = [t.strip() for t in current_notes.split(",") if t.strip()]
                     time_str = punch_time.strftime("%H:%M:%S")

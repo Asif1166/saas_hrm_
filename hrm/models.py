@@ -286,9 +286,11 @@ class Shift(BaseOrganizationModel):
 class Timetable(BaseOrganizationModel):
     """
     Timetable model for employee work schedules
+    (shared by multiple employees)
     """
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='timetables')
-    shift = models.ForeignKey(Shift, on_delete=models.CASCADE, related_name='timetables')
+    employees = models.ManyToManyField('Employee', related_name='timetables')
+
+    shift = models.ForeignKey('Shift', on_delete=models.CASCADE, related_name='timetables')
     
     # Schedule period
     start_date = models.DateField()
@@ -306,10 +308,12 @@ class Timetable(BaseOrganizationModel):
     is_active = models.BooleanField(default=True)
     
     class Meta:
-        ordering = ['employee', 'start_date']
+        ordering = ['start_date']
     
     def __str__(self):
-        return f"{self.employee.full_name} - {self.shift.name} ({self.start_date})"
+        employee_names = ", ".join(e.full_name for e in self.employees.all()[:3])
+        more = "..." if self.employees.count() > 3 else ""
+        return f"{employee_names}{more} - {self.shift.name} ({self.start_date})"
     
     @property
     def working_days(self):
@@ -323,6 +327,7 @@ class Timetable(BaseOrganizationModel):
         if self.saturday: days.append('Saturday')
         if self.sunday: days.append('Sunday')
         return days
+
 
 
 class AttendanceDevice(BaseOrganizationModel):
@@ -428,54 +433,101 @@ class AttendanceRecord(BaseOrganizationModel):
         return f"{self.employee.full_name} - {self.date} ({self.status})"
     
     def calculate_hours(self):
-        """Calculate working hours, break hours, and overtime"""
-        if not self.check_in_time or not self.check_out_time:
-            return
-        
-        # Calculate total time
-        from datetime import datetime, date
-        check_in_datetime = datetime.combine(self.date, self.check_in_time)
-        check_out_datetime = datetime.combine(self.date, self.check_out_time)
-        
-        if check_out_datetime <= check_in_datetime:
-            # Handle overnight shifts
-            check_out_datetime = datetime.combine(self.date.replace(day=self.date.day + 1), self.check_out_time)
-        
-        total_seconds = (check_out_datetime - check_in_datetime).total_seconds()
-        self.total_hours = round(total_seconds / 3600, 2)
-        
-        # Calculate break hours
-        if self.break_start_time and self.break_end_time:
-            break_start_datetime = datetime.combine(self.date, self.break_start_time)
-            break_end_datetime = datetime.combine(self.date, self.break_end_time)
-            
-            if break_end_datetime <= break_start_datetime:
-                break_end_datetime = datetime.combine(self.date.replace(day=self.date.day + 1), self.break_end_time)
-            
-            break_seconds = (break_end_datetime - break_start_datetime).total_seconds()
-            self.break_hours = round(break_seconds / 3600, 2)
-        
-        # Calculate working hours (total - break)
-        self.working_hours = self.total_hours - self.break_hours
-        
-        # Get employee's shift for overtime calculation
-        try:
-            timetable = Timetable.objects.filter(
-                employee=self.employee,
+        """Calculate working hours, late/early flags, overtime, and status from shift + timetable"""
+        from datetime import datetime, timedelta
+
+        # Step 1: Find applicable timetable
+        timetable = (
+            Timetable.objects.filter(
+                employees=self.employee,
                 start_date__lte=self.date,
                 is_active=True
-            ).order_by('-start_date').first()
-            
-            if timetable and timetable.shift:
-                shift = timetable.shift
-                if self.working_hours > shift.overtime_start_after_hours:
-                    self.overtime_hours = self.working_hours - shift.overtime_start_after_hours
-                else:
-                    self.overtime_hours = 0.00
-        except:
-            pass
-        
+            )
+            .filter(models.Q(end_date__gte=self.date) | models.Q(end_date__isnull=True))
+            .order_by('-start_date')
+            .first()
+        )
+
+        if not timetable:
+            self.status = 'absent'
+            self.save()
+            return
+
+        shift = timetable.shift
+
+        # Step 2: Skip if it's off day
+        weekday = self.date.strftime("%A").lower()
+        if not getattr(timetable, weekday):
+            self.status = 'holiday'
+            self.save()
+            return
+
+        # Step 3: Ensure check-in/out times exist
+        if not self.check_in_time or not self.check_out_time:
+            self.status = 'absent'
+            self.save()
+            return
+
+        check_in_dt = datetime.combine(self.date, self.check_in_time)
+        check_out_dt = datetime.combine(self.date, self.check_out_time)
+        shift_start_dt = datetime.combine(self.date, shift.start_time)
+        shift_end_dt = datetime.combine(self.date, shift.end_time)
+
+        # Handle overnight shifts (e.g., ends next day)
+        if shift_end_dt <= shift_start_dt:
+            shift_end_dt += timedelta(days=1)
+        if check_out_dt <= check_in_dt:
+            check_out_dt += timedelta(days=1)
+
+        # Step 4: Calculate base hours
+        total_seconds = (check_out_dt - check_in_dt).total_seconds()
+        self.total_hours = round(total_seconds / 3600, 2)
+
+        # Step 5: Calculate break hours (either from record or shift)
+        break_hours = 0.00
+        if self.break_start_time and self.break_end_time:
+            break_start_dt = datetime.combine(self.date, self.break_start_time)
+            break_end_dt = datetime.combine(self.date, self.break_end_time)
+            if break_end_dt <= break_start_dt:
+                break_end_dt += timedelta(days=1)
+            break_hours = round((break_end_dt - break_start_dt).total_seconds() / 3600, 2)
+        elif shift.break_start_time and shift.break_end_time:
+            break_start_dt = datetime.combine(self.date, shift.break_start_time)
+            break_end_dt = datetime.combine(self.date, shift.break_end_time)
+            if break_end_dt <= break_start_dt:
+                break_end_dt += timedelta(days=1)
+            break_hours = round((break_end_dt - break_start_dt).total_seconds() / 3600, 2)
+
+        self.break_hours = break_hours
+        self.working_hours = round(self.total_hours - self.break_hours, 2)
+
+        # Step 6: Late & early calculations
+        grace_minutes = shift.grace_period_minutes
+        late_diff = (check_in_dt - shift_start_dt).total_seconds() / 60
+        early_diff = (shift_end_dt - check_out_dt).total_seconds() / 60
+
+        self.is_late = late_diff > grace_minutes
+        self.late_minutes = int(late_diff) if self.is_late else 0
+
+        self.is_early_departure = early_diff > grace_minutes
+        self.early_departure_minutes = int(early_diff) if self.is_early_departure else 0
+
+        # Step 7: Overtime calculation
+        if self.working_hours > float(shift.overtime_start_after_hours):
+            self.overtime_hours = round(self.working_hours - float(shift.overtime_start_after_hours), 2)
+        else:
+            self.overtime_hours = 0.00
+
+        # Step 8: Determine attendance status
+        if self.total_hours < (float(shift.working_hours) / 2):
+            self.status = 'half_day'
+        elif self.is_late:
+            self.status = 'late'
+        else:
+            self.status = 'present'
+
         self.save()
+
 
 
 class Payhead(BaseOrganizationModel):

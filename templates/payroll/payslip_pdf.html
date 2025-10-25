@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payslip</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+        
+        .container {
+            width: 100%;
+            padding: 20px;
+            background: #ffffff;
+        }
+        
+        /* Header Styling */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #2980b9;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            letter-spacing: 3px;
+        }
+        
+        .header .company-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2980b9;
+            padding: 8px 0;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .header .company-address {
+            font-size: 13px;
+            color: #7f8c8d;
+            line-height: 1.5;
+            margin-top: 5px;
+        }
+        
+        /* Info Section */
+        .info-section {
+            margin-bottom: 25px;
+            background: #ecf0f1;
+            padding: 18px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .info-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-section table td {
+            padding: 6px 12px;
+            border: none;
+            font-size: 12px;
+        }
+        
+        .info-section table td:first-child {
+            width: 50%;
+        }
+        
+        .info-label {
+            display: inline-block;
+            width: 135px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .info-value {
+            color: #34495e;
+            font-weight: 500;
+        }
+        
+        /* Earnings Table */
+        .earnings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            border: 2px solid #2980b9;
+        }
+        
+        .earnings-table th {
+            background: #34495e;
+            color: #ffffff;
+            border: 1px solid #2c3e50;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .earnings-table td {
+            border: 1px solid #bdc3c7;
+            padding: 10px 12px;
+            font-size: 12px;
+            background: #ffffff;
+        }
+        
+        .earnings-table tbody tr:nth-child(odd) td {
+            background: #f8f9fa;
+        }
+        
+        .earnings-table .amount-cell {
+            text-align: right;
+            width: 18%;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .earnings-table .label-cell {
+            width: 32%;
+            color: #34495e;
+            font-weight: 500;
+        }
+        
+        .earnings-table .total-row td {
+            font-weight: 700;
+            background: #d6eaf8 !important;
+            color: #1565c0;
+            font-size: 13px;
+            border-top: 2px solid #2980b9;
+            border-bottom: 2px solid #2980b9;
+        }
+        
+        .earnings-table .net-pay-row td {
+            font-weight: 700;
+            background: #2980b9 !important;
+            color: #ffffff;
+            font-size: 14px;
+            padding: 14px 12px;
+            border: 2px solid #2980b9;
+        }
+        
+        /* Amount in Words */
+        .amount-words {
+            text-align: center;
+            margin: 35px 0;
+            padding: 20px;
+            background: #ecf0f1;
+            border: 3px solid #3498db;
+            border-radius: 5px;
+        }
+        
+        .amount-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #27ae60;
+            color: #ffffff;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .amount-number {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .amount-text {
+            font-size: 13px;
+            color: #34495e;
+            font-style: italic;
+            text-transform: capitalize;
+            font-weight: 500;
+        }
+        
+        /* Signature Section */
+        .signature-section {
+            margin: 45px 0 25px 0;
+        }
+        
+        .signature-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .signature-section td {
+            width: 50%;
+            text-align: center;
+            padding: 15px;
+            vertical-align: bottom;
+        }
+        
+        .signature-label {
+            font-size: 12px;
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 65px;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #2c3e50;
+            width: 60%;
+            margin: 0 auto;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px solid #bdc3c7;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        /* Decorative Line */
+        .decorative-line {
+            height: 3px;
+            background: #3498db;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>PAYSLIP</h1>
+            <div class="company-name">{{ organization.name }}</div>
+            {% if organization.address %}
+            <div class="company-address">{{ organization.address }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Employee Information -->
+        <div class="info-section">
+            <table>
+                <tr>
+                    <td>
+                        <span class="info-label">Date of Joining</span>
+                        <span class="info-value">: {{ payslip.employee.date_joined|date:"d M, Y"|default:"N/A" }}</span>
+                    </td>
+                    <td>
+                        <span class="info-label">Employee Name</span>
+                        <span class="info-value">: {{ payslip.employee.full_name }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="info-label">Pay Period</span>
+                        <span class="info-value">: {{ payslip.month|date:"F Y" }}</span>
+                    </td>
+                    <td>
+                        <span class="info-label">Designation</span>
+                        <span class="info-value">: {{ payslip.employee.designation|default:"N/A" }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="info-label">Worked Days</span>
+                        <span class="info-value">: {{ payslip.worked_days|default:"0" }}</span>
+                    </td>
+                    <td>
+                        <span class="info-label">Department</span>
+                        <span class="info-value">: {{ payslip.employee.department|default:"N/A" }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="decorative-line"></div>
+        
+        <!-- Earnings and Deductions Table -->
+        <table class="earnings-table">
+            <thead>
+                <tr>
+                    <th class="label-cell">Earnings</th>
+                    <th class="amount-cell">Amount</th>
+                    <th class="label-cell">Deductions</th>
+                    <th class="amount-cell">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="label-cell">Basic Salary</td>
+                    <td class="amount-cell">{{ payslip.basic_salary|floatformat:2 }}</td>
+                    <td class="label-cell">Provident Fund</td>
+                    <td class="amount-cell">{{ payslip.provident_fund|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td class="label-cell">Incentive Pay</td>
+                    <td class="amount-cell">{{ payslip.incentive_pay|default:0|floatformat:2 }}</td>
+                    <td class="label-cell">Professional Tax</td>
+                    <td class="amount-cell">{{ payslip.professional_tax|default:0|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td class="label-cell">House Rent Allowance</td>
+                    <td class="amount-cell">{{ payslip.house_rent_allowance|default:0|floatformat:2 }}</td>
+                    <td class="label-cell">Loan Deduction</td>
+                    <td class="amount-cell">{{ payslip.loan|default:0|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td class="label-cell">Meal Allowance</td>
+                    <td class="amount-cell">{{ payslip.meal_allowance|default:0|floatformat:2 }}</td>
+                    <td class="label-cell">Other Deductions</td>
+                    <td class="amount-cell">{{ payslip.other_deductions|default:0|floatformat:2 }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="label-cell">Total Earnings</td>
+                    <td class="amount-cell">{{ payslip.gross_salary|floatformat:2 }}</td>
+                    <td class="label-cell">Total Deductions</td>
+                    <td class="amount-cell">{{ payslip.total_deductions|floatformat:2 }}</td>
+                </tr>
+                <tr class="net-pay-row">
+                    <td class="label-cell" colspan="2">&nbsp;</td>
+                    <td class="label-cell">NET PAY</td>
+                    <td class="amount-cell">{{ payslip.net_salary|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Amount in Words -->
+        <div class="amount-words">
+            <div class="amount-number">
+                <span class="amount-icon">₹</span>{{ payslip.net_salary|floatformat:2 }}
+            </div>
+            <div class="amount-text">{{ payslip.net_salary_in_words }}</div>
+        </div>
+        
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <table>
+                <tr>
+                    <td>
+                        <div class="signature-label">Employer Signature</div>
+                        <div class="signature-line"></div>
+                    </td>
+                    <td>
+                        <div class="signature-label">Employee Signature</div>
+                        <div class="signature-line"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            This is a system generated payslip and does not require a signature
+        </div>
+    </div>
+</body>
+</html>

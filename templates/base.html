@@ -60,66 +60,30 @@
   <script src="{% static 'assets/js/main.js' %}"></script>
 
 
-
-  <!-- Toast Container -->
-<div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3"></div>
-
-<!-- Toast Script -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const messages = [
-        {% for message in messages %}
-        {
-            level: "{{ message.tags }}",
-            text: "{{ message|escapejs }}"
-        },
-        {% endfor %}
-    ];
-
-    messages.forEach((msg) => {
-        showToast(msg.text, msg.level);
-    });
-
-    function showToast(message, level) {
-        const container = document.getElementById("toast-container");
-
-        const toast = document.createElement("div");
-        toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white animate-slide-in-right transition-opacity duration-300
-            ${level === 'success' ? 'bg-green-500' :
-              level === 'error' ? 'bg-red-500' :
-              level === 'warning' ? 'bg-yellow-500 text-gray-900' :
-              'bg-blue-500'}
-        `;
-
-        toast.innerHTML = `
-            <i class="fa-solid ${level === 'success' ? 'fa-circle-check' :
-                                 level === 'error' ? 'fa-triangle-exclamation' :
-                                 level === 'warning' ? 'fa-circle-exclamation' :
-                                 'fa-circle-info'}"></i>
-            <span class="font-medium">${message}</span>
-        `;
-
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('opacity-0');
-            setTimeout(() => toast.remove(), 500);
-        }, 5000); // Hide after 5s
-    }
-});
-</script>
-
-<!-- Toast Animation -->
 <style>
-@keyframes slide-in-right {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+/* Make calendar icon visible in all browsers */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    display: block;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E") no-repeat center;
+    background-size: 18px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin-left: 5px;
 }
-.animate-slide-in-right {
-  animation: slide-in-right 0.4s ease forwards;
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 0.7;
+}
+
+/* Remove default styling conflicts */
+input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 </style>
-
 
 </body>
 

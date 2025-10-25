@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Payroll Period{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Payroll Period</h2>
+        <div class="btn-box">
+            <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-sm btn-primary">All Periods</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="periodForm">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Period Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Period Type</label>
+                                {{ form.period_type }}
+                                {% if form.period_type.errors %}
+                                    <div class="text-danger">{{ form.period_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger">{{ form.status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">End Date <span class="text-danger">*</span></label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger">{{ form.end_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Pay Date <span class="text-danger">*</span></label>
+                                {{ form.pay_date }}
+                                {% if form.pay_date.errors %}
+                                    <div class="text-danger">{{ form.pay_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">
+                    {% if is_update %}Update{% else %}Save{% endif %} Period
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+
+{% endblock %}

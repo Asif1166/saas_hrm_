@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Payslip{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>{% if is_update %}Update{% else %}Add{% endif %} Payslip</h2>
+        <div class="btn-box">
+            <a href="{% url 'payroll:payslips' %}" class="btn btn-sm btn-primary">All Payslips</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="payslipForm">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Employee & Period Information</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Employee <span class="text-danger">*</span></label>
+                                {{ form.employee }}
+                                {% if form.employee.errors %}
+                                    <div class="text-danger">{{ form.employee.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Payroll Period <span class="text-danger">*</span></label>
+                                {{ form.payroll_period }}
+                                {% if form.payroll_period.errors %}
+                                    <div class="text-danger">{{ form.payroll_period.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Salary Structure</label>
+                                {{ form.salary_structure }}
+                                {% if form.salary_structure.errors %}
+                                    <div class="text-danger">{{ form.salary_structure.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Earnings Section -->
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Earnings</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Basic Salary</label>
+                                {{ form.basic_salary }}
+                                {% if form.basic_salary.errors %}
+                                    <div class="text-danger">{{ form.basic_salary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Allowances</label>
+                                {{ form.allowances }}
+                                {% if form.allowances.errors %}
+                                    <div class="text-danger">{{ form.allowances.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Overtime Pay</label>
+                                {{ form.overtime_pay }}
+                                {% if form.overtime_pay.errors %}
+                                    <div class="text-danger">{{ form.overtime_pay.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Bonus</label>
+                                {{ form.bonus }}
+                                {% if form.bonus.errors %}
+                                    <div class="text-danger">{{ form.bonus.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Other Earnings</label>
+                                {{ form.other_earnings }}
+                                {% if form.other_earnings.errors %}
+                                    <div class="text-danger">{{ form.other_earnings.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deductions Section -->
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Deductions</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Provident Fund</label>
+                                {{ form.provident_fund }}
+                                {% if form.provident_fund.errors %}
+                                    <div class="text-danger">{{ form.provident_fund.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Tax Deduction</label>
+                                {{ form.tax_deduction }}
+                                {% if form.tax_deduction.errors %}
+                                    <div class="text-danger">{{ form.tax_deduction.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Late Attendance Deduction</label>
+                                {{ form.late_attendance_deduction }}
+                                {% if form.late_attendance_deduction.errors %}
+                                    <div class="text-danger">{{ form.late_attendance_deduction.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                <label class="form-label">Other Deductions</label>
+                                {{ form.other_deductions }}
+                                {% if form.other_deductions.errors %}
+                                    <div class="text-danger">{{ form.other_deductions.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 d-flex justify-content-end">
+                <a href="{% url 'payroll:payslips' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-sm btn-success">
+                    {% if is_update %}Update{% else %}Save{% endif %} Payslip
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

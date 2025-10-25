@@ -5,12 +5,17 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
 from organization.decorators import organization_member_required
+from payroll.forms import PayrollPeriodForm, PayslipForm
 from .models import PayrollPeriod, Payslip, SalaryStructure, Allowance, Deduction
 from hrm.models import Employee
 from .services import PayrollProcessor
 import json
 from django.utils import timezone
-
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
+from django.template.loader import get_template
+from django.http import HttpResponse
+from xhtml2pdf import pisa
 
 @login_required
 @organization_member_required
@@ -102,6 +107,54 @@ def payroll_periods(request):
 
 @login_required
 @organization_member_required
+def create_payroll_period(request):
+    """Create a new payroll period"""
+    organization = request.organization
+    form = PayrollPeriodForm(request.POST or None)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            period = form.save(commit=False)
+            period.organization = organization
+            period.created_by = request.user
+            period.save()
+            messages.success(request, f'Payroll period "{period.name}" created successfully!')
+            return redirect('payroll_periods')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+
+    context = {
+        'form': form,
+        'is_update': False,
+    }
+    return render(request, 'payroll/period_form.html', context)
+
+
+@login_required
+@organization_member_required
+def update_payroll_period(request, pk):
+    """Update an existing payroll period"""
+    organization = request.organization
+    period = get_object_or_404(PayrollPeriod, pk=pk, organization=organization)
+    form = PayrollPeriodForm(request.POST or None, instance=period)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Payroll period "{period.name}" updated successfully!')
+            return redirect('payroll_periods')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+
+    context = {
+        'form': form,
+        'is_update': True,
+        'period': period,
+    }
+    return render(request, 'payroll/period_form.html', context)
+
+@login_required
+@organization_member_required
 def run_payroll(request, period_id):
     """Run payroll for a specific period"""
     organization = request.organization
@@ -173,19 +226,21 @@ def payroll_summary(request, period_id):
         }, status=400)
 
 
+
+
 @login_required
 @organization_member_required
 def payslips(request):
     """Manage payslips for the organization"""
     organization = request.organization
-    
+
     # Filter parameters
     period_id = request.GET.get('period')
     employee_id = request.GET.get('employee')
     status = request.GET.get('status')
-    
+
     payslips = Payslip.objects.filter(organization=organization)
-    
+
     # Apply filters
     if period_id:
         payslips = payslips.filter(payroll_period_id=period_id)
@@ -193,21 +248,60 @@ def payslips(request):
         payslips = payslips.filter(employee_id=employee_id)
     if status:
         payslips = payslips.filter(is_generated=(status == 'generated'))
-    
+
     payslips = payslips.select_related('employee', 'payroll_period').order_by('-payroll_period__start_date')
-    
+
+    # Pagination setup
+    paginator = Paginator(payslips, 10)  # show 10 payslips per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # Available filters
     periods = PayrollPeriod.objects.filter(organization=organization)
     employees = Employee.objects.filter(organization=organization, employment_status='active')
-    
+
     context = {
         'organization': organization,
-        'payslips': payslips,
+        'page_obj': page_obj,  # pagination object
         'periods': periods,
         'employees': employees,
+        'period_filter': period_id,
+        'employee_filter': employee_id,
+        'status_filter': status,
     }
     return render(request, 'payroll/payslips.html', context)
 
+def payslip_create(request):
+    if request.method == "POST":
+        form = PayslipForm(request.POST, organization=request.organization)
+        if form.is_valid():
+            payslip = form.save(commit=False)
+            payslip.organization = request.organization
+            payslip.calculate_totals()
+            payslip.save()
+            messages.success(request, "Payslip created successfully!")
+            return redirect('payroll:payslips')
+    else:
+        form = PayslipForm(organization=request.organization)
+
+    return render(request, 'payroll/payslip_form.html', {'form': form, 'is_update': False})
+
+
+def payslip_update(request, pk):
+    payslip = get_object_or_404(Payslip, pk=pk, organization=request.organization)
+
+    if request.method == "POST":
+        form = PayslipForm(request.POST, instance=payslip, organization=request.organization)
+        if form.is_valid():
+            payslip = form.save(commit=False)
+            payslip.calculate_totals()
+            payslip.save()
+            messages.success(request, "Payslip updated successfully!")
+            return redirect('payroll:payslips')
+    else:
+        form = PayslipForm(instance=payslip, organization=request.organization)
+
+    return render(request, 'payroll/payslip_form.html', {'form': form, 'is_update': True})
 
 @login_required
 @organization_member_required
@@ -232,24 +326,53 @@ def payslip_detail(request, payslip_id):
 def generate_payslip_pdf(request, payslip_id):
     """Generate PDF for individual payslip"""
     organization = request.organization
-    payslip = get_object_or_404(
-        Payslip, 
-        id=payslip_id, 
-        organization=organization
-    )
-    
-    # Mark as generated if not already
+    payslip = get_object_or_404(Payslip, id=payslip_id, organization=organization)
+
+    # Mark as generated
     if not payslip.is_generated:
         payslip.is_generated = True
         payslip.generated_at = timezone.now()
         payslip.save()
+
+    # Load template
+    template_path = 'payroll/payslip_pdf.html'
+    context = {'payslip': payslip, 'organization': organization}
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # Create PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename="Payslip_{payslip.employee.full_name}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        messages.error(request, "Error generating PDF.")
+        return redirect('payroll:payslip_detail', payslip_id=payslip_id)
+
+    return response
+
+
+
+@login_required
+@organization_member_required
+def delete_multiple_payslips(request):
+    """Delete multiple payslips"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ids = data.get('ids', [])
+            if not ids:
+                return JsonResponse({'success': False, 'message': 'No payslips selected.'})
+
+            Payslip.objects.filter(id__in=ids, organization=request.organization).delete()
+            return JsonResponse({'success': True, 'message': f'{len(ids)} payslip(s) deleted successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
     
-    # PDF generation logic would go here
-    # For now, redirect to detail page
-    messages.success(request, 'Payslip PDF generated successfully!')
-    return redirect('payroll:payslip_detail', payslip_id=payslip_id)
-
-
 @login_required
 @organization_member_required
 def salary_structures(request):

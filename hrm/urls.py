@@ -69,7 +69,8 @@ urlpatterns = [
 
     # Attendance Management (Legacy)
     path('attendance/', views.attendance_list, name='attendance_list'),
-    
+    path('calculate/', views.calculate_attendance_records, name='calculate_attendance'),
+
     # Leave Management
     path('leaves/', views.leave_list, name='leave_list'),
     path('leaves/<int:pk>/', views.leave_detail, name='leave_detail'),

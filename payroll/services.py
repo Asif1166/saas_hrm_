@@ -164,10 +164,10 @@ class PayrollProcessor:
             return Decimal('0.00')
     
     def _calculate_earnings(self, employee, period, basic_salary, attendance_data):
-        """Calculate all earning components"""
+        """Calculate all earning components — merge employee + organization payheads"""
         earnings = []
-        
-        # Get employee payheads
+
+        # Employee-specific earning payheads
         employee_payheads = EmployeePayhead.objects.filter(
             organization=self.organization,
             employee=employee,
@@ -178,16 +178,35 @@ class PayrollProcessor:
         ).filter(
             Q(effective_to__isnull=True) | Q(effective_to__gte=period.start_date)
         ).select_related('payhead').order_by('payhead__display_order')
-        
-        # If no employee payheads, use organization defaults
-        if not employee_payheads.exists():
-            org_payheads = Payhead.objects.filter(
-                organization=self.organization,
-                payhead_type='earning',
-                is_active=True
-            ).order_by('display_order')
-            
-            for payhead in org_payheads:
+
+        emp_payhead_codes = [ep.payhead.code for ep in employee_payheads]
+
+        # Always get all org-level earning payheads
+        org_payheads = Payhead.objects.filter(
+            organization=self.organization,
+            payhead_type='earning',
+            is_active=True
+        ).order_by('display_order')
+
+        # 1️⃣ Employee-specific payheads (override)
+        for emp_payhead in employee_payheads:
+            amount = emp_payhead.get_effective_amount(
+                base_amount=basic_salary,
+                attendance_hours=attendance_data.get('total_working_hours', 0),
+                overtime_hours=attendance_data.get('total_overtime_hours', 0),
+                production_units=0
+            )
+            earnings.append({
+                'payhead_id': emp_payhead.payhead.id,
+                'payhead_code': emp_payhead.payhead.code,
+                'payhead_name': emp_payhead.payhead.name,
+                'calculation_type': emp_payhead.payhead.calculation_type,
+                'amount': amount
+            })
+
+        # 2️⃣ Add missing org-level earning payheads (not defined for employee)
+        for payhead in org_payheads:
+            if payhead.code not in emp_payhead_codes:
                 amount = self._calculate_payhead_amount(
                     payhead, None, basic_salary, attendance_data
                 )
@@ -198,29 +217,14 @@ class PayrollProcessor:
                     'calculation_type': payhead.calculation_type,
                     'amount': amount
                 })
-        else:
-            for emp_payhead in employee_payheads:
-                amount = emp_payhead.get_effective_amount(
-                    base_amount=basic_salary,
-                    attendance_hours=attendance_data.get('total_working_hours', 0),
-                    overtime_hours=attendance_data.get('total_overtime_hours', 0),
-                    production_units=0
-                )
-                earnings.append({
-                    'payhead_id': emp_payhead.payhead.id,
-                    'payhead_code': emp_payhead.payhead.code,
-                    'payhead_name': emp_payhead.payhead.name,
-                    'calculation_type': emp_payhead.payhead.calculation_type,
-                    'amount': amount
-                })
-        
+
         return earnings
+
     
     def _calculate_deductions(self, employee, period, basic_salary, attendance_data):
-        """Calculate all deduction components"""
+        """Calculate all deduction components — merge employee + organization payheads"""
         deductions = []
-        
-        # Get employee payheads
+
         employee_payheads = EmployeePayhead.objects.filter(
             organization=self.organization,
             employee=employee,
@@ -231,16 +235,32 @@ class PayrollProcessor:
         ).filter(
             Q(effective_to__isnull=True) | Q(effective_to__gte=period.start_date)
         ).select_related('payhead').order_by('payhead__display_order')
-        
-        # If no employee payheads, use organization defaults
-        if not employee_payheads.exists():
-            org_payheads = Payhead.objects.filter(
-                organization=self.organization,
-                payhead_type='deduction',
-                is_active=True
-            ).order_by('display_order')
-            
-            for payhead in org_payheads:
+
+        emp_payhead_codes = [ep.payhead.code for ep in employee_payheads]
+
+        org_payheads = Payhead.objects.filter(
+            organization=self.organization,
+            payhead_type='deduction',
+            is_active=True
+        ).order_by('display_order')
+
+        for emp_payhead in employee_payheads:
+            amount = emp_payhead.get_effective_amount(
+                base_amount=basic_salary,
+                attendance_hours=attendance_data.get('total_working_hours', 0),
+                overtime_hours=attendance_data.get('total_overtime_hours', 0),
+                production_units=0
+            )
+            deductions.append({
+                'payhead_id': emp_payhead.payhead.id,
+                'payhead_code': emp_payhead.payhead.code,
+                'payhead_name': emp_payhead.payhead.name,
+                'calculation_type': emp_payhead.payhead.calculation_type,
+                'amount': amount
+            })
+
+        for payhead in org_payheads:
+            if payhead.code not in emp_payhead_codes:
                 amount = self._calculate_payhead_amount(
                     payhead, None, basic_salary, attendance_data
                 )
@@ -251,23 +271,9 @@ class PayrollProcessor:
                     'calculation_type': payhead.calculation_type,
                     'amount': amount
                 })
-        else:
-            for emp_payhead in employee_payheads:
-                amount = emp_payhead.get_effective_amount(
-                    base_amount=basic_salary,
-                    attendance_hours=attendance_data.get('total_working_hours', 0),
-                    overtime_hours=attendance_data.get('total_overtime_hours', 0),
-                    production_units=0
-                )
-                deductions.append({
-                    'payhead_id': emp_payhead.payhead.id,
-                    'payhead_code': emp_payhead.payhead.code,
-                    'payhead_name': emp_payhead.payhead.name,
-                    'calculation_type': emp_payhead.payhead.calculation_type,
-                    'amount': amount
-                })
-        
+
         return deductions
+
     
     def _calculate_payhead_amount(self, payhead, employee_payhead, basic_salary, attendance_data):
         """Calculate amount for a payhead"""

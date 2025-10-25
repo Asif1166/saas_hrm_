@@ -135,24 +135,28 @@
                                             </ul>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if timetable.employee.profile_picture %}
-                                                <img src="{{ timetable.employee.profile_picture.url }}" alt="{{ timetable.employee.full_name }}" class="rounded-circle me-2" width="32" height="32">
-                                            {% else %}
-                                                <div class="avatar-placeholder rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: #e9ecef;">
-                                                    <i class="fa-solid fa-user text-muted"></i>
-                                                </div>
-                                            {% endif %}
-                                            <div>
-                                                <strong>{{ timetable.employee.full_name }}</strong>
-                                                {% if timetable.employee.designation %}
-                                                    <br>
-                                                    <small class="text-muted">{{ timetable.employee.designation.name }}</small>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </td>
+                                  <td>
+    {% for emp in timetable.employees.all %}
+        <div class="d-flex align-items-center mb-1">
+            {% if emp.profile_picture %}
+                <img src="{{ emp.profile_picture.url }}" alt="{{ emp.full_name }}" class="rounded-circle me-2" width="32" height="32">
+            {% else %}
+                <div class="avatar-placeholder rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: #e9ecef;">
+                    <i class="fa-solid fa-user text-muted"></i>
+                </div>
+            {% endif %}
+            <div>
+                <strong>{{ emp.full_name }}</strong>
+                {% if emp.designation %}
+                    <br><small class="text-muted">{{ emp.designation.name }}</small>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <span class="text-muted">No employees assigned</span>
+    {% endfor %}
+</td>
+
                                     <td>
                                         <div>
                                             <strong>{{ timetable.shift.name }}</strong>
