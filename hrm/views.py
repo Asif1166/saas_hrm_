@@ -762,7 +762,7 @@ def attendance_list(request):
     # --- Search filter (by name, ID, or email) ---
     if search_query:
         attendances = attendances.filter(
-            Q(employee__full_name__icontains=search_query) |
+            Q(employee__first_name__icontains=search_query) |
             Q(employee__employee_id__icontains=search_query) |
             Q(employee__user__email__icontains=search_query)
         )

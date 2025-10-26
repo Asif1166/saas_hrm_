@@ -103,11 +103,13 @@ class EmployeeRoleForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control form-control-sm'}),
             'permissions': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Enter permissions as JSON or comma-separated values', 'class': 'form-control form-control-sm'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
+        self.organization = kwargs.pop('organization', None)  # <-- remove 'organization' from kwargs
         super().__init__(*args, **kwargs)
         self.fields['name'].required = True
         self.fields['code'].required = True
+
 
 class EmployeeForm(forms.ModelForm):
     # User account fields

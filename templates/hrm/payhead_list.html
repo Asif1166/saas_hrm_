@@ -10,13 +10,13 @@
         <div class="col-12">
             <div class="panel">
                 <div class="panel-header d-flex justify-content-between align-items-center">
-                    <h5>Pay Head Records</h5>
+                    <h5>All Pay Heads</h5>
                     <div class="btn-box d-flex flex-wrap gap-2">
-                        <a href="{% url 'hrm:create_payhead' %}" class="btn btn-sm btn-success">
-                            <i class="fa-solid fa-plus"></i> Add Pay Head
-                        </a>
                         <a href="{% url 'hrm:payhead_list' %}" class="btn btn-sm btn-icon btn-outline-primary">
                             <i class="fa-solid fa-arrows-rotate"></i>
+                        </a>
+                        <a href="{% url 'hrm:create_payhead' %}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add New
                         </a>
                     </div>
                 </div>
@@ -24,18 +24,16 @@
                 <div class="panel-body">
 
                     <!-- Filter Section -->
-                    <div class="table-filter-option mb-3">
-                        <form method="get" class="row g-3 align-items-end">
-
-                            <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="table-filter-option">
+                        <form method="get" class="row g-3">
+                            <div class="col-xl-3 col-6 col-xs-12">
                                 <select name="payhead_type" class="form-control form-control-sm">
                                     <option value="">All Payhead Types</option>
                                     <option value="earning" {% if payhead_type_filter == 'earning' %}selected{% endif %}>Earning</option>
                                     <option value="deduction" {% if payhead_type_filter == 'deduction' %}selected{% endif %}>Deduction</option>
                                 </select>
                             </div>
-
-                            <div class="col-lg-3 col-md-4 col-sm-6">
+                            <div class="col-xl-3 col-6 col-xs-12">
                                 <select name="calculation_type" class="form-control form-control-sm">
                                     <option value="">All Calculation Types</option>
                                     <option value="fixed" {% if calculation_filter == 'fixed' %}selected{% endif %}>Fixed Amount</option>
@@ -44,28 +42,31 @@
                                     <option value="overtime" {% if calculation_filter == 'overtime' %}selected{% endif %}>Based on Overtime</option>
                                 </select>
                             </div>
-
-                            <div class="col-lg-4 col-md-6 col-sm-8">
+                            <div class="col-xl-4 col-6 col-xs-12">
                                 <input type="text" name="search" class="form-control form-control-sm"
                                        placeholder="Search by name or code"
                                        value="{{ search_query|default:'' }}">
                             </div>
-
-                            <div class="col-lg-2 col-md-6 col-sm-4 text-end">
-                                <button type="submit" class="btn btn-sm btn-primary w-100">
+                            <div class="col-xl-2 col-6 col-xs-12 d-flex gap-2">
+                                <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
                                     <i class="fa-solid fa-filter"></i> Filter
                                 </button>
+                                <a href="{% url 'hrm:payhead_list' %}" class="btn btn-sm btn-outline-secondary flex-grow-1">Clear</a>
                             </div>
                         </form>
                     </div>
 
                     <!-- Payhead Table -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-striped align-middle">
-                            
-                            <thead class="table-light">
+                        <table class="table table-dashed table-hover table-striped digi-dataTable" id="payheadTable">
+                            <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th class="no-sort">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="markAllPayhead">
+                                        </div>
+                                    </th>
+                                    <th>Action</th>
                                     <th>Name</th>
                                     <th>Code</th>
                                     <th>Type</th>
@@ -76,56 +77,17 @@
                                     <th>PF</th>
                                     <th>ESI</th>
                                     <th>Status</th>
-                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for payhead in page_obj %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ payhead.name }}</td>
-                                        <td><code>{{ payhead.code }}</code></td>
-                                        <td>
-                                            {% if payhead.payhead_type == 'earning' %}
-                                                <span class="badge bg-success">Earning</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">Deduction</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ payhead.get_calculation_type_display }}</td>
-                                        <td>{{ payhead.amount|floatformat:2 }}</td>
-                                        <td>{{ payhead.percentage|floatformat:2 }}</td>
-                                        <td>
-                                            {% if payhead.is_taxable %}
-                                                <span class="badge bg-success">Yes</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">No</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if payhead.is_pf_applicable %}
-                                                <span class="badge bg-success">Yes</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">No</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if payhead.is_esi_applicable %}
-                                                <span class="badge bg-success">Yes</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">No</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if payhead.is_active %}
-                                                <span class="badge bg-success">Active</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">Inactive</span>
-                                            {% endif %}
-                                        </td>
-                               
-
- <td>
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="payhead_ids" value="{{ payhead.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
                                         <div class="digi-dropdown dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Action <i class="fa-solid fa-angle-down"></i>
@@ -141,89 +103,87 @@
                                                         <span class="dropdown-icon"><i class="fa-solid fa-pen-to-square"></i></span> Edit
                                                     </a>
                                                 </li>
-                                             
-                                                
                                                 <li>
-                                                    <a href="#" class="dropdown-item text-danger delete-payhead-btn" data-id="{{ payhead.id }}"
-            data-name="{{ payhead.name }}" 
-                                                       >
+                                                    <a href="#" class="dropdown-item text-danger delete-payhead-btn" data-id="{{ payhead.id }}" data-name="{{ payhead.name }}">
                                                         <span class="dropdown-icon"><i class="fa-solid fa-trash-can"></i></span> Delete
                                                     </a>
                                                 </li>
                                             </ul>
                                         </div>
                                     </td>
-
-                                    </tr>
+                                    <td>{{ payhead.name }}</td>
+                                    <td><code>{{ payhead.code }}</code></td>
+                                    <td>
+                                        {% if payhead.payhead_type == 'earning' %}
+                                            <span class="badge bg-success">Earning</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Deduction</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payhead.get_calculation_type_display }}</td>
+                                    <td>{{ payhead.amount|floatformat:2 }}</td>
+                                    <td>{{ payhead.percentage|floatformat:2 }}</td>
+                                    <td>
+                                        {% if payhead.is_taxable %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payhead.is_pf_applicable %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payhead.is_esi_applicable %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payhead.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                                 {% empty %}
-                                    <tr>
-                                        <td colspan="13" class="text-center py-4 text-muted">
-                                            <i class="fa-solid fa-database fa-2x mb-2"></i>
-                                            <div>No payhead records found.</div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="12" class="text-center py-4 text-muted">
+                                        <i class="fa-solid fa-database fa-2x mb-2"></i>
+                                        <div>No payhead records found.</div>
+                                        <a href="{% url 'hrm:create_payhead' %}" class="btn btn-sm btn-primary mt-2">Add First Pay Head</a>
+                                    </td>
+                                </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Pagination -->
-                    {% if page_obj.has_other_pages %}
-                    <nav aria-label="Page navigation" class="mt-3">
-                        <ul class="pagination justify-content-center">
-                            {% if page_obj.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
-                                        &laquo;
-                                    </a>
-                                </li>
-                            {% endif %}
+                    {% include "pagination.html" %}
 
-                            {% for num in page_obj.paginator.page_range %}
-                                {% if page_obj.number == num %}
-                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-
-                            {% if page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
-                                        &raquo;
-                                    </a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                        <div class="pagination-info text-center text-muted small mt-2">
-                            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
-                        </div>
-                    </nav>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="footer text-center mt-4">
-        <p>© <script>document.write(new Date().getFullYear())</script> All Rights Reserved by <span class="text-primary">Digiboard</span></p>
-    </div>
 </div>
-
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const deleteButtons = document.querySelectorAll(".delete-payhead-btn");
 
     deleteButtons.forEach(button => {
         button.addEventListener("click", function() {
-            const payheadId = this.getAttribute("data-id");
-            const payheadName = this.getAttribute("data-name");
+            const payheadId = this.dataset.id;
+            const payheadName = this.dataset.name;
 
             Swal.fire({
                 title: "Are you sure?",
@@ -238,11 +198,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (result.isConfirmed) {
                     fetch(`/payheads/${payheadId}/delete/`, {
                         method: "POST",
-                        headers: {
-                            "X-CSRFToken": getCookie("csrftoken"),
-                        },
+                        headers: { "X-CSRFToken": getCookie("csrftoken") },
                     })
-                    .then(response => response.json())
+                    .then(res => res.json())
                     .then(data => {
                         if (data.success) {
                             Swal.fire({
@@ -262,18 +220,15 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // Get CSRF token from cookie
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let cookie of cookies) {
+            document.cookie.split(";").forEach(cookie => {
                 cookie = cookie.trim();
                 if (cookie.startsWith(name + "=")) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
                 }
-            }
+            });
         }
         return cookieValue;
     }

@@ -1,0 +1,37 @@
+                    <!-- Pagination -->
+                    <div class="table-bottom-control">
+    <div class="dataTables_info" id="companyTable_info" role="status" aria-live="polite">
+        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+    </div>
+    <div class="dataTables_paginate paging_simple_numbers" id="companyTable_paginate">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-primary previous" aria-controls="companyTable" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fa-solid fa-angle-left"></i>
+            </a>
+        {% else %}
+            <a class="btn btn-primary previous disabled" aria-controls="companyTable" tabindex="-1">
+                <i class="fa-solid fa-angle-left"></i>
+            </a>
+        {% endif %}
+
+        <span>
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a class="btn btn-primary current">{{ num }}</a>
+                {% elif num > page_obj.number|add:'-20' and num < page_obj.number|add:'20' %}
+                    <a class="btn btn-primary" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary next" aria-controls="companyTable" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fa-solid fa-angle-right"></i>
+            </a>
+        {% else %}
+            <a class="btn btn-primary next disabled" aria-controls="companyTable" tabindex="-1">
+                <i class="fa-solid fa-angle-right"></i>
+            </a>
+        {% endif %}
+    </div>
+</div>

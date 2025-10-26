@@ -555,29 +555,34 @@ def get_user_menu_items(user, organization=None):
 
 
 
+from django.urls import reverse, NoReverseMatch
 
-@login_required
+
 def menu_search(request):
-    query = request.GET.get('q', '').strip()
-    user = request.user
-    organization = getattr(user, 'organization', None)  # adjust if using OrganizationMembership
-
-    if not query:
-        return JsonResponse([], safe=False)
-
-    menu_items = MenuItem.objects.filter(title__icontains=query, is_active=True)
-
-    # filter based on user visibility
-    menu_items = [item for item in menu_items if item.is_visible_to_user(user, organization)]
-
+    q = request.GET.get('q', '').strip()
     results = []
-    for item in menu_items:
-        results.append({
-            'title': item.title,
-            'url': item.get_url,
-        })
+
+    if q:
+        items = MenuItem.objects.filter(title__icontains=q, is_active=True)
+        for item in items:
+            # Resolve Django URL name
+            if item.url_name:
+                try:
+                    url = reverse(item.url_name)
+                except NoReverseMatch:
+                    url = '#'
+            elif item.url_path:
+                url = item.url_path
+            else:
+                url = '#'
+
+            results.append({
+                "title": item.title,
+                "url": url,  # send the resolved URL
+            })
 
     return JsonResponse(results, safe=False)
+
 
 
 

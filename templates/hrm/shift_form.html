@@ -9,19 +9,15 @@
         <h2>{% if is_update %}Update{% else %}Add{% endif %} Shift</h2>
         <div class="btn-box">
             <a href="{% url 'hrm:shift_list' %}" class="btn btn-sm btn-primary">All Shifts</a>
+            <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+        {% if is_update %}Update{% else %}Save{% endif %} Shift
+    </button>
+        
         </div>
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
 
-    <form method="post" enctype="multipart/form-data" id="shiftForm">
+    <form method="post" enctype="multipart/form-data" id="dataForm">
         {% csrf_token %}
         
         <div class="row">

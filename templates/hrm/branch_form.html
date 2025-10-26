@@ -7,21 +7,21 @@
 <div class="main-content">
     <div class="dashboard-breadcrumb mb-25">
         <h2>{% if is_update %}Update{% else %}Add{% endif %} Branch</h2>
-        <div class="btn-box">
-            <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-primary">All Branches</a>
-        </div>
+
+<div class="btn-box">
+    <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-primary">All Branches</a>
+    <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+        {% if is_update %}Update{% else %}Save{% endif %} Branch
+    </button>
+</div>
+
+
+        
     </div>
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
 
 
-    <form method="post" enctype="multipart/form-data" id="branchForm">
+    <form method="post" enctype="multipart/form-data" id="dataForm">
         {% csrf_token %}
         
         <div class="row">
@@ -163,6 +163,13 @@ document.getElementById('id_name').addEventListener('input', function() {
         const code = name.substring(0, 3).toUpperCase() + '001';
         codeField.value = code;
     }
+
+    
 });
+
+ 
 </script>
+
+
+
 {% endblock %}

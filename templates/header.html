@@ -260,17 +260,17 @@
     <!-- header end -->
 
 
-    <script>
+  <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('menu-search-input');
     const resultsDropdown = document.getElementById('menu-search-results');
-
     let debounceTimer;
+    let selectedIndex = -1; // For tracking highlighted item
 
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
-
         clearTimeout(debounceTimer);
+
         if (query.length === 0) {
             resultsDropdown.style.display = 'none';
             resultsDropdown.innerHTML = '';
@@ -282,12 +282,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     resultsDropdown.innerHTML = '';
+                    selectedIndex = -1; // Reset selection on new search
 
                     if (data.length > 0) {
-                        data.forEach(item => {
+                        data.forEach((item, index) => {
                             const li = document.createElement('li');
                             li.classList.add('dropdown-item');
-                            li.innerHTML = `<a href="${item.url}">${item.title}</a>`;
+                            li.innerHTML = `<a href="${item.url}" class="dropdown-link">${item.title}</a>`;
                             resultsDropdown.appendChild(li);
                         });
                         resultsDropdown.style.display = 'block';
@@ -296,8 +297,35 @@ document.addEventListener('DOMContentLoaded', function() {
                         resultsDropdown.style.display = 'block';
                     }
                 });
-        }, 300); // debounce 300ms
+        }, 300);
     });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', function(e) {
+        const items = resultsDropdown.querySelectorAll('.dropdown-item .dropdown-link');
+        if (resultsDropdown.style.display === 'none' || items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % items.length;
+            updateActiveItem(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+            updateActiveItem(items);
+        } else if (e.key === 'Enter' && selectedIndex >= 0) {
+            e.preventDefault();
+            items[selectedIndex].click();
+        }
+    });
+
+    function updateActiveItem(items) {
+        items.forEach(link => link.parentElement.classList.remove('active'));
+        if (selectedIndex >= 0 && items[selectedIndex]) {
+            items[selectedIndex].parentElement.classList.add('active');
+            items[selectedIndex].scrollIntoView({ block: 'nearest' });
+        }
+    }
 
     // Hide dropdown when clicking outside
     document.addEventListener('click', function(e) {
@@ -307,3 +335,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+
+
+<style>
+    #menu-search-results .dropdown-item.active {
+    background-color: #007bff;
+}
+#menu-search-results .dropdown-item.active a {
+    color: white !important;
+}
+
+</style>

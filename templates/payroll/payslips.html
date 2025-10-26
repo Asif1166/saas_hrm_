@@ -192,49 +192,17 @@
 
                         
                     </div>
+
+                                                                                  <!-- Pagination -->
+{% include "pagination.html" %}
                 </div>
             </div>
         </div>
     </div>
 
 
-                                                              <!-- Pagination -->
-<div class="d-flex justify-content-between align-items-center mt-3">
-    <div>
-        Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} payslips
-    </div>
-    <nav>
-        <ul class="pagination pagination-sm mb-0">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if period_filter %}&period={{ period_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
-                </li>
-            {% endif %}
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if num == page_obj.number %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if period_filter %}&period={{ period_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
 
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if period_filter %}&period={{ period_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-
-    <!-- footer start -->
-    <div class="footer">
-        <p>Copyright© <script>document.write(new Date().getFullYear())</script> All Rights Reserved By <span class="text-primary">Digiboard</span></p>
-    </div>
-    <!-- footer end -->
 </div>
 <!-- main content end -->
 

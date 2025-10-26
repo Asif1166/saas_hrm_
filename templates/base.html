@@ -35,6 +35,8 @@
     </div>
     <!-- preloader end -->
 
+
+
         {% include "header.html" %}
 
         {% include "sidebar.html" %}
@@ -42,8 +44,12 @@
 
             {% block content %}
 
+
+
+
     {% endblock content %}
 
+        {% include "footer.html" %}
 
 
 
@@ -58,6 +64,19 @@
   <script src="{% static 'assets/vendor/js/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'assets/js/dashboard.js' %}"></script>
   <script src="{% static 'assets/js/main.js' %}"></script>
+
+
+  <script>
+
+    document.addEventListener("DOMContentLoaded", function() {
+       if (topSaveBtn && dataForm) {
+        topSaveBtn.addEventListener('click', function() {
+            dataForm.submit();
+        });
+    }
+
+    });
+</script>
 
 
 <style>
@@ -84,6 +103,13 @@ input[type="date"] {
     appearance: none;
 }
 </style>
+
+<style>
+    .main-content .table-bottom-control .btn.current {
+    background: #0D99FF;
+}
+</style>
+
 
 </body>
 

@@ -9,6 +9,9 @@
         <h2>{% if is_update %}Update{% else %}Add{% endif %} Payslip</h2>
         <div class="btn-box">
             <a href="{% url 'payroll:payslips' %}" class="btn btn-sm btn-primary">All Payslips</a>
+           <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+        {% if is_update %}Update{% else %}Save{% endif %} Payslip
+    </button>
         </div>
     </div>
 
@@ -18,7 +21,7 @@
         {% endfor %}
     {% endif %}
 
-    <form method="post" id="payslipForm">
+    <form method="post" id="dataForm">
         {% csrf_token %}
         <div class="row">
             <div class="col-12">
