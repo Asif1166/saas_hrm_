@@ -241,6 +241,9 @@ def payslips(request):
 
     payslips = Payslip.objects.filter(organization=organization)
 
+    all_payslip=Payslip.objects.all_with_deleted().count()
+    print("all_payslip", all_payslip)
+
     # Apply filters
     if period_id:
         payslips = payslips.filter(payroll_period_id=period_id)
@@ -270,6 +273,51 @@ def payslips(request):
         'status_filter': status,
     }
     return render(request, 'payroll/payslips.html', context)
+
+
+@login_required
+@organization_member_required
+def payslips_trash(request):
+    """List only soft-deleted payslips for restore"""
+    organization = request.organization
+
+    # Soft-deleted payslips only
+    payslips = Payslip.objects.only_deleted().filter(organization=organization)
+
+    # Pagination setup
+    paginator = Paginator(payslips, 10)  # 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'organization': organization,
+        'page_obj': page_obj,
+    }
+    return render(request, 'payroll/payslips_trash.html', context)
+
+
+@login_required
+@organization_member_required
+def restore_payslip(request):
+    """Restore soft-deleted payslip(s)"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ids = data.get('ids', [])
+            if not ids:
+                return JsonResponse({'success': False, 'message': 'No payslips selected.'})
+
+            restored_count = Payslip.objects.only_deleted().filter(id__in=ids, organization=request.organization).update(deleted_at=None)
+
+            return JsonResponse({
+                'success': True,
+                'message': f'{restored_count} payslip(s) restored successfully.'
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
 
 def payslip_create(request):
     if request.method == "POST":
@@ -353,25 +401,44 @@ def generate_payslip_pdf(request, payslip_id):
     return response
 
 
-
 @login_required
 @organization_member_required
 def delete_multiple_payslips(request):
-    """Delete multiple payslips"""
+    """Soft delete or permanently delete multiple payslips"""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             ids = data.get('ids', [])
+            delete_type = data.get('type', 'soft')  # 'soft' or 'hard'
+
             if not ids:
                 return JsonResponse({'success': False, 'message': 'No payslips selected.'})
 
-            Payslip.objects.filter(id__in=ids, organization=request.organization).delete()
-            return JsonResponse({'success': True, 'message': f'{len(ids)} payslip(s) deleted successfully.'})
+            # Include soft-deleted items
+            payslips = Payslip.objects.all_with_deleted().filter(id__in=ids, organization=request.organization)
+            count = payslips.count()
+
+            if delete_type == 'soft':
+                # Soft delete
+                for payslip in payslips:
+                    payslip.delete()
+                message = f'{count} payslip(s) moved to trash successfully.'
+            elif delete_type == 'hard':
+                # Hard delete permanently
+                for payslip in payslips:
+                    payslip.hard_delete()
+                message = f'{count} payslip(s) permanently deleted successfully.'
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid delete type.'})
+
+            return JsonResponse({'success': True, 'message': message})
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
     
 @login_required
 @organization_member_required

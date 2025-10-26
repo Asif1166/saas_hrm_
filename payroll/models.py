@@ -1,11 +1,32 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-
+from django.utils import timezone
 from hrm.models import Payhead
+from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
+
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+    
+    def all_with_deleted(self):
+        """Return all records including deleted ones"""
+        return super().get_queryset()
+    
+    def only_deleted(self):
+        """Return only deleted records"""
+        return super().get_queryset().filter(deleted_at__isnull=False)
+    
+    def restore(self, *args, **kwargs):
+        """Restore soft deleted records"""
+        queryset = self.only_deleted()
+        if args or kwargs:
+            queryset = queryset.filter(*args, **kwargs)
+        return queryset.update(deleted_at=None)
+    
 
 class BaseOrganizationModel(models.Model):
     """
@@ -16,9 +37,25 @@ class BaseOrganizationModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    deleted_at = models.DateTimeField(blank=True, null=True, editable=False)  # Add this field
+
     
     class Meta:
         abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete implementation"""
+        self.deleted_at = timezone.now()
+        self.save()
+    
+    def hard_delete(self):
+        """Permanently delete the record"""
+        super().delete()
+    
+    @property
+    def is_deleted(self):
+        """Check if record is soft deleted"""
+        return self.deleted_at is not None
 
 
 class PayrollPeriod(BaseOrganizationModel):
@@ -123,9 +160,17 @@ class Payslip(BaseOrganizationModel):
     # Status
     is_generated = models.BooleanField(default=False)
     generated_at = models.DateTimeField(blank=True, null=True)
+    objects = SoftDeleteManager()
     
     class Meta:
         unique_together = ['organization', 'employee', 'payroll_period']
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'employee', 'payroll_period'],
+                condition=models.Q(deleted_at__isnull=True),
+                name='unique_org_code_when_not_deleted'
+            )
+        ]
         ordering = ['-payroll_period__start_date']
     
     def __str__(self):

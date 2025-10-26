@@ -18,14 +18,28 @@
                         <div id="tableSearch"></div>
                         <a href="{% url 'hrm:department_list' %}" class="btn btn-sm btn-icon btn-outline-primary"><i class="fa-solid fa-arrows-rotate"></i></a>
                         <a href="{% url 'hrm:create_department' %}" class="btn btn-sm btn-primary"><i class="fa-solid fa-plus"></i> Add New</a>
+                    
+                                                <button id="deleteSelectedBtn"
+        class="btn btn-danger btn-sm"
+        style="display:none;"
+        data-delete-url="{% url 'payroll:delete_multiple_payslips' %}">
+    <i class="fas fa-trash-alt"></i> Delete Selected
+</button>
+                    
                     </div>
                 </div>
                 <div class="panel-body">
                     <!-- Filter Section -->
+
                     <div class="table-filter-option">
+
                         <form method="get" class="row g-3">
                             <div class="col-xl-10 col-9 col-xs-12">
                                 <div class="row g-3">
+
+
+
+
                                     <div class="col">
                                         <select name="branch" class="form-control form-control-sm">
                                             <option value="">All Branches</option>
@@ -63,12 +77,20 @@
                     <div class="table-responsive">
                         <table class="table table-dashed table-hover digi-dataTable all-department-table table-striped" id="allDepartmentTable">
                             <thead>
+
+
+
+
+
                                 <tr id="tableHeader">
                                     <th class="no-sort">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="markAllDepartment">
+                                            <input class="form-check-input" type="checkbox" id="markAllDepartments">
                                         </div>
                                     </th>
+
+                                 <th>SL</th>
+
                                     <th>Action</th>
                                     <th>Name</th>
                                     <th>Code</th>
@@ -82,11 +104,16 @@
                             <tbody id="tableBody">
                                 {% for department in page_obj %}
                                 <tr>
+
+
                                     <td>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="department_ids" value="{{ department.id }}">
+                                    <input class="form-check-input row-checkbox" type="checkbox" value="{{ department.id }}">
                                         </div>
                                     </td>
+                     <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                        
+                                    
                                     <td>
                                         <div class="digi-dropdown dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">
@@ -187,5 +214,7 @@
 
 </div>
 <!-- main content end -->
+
+
 
 {% endblock %}
