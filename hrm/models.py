@@ -3,10 +3,29 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.db.models import UniqueConstraint, Q
 
 User = get_user_model()
 
-
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+    
+    def all_with_deleted(self):
+        """Return all records including deleted ones"""
+        return super().get_queryset()
+    
+    def only_deleted(self):
+        """Return only deleted records"""
+        return super().get_queryset().filter(deleted_at__isnull=False)
+    
+    def restore(self, *args, **kwargs):
+        """Restore soft deleted records"""
+        queryset = self.only_deleted()
+        if args or kwargs:
+            queryset = queryset.filter(*args, **kwargs)
+        return queryset.update(deleted_at=None)
+    
 class BaseOrganizationModel(models.Model):
     """
     Abstract base model for organization-specific data
@@ -16,7 +35,8 @@ class BaseOrganizationModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    
+    deleted_at = models.DateTimeField(blank=True, null=True, editable=False)  # Add this field
+
     class Meta:
         abstract = True
 
@@ -44,9 +64,17 @@ class Branch(BaseOrganizationModel):
     # Manager
     manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_branches')
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
+
     
     class Meta:
-        unique_together = ['organization', 'code']
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'code'],
+                condition=Q(deleted_at__isnull=True),
+                name='unique_organization_branch_code_when_not_deleted'
+            )
+        ]
         ordering = ['name']
     
     def __str__(self):
@@ -63,9 +91,17 @@ class Department(BaseOrganizationModel):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='departments', null=True, blank=True)
     manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_departments')
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
+
     
     class Meta:
-        unique_together = ['organization', 'code']
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'code'],
+                condition=Q(deleted_at__isnull=True),
+                name='unique_organization_department_code_when_not_deleted'
+            )
+        ]
         ordering = ['name']
     
     def __str__(self):
@@ -82,9 +118,17 @@ class Designation(BaseOrganizationModel):
     level = models.PositiveIntegerField(default=1, help_text="Hierarchy level (1=lowest)")
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='designations', null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
+
     
     class Meta:
-        unique_together = ['organization', 'code']
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'code'],
+                condition=Q(deleted_at__isnull=True),
+                name='unique_organization_designation_code_when_not_deleted'
+            )
+        ]
         ordering = ['level', 'name']
     
     def __str__(self):
@@ -100,9 +144,17 @@ class EmployeeRole(BaseOrganizationModel):
     description = models.TextField(blank=True, null=True)
     permissions = models.JSONField(default=dict, blank=True, help_text="Role-specific permissions")
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
+
     
     class Meta:
-        unique_together = ['organization', 'code']
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'code'],
+                condition=Q(deleted_at__isnull=True),
+                name='unique_organization_role_code_when_not_deleted'
+            )
+        ]
         ordering = ['name']
     
     def __str__(self):
@@ -205,6 +257,7 @@ class Employee(BaseOrganizationModel):
     skills = models.TextField(blank=True, null=True, help_text="Comma-separated skills")
     notes = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
     
 
     device_user_id = models.CharField(
@@ -274,6 +327,7 @@ class Shift(BaseOrganizationModel):
     overtime_start_after_hours = models.DecimalField(max_digits=5, decimal_places=2, default=8.00, help_text="Overtime starts after these hours")
     
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
     
     class Meta:
         unique_together = ['organization', 'code']
@@ -306,6 +360,7 @@ class Timetable(BaseOrganizationModel):
     sunday = models.BooleanField(default=False)
     
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
     
     class Meta:
         ordering = ['start_date']
@@ -369,6 +424,7 @@ class AttendanceDevice(BaseOrganizationModel):
     # Sync settings
     auto_sync_enabled = models.BooleanField(default=True)
     sync_interval_minutes = models.PositiveIntegerField(default=30)
+    objects = SoftDeleteManager()
     
     class Meta:
         ordering = ['name']
@@ -398,6 +454,7 @@ class AttendanceRecord(BaseOrganizationModel):
     working_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     break_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     overtime_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+
     
     # Status
     STATUS_CHOICES = [
@@ -424,6 +481,7 @@ class AttendanceRecord(BaseOrganizationModel):
     # Device sync info
     device_user_id = models.CharField(max_length=50, blank=True, null=True, help_text="User ID from device")
     sync_timestamp = models.DateTimeField(blank=True, null=True)
+    objects = SoftDeleteManager()
     
     class Meta:
         unique_together = ['organization', 'employee', 'date']
@@ -598,6 +656,7 @@ class Payhead(BaseOrganizationModel):
     is_active = models.BooleanField(default=True)
     effective_from = models.DateField(default=timezone.now, help_text="Date from which this payhead is effective")
     effective_to = models.DateField(blank=True, null=True, help_text="Date until which this payhead is effective")
+    objects = SoftDeleteManager()
     
     class Meta:
         unique_together = ['organization', 'code']
@@ -673,6 +732,7 @@ class EmployeePayhead(BaseOrganizationModel):
                                  related_name='created_employee_payheads')
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                   related_name='modified_employee_payheads')
+    objects = SoftDeleteManager()
     
     class Meta:
         unique_together = ['organization', 'employee', 'payhead', 'effective_from']
@@ -778,6 +838,8 @@ class HolidayCalendar(BaseOrganizationModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = SoftDeleteManager()
+
 
     class Meta:
         verbose_name_plural = 'Holiday Calendar'
@@ -795,9 +857,16 @@ class AttendanceHoliday(BaseOrganizationModel):
     date = models.DateField()
     is_recurring = models.BooleanField(default=False, help_text="Recurring yearly")
     description = models.TextField(blank=True, null=True)
+    objects = SoftDeleteManager()
     
     class Meta:
-        unique_together = ['organization', 'date']
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'date'],
+                condition=Q(deleted_at__isnull=True),
+                name='unique_organization_attendance_holiday_when_not_deleted'
+            )
+        ]
         ordering = ['date']
     
     def __str__(self):
@@ -835,6 +904,7 @@ class LeaveRequest(BaseOrganizationModel):
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_leave_requests')
     approved_at = models.DateTimeField(blank=True, null=True)
     rejection_reason = models.TextField(blank=True, null=True)
+    objects = SoftDeleteManager()
     
     class Meta:
         ordering = ['-created_at']
