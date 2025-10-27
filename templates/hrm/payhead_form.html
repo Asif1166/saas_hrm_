@@ -10,6 +10,7 @@
 <div class="btn-box">
     <a href="{% url 'hrm:payhead_list' %}" class="btn btn-sm btn-primary">All payhead</a>
     <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+        <i class="fa-solid fa-save me-1"></i>
         {% if is_update %}Update{% else %}Save{% endif %} Payhead
     </button>
 </div>
@@ -133,7 +134,9 @@
                 <!-- ACTION BUTTONS -->
                 <div class="d-flex justify-content-end mt-3">
                     <a href="{% url 'hrm:payhead_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Pay Head</button>
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="fa-solid fa-save me-1"></i>
+                        {% if is_update %}Update{% else %}Save{% endif %} Pay Head</button>
                 </div>
             </div>
         </div>

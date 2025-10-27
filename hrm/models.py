@@ -40,6 +40,20 @@ class BaseOrganizationModel(models.Model):
     class Meta:
         abstract = True
 
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete implementation"""
+        self.deleted_at = timezone.now()
+        self.save()
+    
+    def hard_delete(self):
+        """Permanently delete the record"""
+        super().delete()
+    
+    @property
+    def is_deleted(self):
+        """Check if record is soft deleted"""
+        return self.deleted_at is not None
+
 
 class Branch(BaseOrganizationModel):
     """

@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (typeof Swal !== "undefined") {
         Swal.fire({
-            title: "Delete Payslips",
+            title: "Delete",
             html: `You are about to delete <b>${selectedIds.length}</b> record(s).`,
             icon: "warning",
             showCancelButton: true,

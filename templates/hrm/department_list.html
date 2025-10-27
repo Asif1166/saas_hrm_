@@ -19,12 +19,17 @@
                         <a href="{% url 'hrm:department_list' %}" class="btn btn-sm btn-icon btn-outline-primary"><i class="fa-solid fa-arrows-rotate"></i></a>
                         <a href="{% url 'hrm:create_department' %}" class="btn btn-sm btn-primary"><i class="fa-solid fa-plus"></i> Add New</a>
                     
-                                                <button id="deleteSelectedBtn"
+<button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:department_trash' %}'">
+    <i class="fa-solid fa-trash-can me-1"></i> View Trash
+</button>
+
+<button id="deleteSelectedBtn"
         class="btn btn-danger btn-sm"
         style="display:none;"
-        data-delete-url="{% url 'payroll:delete_multiple_payslips' %}">
-    <i class="fas fa-trash-alt"></i> Delete Selected
+        data-delete-url="{% url 'hrm:delete_multiple_departments' %}">
+    <i class="fa-solid fa-trash-can"></i> Delete Selected
 </button>
+
                     
                     </div>
                 </div>

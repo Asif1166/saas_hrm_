@@ -10,6 +10,8 @@
         <div class="btn-box">
             <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-primary">All Employee</a>
          <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+                        <i class="fa-solid fa-save me-1"></i>
+
         {% if is_update %}Update{% else %}Save{% endif %} Employee
     </button>
         </div>
@@ -411,7 +413,10 @@
 
             <div class="col-12 d-flex justify-content-end">
                 <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
-                <button type="submit" class="btn btn-sm btn-success">Save Employee</button>
+                <button type="submit" class="btn btn-sm btn-success">
+                        <i class="fa-solid fa-save me-1"></i>
+                    
+                    Save Employee</button>
             </div>
         </div>
     </form>

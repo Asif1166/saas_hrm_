@@ -18,6 +18,19 @@
                         <div id="tableSearch"></div>
                         <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-icon btn-outline-primary"><i class="fa-solid fa-arrows-rotate"></i></a>
                         <a href="{% url 'hrm:create_branch' %}" class="btn btn-sm btn-primary"><i class="fa-solid fa-plus"></i> Add New</a>
+                   
+
+<button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:branch_trash' %}'">
+    <i class="fa-solid fa-trash-can me-1"></i> View Trash
+</button>
+
+<button id="deleteSelectedBtn"
+class="btn btn-danger btn-sm"
+style="display:none;"
+data-delete-url="{% url 'hrm:delete_multiple_branches' %}">
+<i class="fa-solid fa-trash-can"></i> Delete Selected
+</button>
+                   
                     </div>
                 </div>
                 <div class="panel-body">
@@ -59,6 +72,7 @@
                                             <input class="form-check-input" type="checkbox" id="markAllBranch">
                                         </div>
                                     </th>
+                                   <th>SL</th>
                                     <th>Action</th>
                                     <th>Name</th>
                                     <th>Code</th>
@@ -76,9 +90,11 @@
                                 <tr>
                                     <td>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="branch_ids" value="{{ branch.id }}">
+                                            <input class="form-check-input row-checkbox" type="checkbox" value="{{ branch.id }}">
                                         </div>
                                     </td>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+
                                     <td>
                                         <div class="digi-dropdown dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">

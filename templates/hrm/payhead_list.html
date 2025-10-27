@@ -18,6 +18,18 @@
                         <a href="{% url 'hrm:create_payhead' %}" class="btn btn-sm btn-primary">
                             <i class="fa-solid fa-plus"></i> Add New
                         </a>
+
+                                                   <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:payhead_trash' %}'">
+                                <i class="fa-solid fa-trash-can me-1"></i> View Trash
+                        </button>
+
+
+                        <button id="deleteSelectedBtn"
+        class="btn btn-danger btn-sm"
+        style="display:none;"
+        data-delete-url="{% url 'hrm:delete_multiple_payheads' %}">
+    <i class="fa-solid fa-trash-can"></i> Delete Selected
+</button>
                     </div>
                 </div>
 
@@ -84,7 +96,7 @@
                                 <tr>
                                     <td>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="payhead_ids" value="{{ payhead.id }}">
+                                            <input class="form-check-input row-checkbox" type="checkbox" value="{{ payhead.id }}">
                                         </div>
                                     </td>
                                     <td>

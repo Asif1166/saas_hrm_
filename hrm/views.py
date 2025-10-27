@@ -6,9 +6,10 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from hrm.utils import handle_bulk_delete, restore_objects_view, trash_list_view
 from organization.decorators import organization_member_required, organization_admin_required
 from organization.utils import DynamicTableManager
-from .models import Branch, Department, Designation, EmployeeRole, Employee, AttendanceRecord, LeaveRequest, Shift, Timetable, AttendanceDevice, Payhead, EmployeePayhead, AttendanceHoliday
+from .models import Branch, Department, Designation, EmployeeRole, Employee, AttendanceRecord, HolidayCalendar, LeaveRequest, Shift, Timetable, AttendanceDevice, Payhead, EmployeePayhead, AttendanceHoliday
 from .forms import EmployeeForm, BranchForm, DepartmentForm, DesignationForm, EmployeeRoleForm, EmployeeUpdateForm, ShiftForm, TimetableForm, AttendanceDeviceForm, PayheadForm, EmployeePayheadForm, AttendanceHolidayForm, AttendanceFilterForm
 from .zkteco_utils import *
 from datetime import date, datetime
@@ -16,6 +17,7 @@ from django.utils import timezone
 from django.urls import reverse
 from datetime import timedelta
 from django.utils.dateparse import parse_date
+import json
 
 User = get_user_model()
 
@@ -1500,3 +1502,194 @@ def delete_holiday(request, holiday_id):
         holiday.delete()
         return JsonResponse({"success": True, "message": f"Holiday '{name}' deleted successfully."})
     return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
+
+
+
+# --- DELETE MULTIPLE ---
+@login_required
+@organization_member_required
+def delete_multiple_branches(request):
+    return handle_bulk_delete(request, Branch, 'branch')
+
+@login_required
+@organization_member_required
+def delete_multiple_departments(request):
+    return handle_bulk_delete(request, Department, 'department')
+
+@login_required
+@organization_member_required
+def delete_multiple_designations(request):
+    return handle_bulk_delete(request, Designation, 'designation')
+
+@login_required
+@organization_member_required
+def delete_multiple_roles(request):
+    return handle_bulk_delete(request, EmployeeRole, 'employee role')
+
+@login_required
+@organization_member_required
+def delete_multiple_employees(request):
+    return handle_bulk_delete(request, Employee, 'employee')
+
+@login_required
+@organization_member_required
+def delete_multiple_leave_requests(request):
+    return handle_bulk_delete(request, LeaveRequest, 'leave request')
+
+@login_required
+@organization_member_required
+def delete_multiple_attendance_records(request):
+    return handle_bulk_delete(request, AttendanceRecord, 'attendance record')
+
+@login_required
+@organization_member_required
+def delete_multiple_holidays(request):
+    return handle_bulk_delete(request, AttendanceHoliday, 'holiday')
+
+@login_required
+@organization_member_required
+def delete_multiple_payheads(request):
+    return handle_bulk_delete(request, Payhead, 'payhead')
+
+@login_required
+@organization_member_required
+def delete_multiple_timetables(request):
+    return handle_bulk_delete(request, Timetable, 'timetable')
+
+@login_required
+@organization_member_required
+def delete_multiple_employee_payheads(request):
+    return handle_bulk_delete(request, EmployeePayhead, 'employee payhead')
+
+@login_required
+@organization_member_required
+def delete_multiple_shifts(request):
+    return handle_bulk_delete(request, Shift, 'shift')
+
+
+
+
+# --- Trash ---
+
+@login_required
+@organization_member_required
+def branch_trash(request):
+    return trash_list_view(request, Branch, 'hrm/branch_trash.html', 'branches')
+
+@login_required
+@organization_member_required
+def department_trash(request):
+    return trash_list_view(request, Department, 'hrm/department_trash.html', 'departments')
+
+@login_required
+@organization_member_required
+def designation_trash(request):
+    return trash_list_view(request, Designation, 'hrm/designation_trash.html', 'designations')
+
+@login_required
+@organization_member_required
+def employee_role_trash(request):
+    return trash_list_view(request, EmployeeRole, 'hrm/role_trash.html', 'employee roles')
+
+@login_required
+@organization_member_required
+def employee_trash(request):
+    return trash_list_view(request, Employee, 'hrm/employee_trash.html', 'employees')
+
+@login_required
+@organization_member_required
+def leave_request_trash(request):
+    return trash_list_view(request, LeaveRequest, 'hrm/leave_request_trash.html', 'leave requests')
+
+@login_required
+@organization_member_required
+def attendance_record_trash(request):
+    return trash_list_view(request, AttendanceRecord, 'hrm/attendance_record_trash.html', 'attendance records')
+
+@login_required
+@organization_member_required
+def holiday_trash(request):
+    return trash_list_view(request, AttendanceHoliday, 'hrm/holiday_trash.html', 'holidays')
+
+@login_required
+@organization_member_required
+def payhead_trash(request):
+    return trash_list_view(request, Payhead, 'hrm/payhead_trash.html', 'payheads')
+
+@login_required
+@organization_member_required
+def timetable_trash(request):
+    return trash_list_view(request, Timetable, 'hrm/timetable_trash.html', 'timetables')
+
+@login_required
+@organization_member_required
+def employee_payhead_trash(request):
+    return trash_list_view(request, EmployeePayhead, 'hrm/employee_payhead_trash.html', 'employee payheads')
+
+@login_required
+@organization_member_required
+def shift_trash(request):
+    return trash_list_view(request, Shift, 'hrm/shift_trash.html', 'shifts')
+
+
+
+# --- Restore ---
+@login_required
+@organization_member_required
+def restore_branch(request):
+    return restore_objects_view(request, Branch, 'branch')
+
+@login_required
+@organization_member_required
+def restore_department(request):
+    return restore_objects_view(request, Department, 'department')
+
+@login_required
+@organization_member_required
+def restore_designation(request):
+    return restore_objects_view(request, Designation, 'designation')
+
+@login_required
+@organization_member_required
+def restore_employee_role(request):
+    return restore_objects_view(request, EmployeeRole, 'employee role')
+
+@login_required
+@organization_member_required
+def restore_employee(request):
+    return restore_objects_view(request, Employee, 'employee')
+
+@login_required
+@organization_member_required
+def restore_leave_request(request):
+    return restore_objects_view(request, LeaveRequest, 'leave request')
+
+@login_required
+@organization_member_required
+def restore_attendance_record(request):
+    return restore_objects_view(request, AttendanceRecord, 'attendance record')
+
+@login_required
+@organization_member_required
+def restore_holiday(request):
+    return restore_objects_view(request, AttendanceHoliday, 'holiday')
+
+@login_required
+@organization_member_required
+def restore_payhead(request):
+    return restore_objects_view(request, Payhead, 'payhead')
+
+@login_required
+@organization_member_required
+def restore_timetable(request):
+    return restore_objects_view(request, Timetable, 'timetable')
+
+@login_required
+@organization_member_required
+def restore_employee_payhead(request):
+    return restore_objects_view(request, EmployeePayhead, 'employee payhead')
+
+@login_required
+@organization_member_required
+def restore_shift(request):
+    return restore_objects_view(request, Shift, 'shift')

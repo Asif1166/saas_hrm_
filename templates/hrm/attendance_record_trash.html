@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load organization_tags %}
+
+{% block title %}Attendance Trash{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <button id="restoreSelectedBtn"
+                                class="btn btn-success btn-sm"
+                                style="display:none;"
+                                data-restore-url="{% url 'hrm:restore_attendance_record' %}">
+                            <i class="fas fa-undo"></i> Restore Selected
+                        </button>
+
+                        <button id="deletePermanentlyBtn"
+                                class="btn btn-danger btn-sm"
+                                style="display:none;"
+                                data-delete-url="{% url 'hrm:delete_multiple_attendance_records' %}"
+                                data-type="hard">
+                            <i class="fas fa-trash-alt"></i> Delete Permanently
+                        </button>
+                    </div>
+
+                    <h5>Deleted Attendance Records</h5>
+                    <a href="{% url 'hrm:attendance_list' %}" class="btn btn-sm btn-primary">All Attendance</a>
+                </div>
+
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table id="attendanceTrashTable" class="table table-dashed table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="mark-all"></th>
+                                    <th>SL</th>
+                                    <th>Employee</th>
+                                    <th>Date</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Deleted At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in page_obj %}
+                                <tr>
+                                    <td><input class="row-checkbox" type="checkbox" value="{{ record.id }}"></td>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    <td>{{ record.employee.first_name }} {{ record.employee.last_name }}</td>
+                                    <td>{{ record.date }}</td>
+                                    <td>{{ record.check_in_time|default:"—" }}</td>
+                                    <td>{{ record.check_out_time|default:"—" }}</td>
+                                    <td>{{ record.deleted_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fa-solid fa-calendar-check fa-2x mb-3"></i>
+                                            <p>No deleted attendance records found.</p>
+                                            <a href="{% url 'hrm:attendance_list' %}" class="btn btn-sm btn-primary">Back to Attendance List</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% include "pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initTableActions({
+        tableSelector: '#attendanceTrashTable',
+        markAllSelector: '.mark-all',
+        rowCheckboxSelector: '.row-checkbox',
+        restoreBtnSelector: '#restoreSelectedBtn',
+        deleteBtnSelector: '#deletePermanentlyBtn'
+    });
+});
+</script>
+{% endblock %}

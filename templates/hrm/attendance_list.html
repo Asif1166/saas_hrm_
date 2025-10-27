@@ -22,6 +22,21 @@
                         <a href="{% url 'hrm:attendance_list' %}" class="btn btn-sm btn-icon btn-outline-primary">
                             <i class="fa-solid fa-arrows-rotate"></i>
                         </a>
+                    
+
+                                                   <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:attendance_record_trash' %}'">
+                               <i class="fa-solid fa-trash-can me-1"></i> View Trash
+                        </button>
+
+
+                        <button id="deleteSelectedBtn"
+        class="btn btn-danger btn-sm"
+        style="display:none;"
+        data-delete-url="{% url 'hrm:delete_multiple_attendance_records' %}">
+    <i class="fa-solid fa-trash-can"></i> Delete Selected
+</button>
+                    
+                    
                     </div>
                 </div>
 
@@ -106,7 +121,16 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover table-striped align-middle">
                             <thead class="table-light">
+                              
+                              
                                 <tr>
+
+                                      <th class="no-sort">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="markAllAttendance">
+                                        </div>
+                                    </th>
+
                                     <th>#</th>
                                     <th>Employee</th>
                                     <th>Employee ID</th>
@@ -124,6 +148,13 @@
                             <tbody>
                                 {% for attendance in page_obj %}
                                     <tr>
+
+                            <td>
+                        <div class="form-check">
+                            <input class="form-check-input row-checkbox" type="checkbox" value="{{ attendance.id }}">
+                        </div>
+                    </td>
+
                             <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
 
                                                                                 <td>

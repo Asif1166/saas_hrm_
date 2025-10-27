@@ -41,6 +41,7 @@
         <div class="d-flex justify-content-end mt-3">
             <a href="{% url 'hrm:holiday_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
             <button type="submit" class="btn btn-sm btn-success">
+                <i class="fa-solid fa-save me-1"></i>
                 {% if is_update %}Update{% else %}Save{% endif %} Holiday
             </button>
         </div>

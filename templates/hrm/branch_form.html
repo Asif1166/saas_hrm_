@@ -9,10 +9,17 @@
         <h2>{% if is_update %}Update{% else %}Add{% endif %} Branch</h2>
 
 <div class="btn-box">
-    <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-primary">All Branches</a>
-    <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
-        {% if is_update %}Update{% else %}Save{% endif %} Branch
-    </button>
+<a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-secondary">
+    <i class="fa-solid fa-arrow-left"></i> Back
+</a>       
+
+
+<button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+    <i class="fa-solid fa-save me-1"></i>
+    {% if is_update %}Update{% else %}Save{% endif %} Branch
+</button>
+
+
 </div>
 
 
@@ -147,7 +154,13 @@
 
             <div class="col-12 d-flex justify-content-end">
                 <a href="{% url 'hrm:branch_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
-                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Branch</button>
+
+
+                <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+    <i class="fa-solid fa-save me-1"></i>
+    {% if is_update %}Update{% else %}Save{% endif %} Branch
+</button>
+
             </div>
         </div>
     </form>

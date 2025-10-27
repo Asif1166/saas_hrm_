@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load organization_tags %}
+
+{% block title %}Designation Trash{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <button id="restoreSelectedBtn"
+                                class="btn btn-success btn-sm"
+                                style="display:none;"
+                                data-restore-url="{% url 'hrm:restore_designation' %}">
+                            <i class="fas fa-undo"></i> Restore Selected
+                        </button>
+
+                        <button id="deletePermanentlyBtn"
+                                class="btn btn-danger btn-sm"
+                                style="display:none;"
+                                data-delete-url="{% url 'hrm:delete_multiple_designations' %}"
+                                data-type="hard">
+                            <i class="fas fa-trash-alt"></i> Delete Permanently
+                        </button>
+                    </div>
+
+                    <h5>Deleted Designations</h5>
+                    <a href="{% url 'hrm:designation_list' %}" class="btn btn-sm btn-primary">All Designations</a>
+                </div>
+
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table id="designationTrashTable" class="table table-dashed table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="mark-all"></th>
+                                    <th>SL</th>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Department</th>
+                                    <th>Level</th>
+                                    <th>Deleted At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for designation in page_obj %}
+                                <tr>
+                                    <td><input class="row-checkbox" type="checkbox" value="{{ designation.id }}"></td>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    <td>{{ designation.name }}</td>
+                                    <td>{{ designation.code }}</td>
+                                    <td>{{ designation.department.name|default:"—" }}</td>
+                                    <td>{{ designation.level }}</td>
+                                    <td>{{ designation.deleted_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fa-solid fa-user-tie fa-2x mb-3"></i>
+                                            <p>No deleted designations found.</p>
+                                            <a href="{% url 'hrm:designation_list' %}" class="btn btn-sm btn-primary">Back to Designation List</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% include "pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initTableActions({
+        tableSelector: '#designationTrashTable',
+        markAllSelector: '.mark-all',
+        rowCheckboxSelector: '.row-checkbox',
+        restoreBtnSelector: '#restoreSelectedBtn',
+        deleteBtnSelector: '#deletePermanentlyBtn'
+    });
+});
+</script>
+{% endblock %}

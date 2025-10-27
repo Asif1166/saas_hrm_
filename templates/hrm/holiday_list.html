@@ -20,6 +20,19 @@
                         <a href="{% url 'hrm:create_holiday' %}" class="btn btn-sm btn-primary">
                             <i class="fa-solid fa-plus"></i> Add Holiday
                         </a>
+
+                                                   <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:holiday_trash' %}'">
+                                <i class="fa-solid fa-trash-can me-1"></i> View Trash
+                        </button>
+
+
+                        <button id="deleteSelectedBtn"
+        class="btn btn-danger btn-sm"
+        style="display:none;"
+        data-delete-url="{% url 'hrm:delete_multiple_holidays' %}">
+    <i class="fa-solid fa-trash-can"></i> Delete Selected
+</button>
+           
                     </div>
                 </div>
 
@@ -49,7 +62,7 @@
                                 <tr>
                                     <th class="no-sort">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="markAllHoliday">
+                                            <input class="form-check-input row-checkbox" type="checkbox" id="markAllAttendanceHoliday">
                                         </div>
                                     </th>
                                     <th>Action</th>
@@ -64,7 +77,7 @@
                                 <tr>
                                     <td>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="holiday_ids" value="{{ holiday.id }}">
+                                            <input class="form-check-input row-checkbox" type="checkbox" value="{{ holiday.id }}">
                                         </div>
                                     </td>
                                     <td>

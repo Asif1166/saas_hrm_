@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load organization_tags %}
+
+{% block title %}Leave Request Trash{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <button id="restoreSelectedBtn"
+                                class="btn btn-success btn-sm"
+                                style="display:none;"
+                                data-restore-url="{% url 'hrm:restore_leave_request' %}">
+                            <i class="fas fa-undo"></i> Restore Selected
+                        </button>
+
+                        <button id="deletePermanentlyBtn"
+                                class="btn btn-danger btn-sm"
+                                style="display:none;"
+                                data-delete-url="{% url 'hrm:delete_multiple_leave_requests' %}"
+                                data-type="hard">
+                            <i class="fas fa-trash-alt"></i> Delete Permanently
+                        </button>
+                    </div>
+
+                    <h5>Deleted Leave Requests</h5>
+                    <a href="{% url 'hrm:leave_list' %}" class="btn btn-sm btn-primary">All Leave Requests</a>
+                </div>
+
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table id="leaveRequestTrashTable" class="table table-dashed table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="mark-all"></th>
+                                    <th>SL</th>
+                                    <th>Employee</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Deleted At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in page_obj %}
+                                <tr>
+                                    <td><input class="row-checkbox" type="checkbox" value="{{ leave.id }}"></td>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    <td>{{ leave.employee.get_full_name|default:leave.employee.user.username }}</td>
+                                    <td>{{ leave.get_leave_type_display }}</td>
+                                    <td>{{ leave.start_date|date:"M d, Y" }}</td>
+                                    <td>{{ leave.end_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if leave.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif leave.status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% elif leave.status == 'cancelled' %}
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ leave.deleted_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fa-solid fa-plane-departure fa-2x mb-3"></i>
+                                            <p>No deleted leave requests found.</p>
+                                            <a href="{% url 'hrm:leave_list' %}" class="btn btn-sm btn-primary">Back to Leave Request List</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% include "pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initTableActions({
+        tableSelector: '#leaveRequestTrashTable',
+        markAllSelector: '.mark-all',
+        rowCheckboxSelector: '.row-checkbox',
+        restoreBtnSelector: '#restoreSelectedBtn',
+        deleteBtnSelector: '#deletePermanentlyBtn'
+    });
+});
+</script>
+
+{% endblock %}

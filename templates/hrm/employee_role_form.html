@@ -76,7 +76,9 @@
 
             <div class="col-12 d-flex justify-content-end">
                 <a href="{% url 'hrm:employee_role_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
-                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Employee Role</button>
+                <button type="submit" class="btn btn-sm btn-success">
+                    <i class="fa-solid fa-save me-1"></i>
+                    {% if is_update %}Update{% else %}Save{% endif %} Employee Role</button>
             </div>
         </div>
     </form>

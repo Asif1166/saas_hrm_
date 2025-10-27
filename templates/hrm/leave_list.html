@@ -16,6 +16,18 @@
                         <a href="{% url 'hrm:leave_list' %}" class="btn btn-sm btn-outline-primary">
                             <i class="fa-solid fa-arrows-rotate"></i> Refresh
                         </a>
+
+                        <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:leave_request_trash' %}'">
+       <i class="fa-solid fa-trash-can me-1"></i> View Trash
+</button>
+
+<button id="deleteSelectedBtn"
+        class="btn btn-danger btn-sm"
+        style="display:none;"
+        data-delete-url="{% url 'hrm:delete_multiple_leave_requests' %}">
+    <i class="fa-solid fa-trash-can"></i> Delete Selected
+</button>
+
                     </div>
                 </div>
 
@@ -66,7 +78,7 @@
                                 <tr>
                                     <td>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="leave_ids" value="{{ leave.id }}">
+                                            <input class="form-check-input row-checkbox" type="checkbox" value="{{ leave.id }}">
                                         </div>
                                     </td>
                                     <td>

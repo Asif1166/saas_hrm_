@@ -10,6 +10,7 @@
         <div class="btn-box">
             <a href="{% url 'hrm:shift_list' %}" class="btn btn-sm btn-primary">All Shifts</a>
             <button type="button" class="btn btn-sm btn-success" id="topSaveBtn">
+                <i class="fa-solid fa-save me-1"></i>
         {% if is_update %}Update{% else %}Save{% endif %} Shift
     </button>
         
@@ -140,7 +141,9 @@
 
             <div class="col-12 d-flex justify-content-end">
                 <a href="{% url 'hrm:shift_list' %}" class="btn btn-sm btn-secondary me-2">Cancel</a>
-                <button type="submit" class="btn btn-sm btn-success">{% if is_update %}Update{% else %}Save{% endif %} Shift</button>
+                <button type="submit" class="btn btn-sm btn-success">
+                    <i class="fa-solid fa-save me-1"></i>
+                    {% if is_update %}Update{% else %}Save{% endif %} Shift</button>
             </div>
         </div>
     </form>
