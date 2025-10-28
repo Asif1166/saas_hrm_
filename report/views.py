@@ -65,7 +65,7 @@ def employee_profile_summary_report(request):
     }
     
     report_generator = EmployeeProfileSummaryReport()
-    report_data = report_generator.generate_report(organization, filters)
+    report_data = report_generator.generate_profile_summary(organization, filters)
     
     # Get filter options
     filter_options = {
@@ -98,7 +98,7 @@ def employee_status_report(request):
     }
     
     report_generator = EmployeeStatusReport()
-    report_data = report_generator.generate_report(organization, filters)
+    report_data = report_generator.generate_employee_status(organization, filters)
     
     # Get filter options
     filter_options = {
@@ -131,7 +131,7 @@ def employee_joining_report(request):
     }
     
     report_generator = EmployeeJoiningReport()
-    report_data = report_generator.generate_report(organization, filters)
+    report_data = report_generator.generate_joining_report(organization, filters)
     
     # Get filter options
     filter_options = {
@@ -162,7 +162,7 @@ def employee_exit_report(request):
     }
     
     report_generator = EmployeeExitReport()
-    report_data = report_generator.generate_report(organization, filters)
+    report_data = report_generator.generate_exit_report(organization, filters)
     
     # Get filter options
     filter_options = {

@@ -1,16 +1,4 @@
 <!-- templates/reports/partials/profile_summary.html -->
-<!-- Search Filter -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <form method="get" class="d-flex">
-            <input type="text" name="employee_id" class="form-control me-2" 
-                   placeholder="Enter Employee ID" value="{{ filters.employee_id }}">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search me-1"></i>Search
-            </button>
-        </form>
-    </div>
-</div>
 
 {% if report_data.data %}
 {% for employee in report_data.data %}

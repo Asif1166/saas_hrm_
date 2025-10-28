@@ -299,7 +299,6 @@ class EmployeeJoiningReport:
             'joining_list': joining_list
         }
     
-
 class EmployeeExitReport:
     def generate_exit_report(self, organization, filters=None):
         """
@@ -352,24 +351,7 @@ class EmployeeExitReport:
             count=Count('id')
         ).order_by('-count')
         
-        # Experience analysis of exited employees
-        experience_analysis = []
-        experience_ranges = [
-            ('0-1', (0, 1)),
-            ('1-3', (1, 3)),
-            ('3-5', (3, 5)),
-            ('5-10', (5, 10)),
-            ('10+', (10, 100))
-        ]
-        
-        for range_name, (min_exp, max_exp) in experience_ranges:
-            count = employees.filter(experience_years__gte=min_exp, experience_years__lt=max_exp).count()
-            experience_analysis.append({
-                'experience_range': range_name,
-                'count': count
-            })
-        
-        # Prepare detailed exit list
+        # Prepare detailed exit list first
         exit_list = []
         for emp in employees:
             # Calculate employment duration
@@ -380,6 +362,9 @@ class EmployeeExitReport:
                 months = (duration_days % 365) // 30
                 employment_duration = f"{years} years, {months} months"
             
+            # Get experience years from property
+            experience_years = emp.experience_years
+            
             exit_list.append({
                 'employee_id': emp.employee_id,
                 'full_name': emp.full_name,
@@ -389,10 +374,29 @@ class EmployeeExitReport:
                 'hire_date': emp.hire_date.strftime('%d-%m-%Y') if emp.hire_date else 'N/A',
                 'termination_date': emp.termination_date.strftime('%d-%m-%Y') if emp.termination_date else 'N/A',
                 'employment_duration': employment_duration,
-                'experience_at_exit': f"{emp.experience_years} years",
+                'experience_at_exit': f"{experience_years} years",
                 'last_designation': emp.designation.name if emp.designation else 'N/A',
                 'reporting_manager': emp.reporting_manager.full_name if emp.reporting_manager else 'N/A',
-                'exit_reason': 'Terminated'  # You can add reason field in Employee model
+                'exit_reason': 'Terminated',  # You can add reason field in Employee model
+                '_experience_years': experience_years  # Store for analysis
+            })
+        
+        # Experience analysis of exited employees (calculate after building exit_list)
+        experience_analysis = []
+        experience_ranges = [
+            ('0-1', (0, 1)),
+            ('1-3', (1, 3)),
+            ('3-5', (3, 5)),
+            ('5-10', (5, 10)),
+            ('10+', (10, 100))
+        ]
+        
+        for range_name, (min_exp, max_exp) in experience_ranges:
+            count = sum(1 for emp in exit_list 
+                       if min_exp <= emp['_experience_years'] < max_exp)
+            experience_analysis.append({
+                'experience_range': range_name,
+                'count': count
             })
         
         return {

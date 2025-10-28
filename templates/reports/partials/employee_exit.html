@@ -1,5 +1,7 @@
 <!-- templates/reports/partials/employee_exit.html -->
-<!-- Summary Cards -->
+<!-- Remove any {% load report_filters %} line at the top -->
+
+<!-- Summary Cards (keep this part as it is) -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-danger shadow h-100 py-2">
@@ -111,16 +113,21 @@
                                     <span class="badge bg-danger rounded-pill">{{ dept.count }}</span>
                                 </td>
                                 <td>
+                                    {% if report_data.summary.total_exits > 0 %}
+                                    {% widthratio dept.count report_data.summary.total_exits 100 as percentage %}
                                     <div class="progress" style="height: 20px;">
                                         <div class="progress-bar bg-danger" 
                                              role="progressbar" 
-                                             style="width: {{ dept.count|divisibleby:report_data.summary.total_exits|multiply:100 }}%"
+                                             style="width: {{ percentage }}%"
                                              aria-valuenow="{{ dept.count }}" 
                                              aria-valuemin="0" 
                                              aria-valuemax="{{ report_data.summary.total_exits }}">
-                                            {{ dept.count|divisibleby:report_data.summary.total_exits|multiply:100|floatformat:1 }}%
+                                            {{ percentage }}%
                                         </div>
                                     </div>
+                                    {% else %}
+                                    <div class="text-muted">N/A</div>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -153,7 +160,7 @@
                             <tr>
                                 <th>Experience Range</th>
                                 <th>Exit Count</th>
-                                <th>Trend</th>
+                                <th>Percentage</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -164,8 +171,12 @@
                                     <span class="badge bg-warning text-dark rounded-pill">{{ exp.count }}</span>
                                 </td>
                                 <td>
+                                    {% if report_data.summary.total_exits > 0 %}
                                     {% widthratio exp.count report_data.summary.total_exits 100 as percentage %}
                                     <small class="text-muted">{{ percentage }}% of total exits</small>
+                                    {% else %}
+                                    <small class="text-muted">N/A</small>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -211,15 +222,20 @@
                                     <span class="badge bg-primary rounded-pill">{{ month_data.count }}</span>
                                 </td>
                                 <td>
+                                    {% if report_data.summary.total_exits > 0 %}
+                                    {% widthratio month_data.count report_data.summary.total_exits 100 as percentage %}
                                     <div class="progress" style="height: 15px;">
                                         <div class="progress-bar bg-primary" 
                                              role="progressbar" 
-                                             style="width: {% widthratio month_data.count report_data.summary.total_exits 100 %}%"
+                                             style="width: {{ percentage }}%"
                                              aria-valuenow="{{ month_data.count }}" 
                                              aria-valuemin="0" 
                                              aria-valuemax="{{ report_data.summary.total_exits }}">
                                         </div>
                                     </div>
+                                    {% else %}
+                                    <div class="text-muted">N/A</div>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -342,11 +358,7 @@ function exportExitReport(format) {
     const filters = new URLSearchParams(window.location.search);
     let url = '';
     
-    if (format === 'excel') {
-        url = `{% url 'employee_reports' 'exit' %}?${filters.toString()}&export=excel`;
-    } else if (format === 'pdf') {
-        url = `{% url 'employee_reports' 'exit' %}?${filters.toString()}&export=pdf`;
-    }
+
     
     if (url) {
         window.open(url, '_blank');
