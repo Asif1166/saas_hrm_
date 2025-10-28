@@ -1,0 +1,87 @@
+<!-- templates/reports/partials/employee_joining.html -->
+<!-- Summary -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Joinees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_joinees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Period
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.period }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Joining List -->
+<h5 class="mb-3">Employee Joining Details</h5>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Branch</th>
+                <th>Hire Date</th>
+                <th>Confirmation Date</th>
+                <th>Probation Period</th>
+                <th>Probation Status</th>
+                <th>Reporting Manager</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in report_data.joining_list %}
+            <tr>
+                <td><strong>{{ emp.employee_id }}</strong></td>
+                <td>{{ emp.full_name }}</td>
+                <td>{{ emp.department }}</td>
+                <td>{{ emp.designation }}</td>
+                <td>{{ emp.branch }}</td>
+                <td>{{ emp.hire_date }}</td>
+                <td>{{ emp.confirmation_date }}</td>
+                <td>{{ emp.probation_period }}</td>
+                <td>
+                    <span class="badge {% if emp.probation_status == 'Under Probation' %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ emp.probation_status }}
+                    </span>
+                </td>
+                <td>{{ emp.reporting_manager }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="text-center text-muted py-4">
+                    <i class="fas fa-user-plus fa-2x mb-3"></i><br>
+                    No employees found for the selected period
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

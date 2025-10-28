@@ -1,0 +1,371 @@
+<!-- templates/reports/partials/employee_exit.html -->
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Total Exits
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_exits }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-times fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Attrition Rate
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.attrition_rate }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Current Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.current_employee_count }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Period
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.period }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Section -->
+<div class="row mb-4">
+    <!-- Department-wise Exit -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-building me-2"></i>Department-wise Exit Analysis
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if report_data.department_wise_exit %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th>Exit Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in report_data.department_wise_exit %}
+                            <tr>
+                                <td>{{ dept.department__name|default:"Not Assigned" }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger rounded-pill">{{ dept.count }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-danger" 
+                                             role="progressbar" 
+                                             style="width: {{ dept.count|divisibleby:report_data.summary.total_exits|multiply:100 }}%"
+                                             aria-valuenow="{{ dept.count }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="{{ report_data.summary.total_exits }}">
+                                            {{ dept.count|divisibleby:report_data.summary.total_exits|multiply:100|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-chart-pie fa-2x mb-2"></i><br>
+                    No department data available
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Experience Analysis -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-bar me-2"></i>Experience-wise Exit Analysis
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if report_data.experience_analysis %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Experience Range</th>
+                                <th>Exit Count</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exp in report_data.experience_analysis %}
+                            <tr>
+                                <td>{{ exp.experience_range }} years</td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark rounded-pill">{{ exp.count }}</span>
+                                </td>
+                                <td>
+                                    {% widthratio exp.count report_data.summary.total_exits 100 as percentage %}
+                                    <small class="text-muted">{{ percentage }}% of total exits</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-user-clock fa-2x mb-2"></i><br>
+                    No experience data available
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Exit Trend -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-line me-2"></i>Monthly Exit Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if report_data.monthly_exit_trend %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Exit Count</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month_data in report_data.monthly_exit_trend %}
+                            <tr>
+                                <td>{{ month_data.month|date:"F Y" }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ month_data.count }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 15px;">
+                                        <div class="progress-bar bg-primary" 
+                                             role="progressbar" 
+                                             style="width: {% widthratio month_data.count report_data.summary.total_exits 100 %}%"
+                                             aria-valuenow="{{ month_data.count }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="{{ report_data.summary.total_exits }}">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
+                    No monthly trend data available for the selected period
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Exit List -->
+<h5 class="mb-3">
+    <i class="fas fa-list me-2"></i>Detailed Exit List
+    <span class="badge bg-secondary ms-2">{{ report_data.exit_list|length }} employees</span>
+</h5>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover" id="exitReportTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Branch</th>
+                <th>Hire Date</th>
+                <th>Exit Date</th>
+                <th>Employment Duration</th>
+                <th>Experience at Exit</th>
+                <th>Last Designation</th>
+                <th>Reporting Manager</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in report_data.exit_list %}
+            <tr>
+                <td>
+                    <strong>{{ emp.employee_id }}</strong>
+                </td>
+                <td>{{ emp.full_name }}</td>
+                <td>{{ emp.department }}</td>
+                <td>{{ emp.designation }}</td>
+                <td>{{ emp.branch }}</td>
+                <td>{{ emp.hire_date }}</td>
+                <td>
+                    <span class="badge bg-danger">{{ emp.termination_date }}</span>
+                </td>
+                <td>
+                    <small class="text-muted">{{ emp.employment_duration }}</small>
+                </td>
+                <td>
+                    <span class="badge bg-info text-dark">{{ emp.experience_at_exit }}</span>
+                </td>
+                <td>{{ emp.last_designation }}</td>
+                <td>{{ emp.reporting_manager }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center text-muted py-4">
+                    <i class="fas fa-user-times fa-3x mb-3"></i>
+                    <h5>No Employee Exits Found</h5>
+                    <p class="mb-0">No employee exits found for the selected criteria</p>
+                    {% if filters.start_date or filters.end_date %}
+                    <small>Try adjusting your date range filters</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Export Section -->
+{% if report_data.exit_list %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-left-success shadow">
+            <div class="card-body">
+                <h6 class="font-weight-bold text-success mb-3">
+                    <i class="fas fa-download me-2"></i>Export Options
+                </h6>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-success" onclick="exportExitReport('excel')">
+                        <i class="fas fa-file-excel me-1"></i>Export to Excel
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="exportExitReport('pdf')">
+                        <i class="fas fa-file-pdf me-1"></i>Export to PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="printExitReport()">
+                        <i class="fas fa-print me-1"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+#exitReportTable tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+}
+</style>
+
+<script>
+function exportExitReport(format) {
+    // Add your export logic here
+    const filters = new URLSearchParams(window.location.search);
+    let url = '';
+    
+    if (format === 'excel') {
+        url = `{% url 'employee_reports' 'exit' %}?${filters.toString()}&export=excel`;
+    } else if (format === 'pdf') {
+        url = `{% url 'employee_reports' 'exit' %}?${filters.toString()}&export=pdf`;
+    }
+    
+    if (url) {
+        window.open(url, '_blank');
+    }
+}
+
+function printExitReport() {
+    window.print();
+}
+
+// Add row click functionality for detailed view
+document.addEventListener('DOMContentLoaded', function() {
+    const tableRows = document.querySelectorAll('#exitReportTable tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const employeeId = this.cells[0].textContent.trim();
+            // You can implement a modal or redirect to employee detail page
+            console.log('View details for:', employeeId);
+        });
+    });
+});
+</script>

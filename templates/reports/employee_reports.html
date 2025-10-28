@@ -1,0 +1,231 @@
+<!-- templates/reports/employee_reports.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0 text-gray-800">
+                    <i class="fas fa-users me-2"></i>{{ page_title }}
+                </h1>
+                <div>
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button class="btn btn-success ms-2" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                    <button class="btn btn-danger ms-2" onclick="exportToPDF()">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </button>
+                </div>
+            </div>
+            <p class="text-muted">Generated on: {{ report_data.generated_on }}</p>
+        </div>
+    </div>
+
+    <!-- Report Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'report:employee_directory_report' %}" 
+                           class="btn {% if report_type == 'directory' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                            <i class="fas fa-list me-1"></i>Directory
+                        </a>
+                        <a href="{% url 'report:employee_profile_summary_report' %}" 
+                           class="btn {% if report_type == 'profile-summary' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                            <i class="fas fa-id-card me-1"></i>Profile Summary
+                        </a>
+                        <a href="{% url 'report:employee_status_report' %}" 
+                           class="btn {% if report_type == 'status' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                            <i class="fas fa-chart-bar me-1"></i>Status
+                        </a>
+                        <a href="{% url 'report:employee_joining_report' %}" 
+                           class="btn {% if report_type == 'joining' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                            <i class="fas fa-user-plus me-1"></i>Joining
+                        </a>
+                        <a href="{% url 'report:employee_exit_report' %}" 
+                           class="btn {% if report_type == 'exit' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                            <i class="fas fa-user-minus me-1"></i>Exit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-filter me-1"></i>Filters
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="reportFilters">
+                        <div class="row">
+                            {% if report_type == 'directory' or report_type == 'status' %}
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Department</label>
+                                <select name="department" class="form-select">
+                                    <option value="">All Departments</option>
+                                    {% for dept in filter_options.departments %}
+                                    <option value="{{ dept.id }}" 
+                                        {% if filters.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ dept.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Designation</label>
+                                <select name="designation" class="form-select">
+                                    <option value="">All Designations</option>
+                                    {% for desg in filter_options.designations %}
+                                    <option value="{{ desg.id }}"
+                                        {% if filters.designation == desg.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ desg.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            {% if report_type == 'directory' %}
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Branch</label>
+                                <select name="branch" class="form-select">
+                                    <option value="">All Branches</option>
+                                    {% for branch in filter_options.branches %}
+                                    <option value="{{ branch.id }}"
+                                        {% if filters.branch == branch.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ branch.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Employment Status</label>
+                                <select name="employment_status" class="form-select">
+                                    <option value="">All Status</option>
+                                    {% for status_code, status_name in filter_options.employment_statuses %}
+                                    <option value="{{ status_code }}"
+                                        {% if filters.employment_status == status_code %}selected{% endif %}>
+                                        {{ status_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            {% if report_type == 'joining' or report_type == 'exit' %}
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" name="start_date" class="form-control" 
+                                       value="{{ filters.start_date }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" name="end_date" class="form-control" 
+                                       value="{{ filters.end_date }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Department</label>
+                                <select name="department" class="form-select">
+                                    <option value="">All Departments</option>
+                                    {% for dept in filter_options.departments %}
+                                    <option value="{{ dept.id }}" 
+                                        {% if filters.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ dept.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            {% if report_type == 'profile-summary' %}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Employee ID</label>
+                                <input type="text" name="employee_id" class="form-control" 
+                                       placeholder="Enter Employee ID" value="{{ filters.employee_id }}">
+                            </div>
+                            {% endif %}
+
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Search</label>
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Search..." value="{{ filters.search }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Apply Filters
+                                </button>
+                                <a href="" class="btn btn-outline-secondary">
+                                    <i class="fas fa-refresh me-1"></i>Clear All
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    {% if report_type == 'directory' %}
+                        {% include 'reports/partials/employee_directory.html' %}
+                    {% elif report_type == 'profile-summary' %}
+                        {% include 'reports/partials/profile_summary.html' %}
+                    {% elif report_type == 'status' %}
+                        {% include 'reports/partials/employee_status.html' %}
+                    {% elif report_type == 'joining' %}
+                        {% include 'reports/partials/employee_joining.html' %}
+                    {% elif report_type == 'exit' %}
+                        {% include 'reports/partials/employee_exit.html' %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportToExcel() {
+    // Implement Excel export logic
+    alert('Excel export functionality will be implemented');
+}
+
+function exportToPDF() {
+    // Implement PDF export logic
+    alert('PDF export functionality will be implemented');
+}
+
+// Auto-submit form when select changes for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select[name]');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            document.getElementById('reportFilters').submit();
+        });
+    });
+});
+</script>
+{% endblock %}
