@@ -1,4 +1,3 @@
-# reports/templatetags/report_filters.py
 from django import template
 
 register = template.Library()
@@ -41,3 +40,25 @@ def percentage(value, total):
 def get_item(dictionary, key):
     """Get item from dictionary"""
     return dictionary.get(key, '')
+
+@register.filter
+def sum_attr(queryset, attr):
+    """Sum a specific attribute from a list of dictionaries"""
+    try:
+        return sum(item.get(attr, 0) for item in queryset)
+    except (AttributeError, TypeError):
+        return 0
+
+@register.filter
+def to_json(value):
+    """Convert value to JSON string"""
+    import json
+    return json.dumps(value)
+
+@register.filter
+def div(value, arg):
+    """Divide value by arg"""
+    try:
+        return float(value) / float(arg)
+    except (ValueError, ZeroDivisionError):
+        return 0

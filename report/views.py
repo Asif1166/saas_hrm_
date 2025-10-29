@@ -7,8 +7,10 @@ from functools import wraps
 from hrm.models import Employee, Department, Designation, Branch
 from organization.decorators import organization_member_required
 from report.attendance_reports import *
+from report.earnings_deductions_reports import *
 from report.payroll_reports import *
 from report.salary_reports import *
+from report.statutory_compliance_reports import *
 from .employee_reports import (
     EmployeeDirectoryReport,
     EmployeeProfileSummaryReport,
@@ -609,3 +611,226 @@ def comparative_salary_report(request):
     }
     
     return render(request, 'reports/salary_reports.html', context)
+
+
+
+
+# Earnings & Deductions Reports
+@login_required
+@organization_member_required
+def earnings_breakdown_report(request):
+    """Earnings Breakdown Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'designation': request.GET.get('designation'),
+        'employee_id': request.GET.get('employee_id'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = EarningsBreakdownReport()
+    report_data = report_generator.generate_earnings_breakdown_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department, Designation
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'designations': Designation.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'earnings-breakdown',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Earnings Breakdown Report'
+    }
+    
+    return render(request, 'reports/earnings_deductions_reports.html', context)
+
+@login_required
+@organization_member_required
+def deductions_summary_report(request):
+    """Deductions Summary Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'designation': request.GET.get('designation'),
+        'employee_id': request.GET.get('employee_id'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = DeductionsSummaryReport()
+    report_data = report_generator.generate_deductions_summary_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department, Designation
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'designations': Designation.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'deductions-summary',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Deductions Summary Report'
+    }
+    
+    return render(request, 'reports/earnings_deductions_reports.html', context)
+
+@login_required
+@organization_member_required
+def payhead_analysis_report(request):
+    """Payhead Analysis Report"""
+    organization = request.organization
+    
+    filters = {
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+        'payhead_type': request.GET.get('payhead_type'),
+    }
+    
+    report_generator = PayheadAnalysisReport()
+    report_data = report_generator.generate_payhead_analysis_report(organization, filters)
+    
+    context = {
+        'report_type': 'payhead-analysis',
+        'report_data': report_data,
+        'filters': filters,
+        'page_title': 'Payhead Analysis Report'
+    }
+    
+    return render(request, 'reports/earnings_deductions_reports.html', context)
+
+# Statutory & Compliance Reports
+@login_required
+@organization_member_required
+def provident_fund_report(request):
+    """Provident Fund Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'employee_id': request.GET.get('employee_id'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = ProvidentFundReport()
+    report_data = report_generator.generate_provident_fund_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'provident-fund',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Provident Fund Report'
+    }
+    
+    return render(request, 'reports/statutory_compliance_reports.html', context)
+
+@login_required
+@organization_member_required
+def tax_deduction_report(request):
+    """Tax Deduction Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'employee_id': request.GET.get('employee_id'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = TaxDeductionReport()
+    report_data = report_generator.generate_tax_deduction_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'tax-deduction',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Tax Deduction Report'
+    }
+    
+    return render(request, 'reports/statutory_compliance_reports.html', context)
+
+@login_required
+@organization_member_required
+def esi_report(request):
+    """ESI Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'employee_id': request.GET.get('employee_id'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = ESIReport()
+    report_data = report_generator.generate_esi_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'esi',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'ESI Report'
+    }
+    
+    return render(request, 'reports/statutory_compliance_reports.html', context)
+
+@login_required
+@organization_member_required
+def gratuity_report(request):
+    """Gratuity Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'employee_id': request.GET.get('employee_id'),
+    }
+    
+    report_generator = GratuityReport()
+    report_data = report_generator.generate_gratuity_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'gratuity',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Gratuity Report'
+    }
+    
+    return render(request, 'reports/statutory_compliance_reports.html', context)

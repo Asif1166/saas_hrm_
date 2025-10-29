@@ -31,5 +31,17 @@ urlpatterns = [
     path('salary-structure/', views.salary_structure_report, name='salary_structure_report'),
     path('salary-revision/', views.salary_revision_report, name='salary_revision_report'),
     path('comparative-salary/', views.comparative_salary_report, name='comparative_salary_report'),
+
+
+    # Earnings & Deductions Reports
+    path('earnings-breakdown/', views.earnings_breakdown_report, name='earnings_breakdown_report'),
+    path('deductions-summary/', views.deductions_summary_report, name='deductions_summary_report'),
+    path('payhead-analysis/', views.payhead_analysis_report, name='payhead_analysis_report'),
+    
+    # Statutory & Compliance Reports
+    path('provident-fund/', views.provident_fund_report, name='provident_fund_report'),
+    path('tax-deduction/', views.tax_deduction_report, name='tax_deduction_report'),
+    path('esi-report/', views.esi_report, name='esi_report'),
+    path('gratuity-report/', views.gratuity_report, name='gratuity_report'),
     
     ]
