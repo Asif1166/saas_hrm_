@@ -1,0 +1,246 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.payroll_period or report_data.filters.start_date %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.payroll_period %}Payroll Period | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Periods
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_periods }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Balanced Periods
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.balanced_periods }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Unbalanced Periods
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.unbalanced_periods }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Balance Percentage
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.balance_percentage }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-pie me-1"></i> Financial Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="text-white-50 small">Total Net Salary</div>
+                                        <div class="h5">৳{{ report_data.summary.total_net_salary|floatformat:2 }}</div>
+                                    </div>
+                                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="text-white-50 small">Bank Transfers</div>
+                                        <div class="h5">৳{{ report_data.summary.total_bank_transfers|floatformat:2 }}</div>
+                                    </div>
+                                    <i class="fas fa-university fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning text-white mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="text-white-50 small">Cash Payments</div>
+                                        <div class="h5">৳{{ report_data.summary.total_cash_payments|floatformat:2 }}</div>
+                                    </div>
+                                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert {% if report_data.summary.overall_variance == 0 %}alert-success{% else %}alert-danger{% endif %}">
+                            <h6><i class="fas fa-balance-scale me-2"></i>Overall Reconciliation</h6>
+                            <p class="mb-0">
+                                <strong>Variance:</strong> ৳{{ report_data.summary.overall_variance|floatformat:2 }} |
+                                <strong>Status:</strong> 
+                                <span class="badge {% if report_data.summary.overall_variance == 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if report_data.summary.overall_variance == 0 %}Balanced{% else %}Unbalanced{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reconciliation Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-1"></i> Period-wise Reconciliation
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="reconciliationTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Payroll Period</th>
+                                <th>Start Date</th>
+                                <th>Pay Date</th>
+                                <th>Total Employees</th>
+                                <th>Total Net Salary</th>
+                                <th>Bank Transfers</th>
+                                <th>Cash Payments</th>
+                                <th>Variance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recon in report_data.reconciliation_data %}
+                            <tr>
+                                <td><strong>{{ recon.payroll_period }}</strong></td>
+                                <td>{{ recon.start_date }}</td>
+                                <td>{{ recon.pay_date }}</td>
+                                <td class="text-center">{{ recon.total_employees }}</td>
+                                <td class="text-end">৳{{ recon.total_net_salary|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    ৳{{ recon.bank_transfers.total_amount|floatformat:2 }}
+                                    <br><small class="text-muted">({{ recon.bank_transfers.employee_count }} employees)</small>
+                                </td>
+                                <td class="text-end">
+                                    ৳{{ recon.cash_payments.total_amount|floatformat:2 }}
+                                    <br><small class="text-muted">({{ recon.cash_payments.employee_count }} employees)</small>
+                                </td>
+                                <td class="text-end">
+                                    {% if recon.variance == 0 %}
+                                        <span class="text-success">৳{{ recon.variance|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span class="text-danger">৳{{ recon.variance|floatformat:2 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if recon.reconciliation_status == 'Balanced' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ recon.reconciliation_status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    <i class="fas fa-exclamation-circle me-2"></i>No reconciliation data found for the selected criteria
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

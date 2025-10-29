@@ -1,0 +1,24 @@
+{% extends 'reports/analytics_base.html' %}
+
+{% block analytics_content %}
+<div class="analytics-content">
+    <div class="alert alert-danger">
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Analytics Error</h4>
+        <p class="mb-0">{{ error_message }}</p>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-body text-center">
+            <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+            <h5>No Data Available</h5>
+            <p class="text-muted">
+                There is no payroll data available for the selected filters and time period.
+                Please try adjusting your filters or check if payroll data has been processed.
+            </p>
+            <a href="{% url 'report:analytics_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-refresh me-2"></i>Try Again with Different Filters
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

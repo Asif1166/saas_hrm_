@@ -1,0 +1,324 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.department or report_data.filters.designation %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.department %}Department | {% endif %}
+                            {% if report_data.filters.designation %}Designation | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Analysis Period
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.analysis_period }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Employees Terminated
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.employees_terminated }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-sign-out-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Attrition Rate
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.attrition_rate }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Summary -->
+<div class="row mb-4">
+    <div class="col-xl-4 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Voluntary Attrition
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.voluntary_attrition }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-times fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 mb-4">
+        <div class="card border-left-secondary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                            Involuntary Attrition
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.involuntary_attrition }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-slash fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 mb-4">
+        <div class="card border-left-dark shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                            Avg Tenure (Days)
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.avg_tenure_days }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Attrition Trend -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-line me-1"></i> Monthly Attrition Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Terminations</th>
+                                <th>Avg Headcount</th>
+                                <th>Attrition Rate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in report_data.monthly_attrition %}
+                            <tr>
+                                <td><strong>{{ month.month }}</strong></td>
+                                <td class="text-center text-danger">{{ month.terminations }}</td>
+                                <td class="text-center">{{ month.avg_headcount }}</td>
+                                <td class="text-end text-danger">{{ month.attrition_rate }}%</td>
+                                <td class="text-center">
+                                    {% if month.attrition_rate < 5 %}
+                                        <span class="badge bg-success">Low</span>
+                                    {% elif month.attrition_rate < 10 %}
+                                        <span class="badge bg-warning">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">High</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    No monthly attrition data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department-wise Attrition -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-building me-1"></i> Department-wise Attrition
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th>Terminations</th>
+                                <th>Percentage</th>
+                                <th>Avg Tenure (Days)</th>
+                                <th>Attrition Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in report_data.department_attrition %}
+                            <tr>
+                                <td><strong>{{ dept.department__name }}</strong></td>
+                                <td class="text-center text-danger">{{ dept.count }}</td>
+                                <td class="text-end">{{ dept.count|percentage:report_data.summary.employees_terminated|floatformat:1 }}%</td>
+                                <td class="text-end">{{ dept.avg_tenure.days }}</td>
+                                <td class="text-end text-danger">
+                                    {% with dept_rate=dept.count|percentage:report_data.summary.total_employees %}
+                                        {{ dept_rate|floatformat:1 }}%
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    No department attrition data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tenure Analysis -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-clock me-1"></i> Tenure Analysis of Terminated Employees
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tenure Bracket</th>
+                                <th>Employees</th>
+                                <th>Percentage</th>
+                                <th>Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tenure in report_data.tenure_analysis %}
+                            <tr>
+                                <td><strong>{{ tenure.tenure_bracket }}</strong></td>
+                                <td class="text-center">{{ tenure.count }}</td>
+                                <td class="text-end">{{ tenure.percentage }}%</td>
+                                <td class="text-center">
+                                    {% if tenure.tenure_bracket == '< 6 months' %}
+                                        <span class="badge bg-danger">High Risk</span>
+                                    {% elif tenure.tenure_bracket == '6-12 months' %}
+                                        <span class="badge bg-warning">Medium Risk</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Low Risk</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No tenure analysis data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

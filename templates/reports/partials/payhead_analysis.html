@@ -1,0 +1,241 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.payhead_type or report_data.filters.start_date %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.payhead_type %}{{ report_data.filters.payhead_type|title }} | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Payheads
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_payheads }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-cubes fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Earnings
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.earning_payheads }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Deductions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.deduction_payheads }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Earnings
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_earnings|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Total Deductions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_deductions|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Earnings Payheads -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-success text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-money-bill-wave me-1"></i> Earnings Payheads Analysis
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Payhead Name</th>
+                                <th>Code</th>
+                                <th>Calculation Type</th>
+                                <th>Employees</th>
+                                <th>Payslips</th>
+                                <th>Total Amount</th>
+                                <th>Avg per Employee</th>
+                                <th>Min Amount</th>
+                                <th>Max Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for code, data in report_data.earnings_payheads.items %}
+                            <tr>
+                                <td><strong>{{ data.name }}</strong></td>
+                                <td>{{ data.code }}</td>
+                                <td>{{ data.calculation_type|title }}</td>
+                                <td class="text-center">{{ data.employee_count }}</td>
+                                <td class="text-center">{{ data.payslip_count }}</td>
+                                <td class="text-end">৳{{ data.total_amount|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.avg_per_employee|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.min_amount|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.max_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-3">
+                                    No earnings payheads data found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deductions Payheads -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-warning text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-hand-holding-usd me-1"></i> Deductions Payheads Analysis
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Payhead Name</th>
+                                <th>Code</th>
+                                <th>Calculation Type</th>
+                                <th>Statutory</th>
+                                <th>Employees</th>
+                                <th>Payslips</th>
+                                <th>Total Amount</th>
+                                <th>Avg per Employee</th>
+                                <th>Min Amount</th>
+                                <th>Max Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for code, data in report_data.deductions_payheads.items %}
+                            <tr>
+                                <td><strong>{{ data.name }}</strong></td>
+                                <td>{{ data.code }}</td>
+                                <td>{{ data.calculation_type|title }}</td>
+                                <td class="text-center">
+                                    {% if data.is_statutory %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ data.employee_count }}</td>
+                                <td class="text-center">{{ data.payslip_count }}</td>
+                                <td class="text-end">৳{{ data.total_amount|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.avg_per_employee|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.min_amount|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.max_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-3">
+                                    No deductions payheads data found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

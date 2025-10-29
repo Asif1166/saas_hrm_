@@ -62,3 +62,42 @@ def div(value, arg):
         return float(value) / float(arg)
     except (ValueError, ZeroDivisionError):
         return 0
+    
+
+@register.filter
+def divide(value, arg):
+    """Safely divide the value by the argument"""
+    try:
+        if float(arg) == 0:
+            return 0
+        return float(value) / float(arg)
+    except (ValueError, ZeroDivisionError, TypeError):
+        return 0
+
+
+@register.filter
+def subtract(value, arg):
+    """Safely subtract the argument from the value"""
+    try:
+        return float(value) - float(arg)
+    except (ValueError, TypeError):
+        return 0
+    
+
+
+@register.filter
+def mul(value, arg):
+    """Multiply value by arg."""
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0
+    
+
+@register.filter
+def abs(value):
+    """Return absolute value."""
+    try:
+        return abs(float(value))
+    except (ValueError, TypeError):
+        return value

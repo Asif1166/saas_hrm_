@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'hrm',
     'payroll',
     'report',
+
+    'django.contrib.humanize',
+
 ]
 
 MIDDLEWARE = [

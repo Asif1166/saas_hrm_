@@ -3,11 +3,14 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from functools import wraps
-
+from django.http import JsonResponse
 from hrm.models import Employee, Department, Designation, Branch
 from organization.decorators import organization_member_required
 from report.attendance_reports import *
 from report.earnings_deductions_reports import *
+from report.hr_analytics_reports import *
+from report.payment_disbursement_reports import *
+from report.payroll_analytics_reports import *
 from report.payroll_reports import *
 from report.salary_reports import *
 from report.statutory_compliance_reports import *
@@ -834,3 +837,466 @@ def gratuity_report(request):
     }
     
     return render(request, 'reports/statutory_compliance_reports.html', context)
+
+
+
+# Payment & Disbursement Reports
+@login_required
+@organization_member_required
+def bank_transfer_report(request):
+    """Bank Transfer Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'designation': request.GET.get('designation'),
+        'employee_id': request.GET.get('employee_id'),
+        'payroll_period': request.GET.get('payroll_period'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = BankTransferReport()
+    report_data = report_generator.generate_bank_transfer_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department, Designation
+    from payroll.models import PayrollPeriod
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'designations': Designation.objects.filter(organization=organization, is_active=True),
+        'payroll_periods': PayrollPeriod.objects.filter(organization=organization).order_by('-start_date')
+    }
+    
+    context = {
+        'report_type': 'bank-transfer',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Bank Transfer Report'
+    }
+    
+    return render(request, 'reports/payment_disbursement_reports.html', context)
+
+@login_required
+@organization_member_required
+def cash_payment_report(request):
+    """Cash Payment Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'employee_id': request.GET.get('employee_id'),
+        'payroll_period': request.GET.get('payroll_period'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = CashPaymentReport()
+    report_data = report_generator.generate_cash_payment_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department
+    from payroll.models import PayrollPeriod
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'payroll_periods': PayrollPeriod.objects.filter(organization=organization).order_by('-start_date')
+    }
+    
+    context = {
+        'report_type': 'cash-payment',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Cash Payment Report'
+    }
+    
+    return render(request, 'reports/payment_disbursement_reports.html', context)
+
+@login_required
+@organization_member_required
+def payment_status_report(request):
+    """Payment Status Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'employee_id': request.GET.get('employee_id'),
+        'payroll_period': request.GET.get('payroll_period'),
+        'status': request.GET.get('status'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = PaymentStatusReport()
+    report_data = report_generator.generate_payment_status_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department
+    from payroll.models import PayrollPeriod
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'payroll_periods': PayrollPeriod.objects.filter(organization=organization).order_by('-start_date')
+    }
+    
+    context = {
+        'report_type': 'payment-status',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Payment Status Report'
+    }
+    
+    return render(request, 'reports/payment_disbursement_reports.html', context)
+
+@login_required
+@organization_member_required
+def payment_reconciliation_report(request):
+    """Payment Reconciliation Report"""
+    organization = request.organization
+    
+    filters = {
+        'payroll_period': request.GET.get('payroll_period'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = PaymentReconciliationReport()
+    report_data = report_generator.generate_payment_reconciliation_report(organization, filters)
+    
+    # Get filter options
+    from payroll.models import PayrollPeriod
+    filter_options = {
+        'payroll_periods': PayrollPeriod.objects.filter(organization=organization).order_by('-start_date')
+    }
+    
+    context = {
+        'report_type': 'payment-reconciliation',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Payment Reconciliation Report'
+    }
+    
+    return render(request, 'reports/payment_disbursement_reports.html', context)
+
+
+
+
+
+# HR Analytics Reports
+@login_required
+@organization_member_required
+def headcount_analysis_report(request):
+    """Headcount Analysis Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'designation': request.GET.get('designation'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = HeadcountAnalysisReport()
+    report_data = report_generator.generate_headcount_analysis_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department, Designation
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'designations': Designation.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'headcount-analysis',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Headcount Analysis Report'
+    }
+    
+    return render(request, 'reports/hr_analytics_reports.html', context)
+
+@login_required
+@organization_member_required
+def attrition_report(request):
+    """Attrition Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'designation': request.GET.get('designation'),
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = AttritionReport()
+    report_data = report_generator.generate_attrition_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department, Designation
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'designations': Designation.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'attrition',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Attrition Report'
+    }
+    
+    return render(request, 'reports/hr_analytics_reports.html', context)
+
+@login_required
+@organization_member_required
+def department_cost_analysis_report(request):
+    """Department Cost Analysis Report"""
+    organization = request.organization
+    
+    filters = {
+        'start_date': request.GET.get('start_date'),
+        'end_date': request.GET.get('end_date'),
+    }
+    
+    report_generator = DepartmentCostAnalysisReport()
+    report_data = report_generator.generate_department_cost_analysis(organization, filters)
+    
+    context = {
+        'report_type': 'department-cost-analysis',
+        'report_data': report_data,
+        'filters': filters,
+        'page_title': 'Department Cost Analysis Report'
+    }
+    
+    return render(request, 'reports/hr_analytics_reports.html', context)
+
+@login_required
+@organization_member_required
+def employee_cost_to_company_report(request):
+    """Employee Cost-to-Company Report"""
+    organization = request.organization
+    
+    filters = {
+        'department': request.GET.get('department'),
+        'designation': request.GET.get('designation'),
+        'employee_id': request.GET.get('employee_id'),
+    }
+    
+    report_generator = EmployeeCostToCompanyReport()
+    report_data = report_generator.generate_employee_cost_to_company_report(organization, filters)
+    
+    # Get filter options
+    from hrm.models import Department, Designation
+    filter_options = {
+        'departments': Department.objects.filter(organization=organization, is_active=True),
+        'designations': Designation.objects.filter(organization=organization, is_active=True),
+    }
+    
+    context = {
+        'report_type': 'employee-ctc',
+        'report_data': report_data,
+        'filters': filters,
+        'filter_options': filter_options,
+        'page_title': 'Employee Cost-to-Company Report'
+    }
+    
+    return render(request, 'reports/hr_analytics_reports.html', context)
+
+
+
+
+
+
+
+@login_required
+def payroll_analytics_dashboard(request):
+    """Main payroll analytics dashboard"""
+    try:
+        organization = request.organization
+        
+        # Get filter parameters
+        filters = _get_filters_from_request(request)
+        
+        # Generate dashboard data
+        dashboard = PayrollAnalyticsDashboard(organization)
+        dashboard_data = dashboard.generate_comprehensive_dashboard(filters)
+        
+        # Get filter options
+        departments = Department.objects.filter(organization=organization, is_active=True)
+        designations = Designation.objects.filter(organization=organization, is_active=True)
+        
+        context = {
+            'dashboard_data': dashboard_data,
+            'departments': departments,
+            'designations': designations,
+            'current_filters': filters,
+            'page_title': 'Payroll Analytics Dashboard'
+        }
+        
+        return render(request, 'report/analytics_dashboard.html', context)
+    
+    except ZeroDivisionError as e:
+        # Handle division by zero errors gracefully
+        return render(request, 'reports/analytics_error.html', {
+            'error_message': 'Unable to generate analytics: No payroll data available for the selected period.',
+            'page_title': 'Analytics Error'
+        })
+    
+    except Exception as e:
+        # Handle other errors
+        import traceback
+        print(f"Error in payroll analytics: {e}")
+        print(traceback.format_exc())
+        return render(request, 'reports/analytics_error.html', {
+            'error_message': f'Error generating analytics: {str(e)}',
+            'page_title': 'Analytics Error'
+        })
+
+
+@login_required
+def payroll_cost_trends_report(request):
+    """Payroll cost trends report view"""
+    organization = request.organization
+    
+    filters = _get_filters_from_request(request)
+    
+    report_generator = PayrollCostTrendsReport()
+    report_data = report_generator.generate_payroll_cost_trends_report(organization, filters)
+    
+    departments = Department.objects.filter(organization=organization, is_active=True)
+    
+    context = {
+        'report_data': report_data,
+        'departments': departments,
+        'current_filters': filters,
+        'page_title': 'Payroll Cost Trends Report'
+    }
+    
+    return render(request, 'reports/partials/cost_trends_report.html', context)
+
+
+@login_required
+def overtime_cost_analysis_report(request):
+    """Overtime cost analysis report view"""
+    organization = request.organization
+    
+    filters = _get_filters_from_request(request)
+    
+    report_generator = OvertimeCostAnalysisReport()
+    report_data = report_generator.generate_overtime_cost_analysis(organization, filters)
+    
+    departments = Department.objects.filter(organization=organization, is_active=True)
+    
+    context = {
+        'report_data': report_data,
+        'departments': departments,
+        'current_filters': filters,
+        'page_title': 'Overtime Cost Analysis Report'
+    }
+    
+    return render(request, 'reports/partials/overtime_analysis.html', context)
+
+
+@login_required
+def bonus_incentive_analysis_report(request):
+    """Bonus and incentive analysis report view"""
+    organization = request.organization
+    
+    filters = _get_filters_from_request(request)
+    
+    report_generator = BonusIncentiveAnalysisReport()
+    report_data = report_generator.generate_bonus_incentive_analysis(organization, filters)
+    
+    departments = Department.objects.filter(organization=organization, is_active=True)
+    designations = Designation.objects.filter(organization=organization, is_active=True)
+    
+    context = {
+        'report_data': report_data,
+        'departments': departments,
+        'designations': designations,
+        'current_filters': filters,
+        'page_title': 'Bonus & Incentive Analysis Report'
+    }
+    
+    return render(request, 'reports/partials/bonus_analysis.html', context)
+
+
+@login_required
+def tax_liability_projection_report(request):
+    """Tax liability projection report view"""
+    organization = request.organization
+    
+    filters = _get_filters_from_request(request)
+    
+    report_generator = TaxLiabilityProjectionReport()
+    report_data = report_generator.generate_tax_liability_projection(organization, filters)
+    
+    departments = Department.objects.filter(organization=organization, is_active=True)
+    
+    context = {
+        'report_data': report_data,
+        'departments': departments,
+        'current_filters': filters,
+        'page_title': 'Tax Liability Projection Report'
+    }
+    
+    return render(request, 'reports/partials/tax_projections.html', context)
+
+
+@login_required
+def payroll_analytics_api(request):
+    """API endpoint for AJAX analytics data"""
+    organization = request.organization
+    report_type = request.GET.get('report_type', 'dashboard')
+    filters = _get_filters_from_request(request)
+    
+    try:
+        if report_type == 'cost_trends':
+            report_generator = PayrollCostTrendsReport()
+            data = report_generator.generate_payroll_cost_trends_report(organization, filters)
+        elif report_type == 'overtime':
+            report_generator = OvertimeCostAnalysisReport()
+            data = report_generator.generate_overtime_cost_analysis(organization, filters)
+        elif report_type == 'bonus':
+            report_generator = BonusIncentiveAnalysisReport()
+            data = report_generator.generate_bonus_incentive_analysis(organization, filters)
+        elif report_type == 'tax':
+            report_generator = TaxLiabilityProjectionReport()
+            data = report_generator.generate_tax_liability_projection(organization, filters)
+        else:
+            dashboard = PayrollAnalyticsDashboard(organization)
+            data = dashboard.generate_comprehensive_dashboard(filters)
+        
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+def _get_filters_from_request(request):
+    """Extract filters from request parameters"""
+    filters = {}
+    
+    # Date filters
+    if request.GET.get('start_date'):
+        filters['start_date'] = request.GET.get('start_date')
+    if request.GET.get('end_date'):
+        filters['end_date'] = request.GET.get('end_date')
+    
+    # Department filter
+    if request.GET.get('department'):
+        filters['department'] = request.GET.get('department')
+    
+    # Designation filter
+    if request.GET.get('designation'):
+        filters['designation'] = request.GET.get('designation')
+    
+    # Employee filter
+    if request.GET.get('employee_id'):
+        filters['employee_id'] = request.GET.get('employee_id')
+    
+    return filters

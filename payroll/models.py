@@ -210,7 +210,7 @@ class PayslipComponent(BaseOrganizationModel):
         ordering = ['component_type', 'display_order', 'component_name']
     
     def __str__(self):
-        return f"{self.component_name}: ₹{self.amount}"
+        return f"{self.component_name}: ৳{self.amount}"
 
 
 

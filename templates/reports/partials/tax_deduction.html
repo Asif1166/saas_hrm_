@@ -1,0 +1,216 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.department or report_data.filters.employee_id %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.department %}Department | {% endif %}
+                            {% if report_data.filters.employee_id %}Employee ID: {{ report_data.filters.employee_id }} | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Tax Deducted
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_tax_deduction|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Avg Tax per Employee
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.avg_tax_per_employee|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Financial Year
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.financial_year }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tax Slabs Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-pie me-1"></i> Tax Slab Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tax Slab</th>
+                                <th>Employees</th>
+                                <th>Total Tax</th>
+                                <th>Avg Tax per Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slab, data in report_data.tax_slabs.items %}
+                            <tr>
+                                <td><strong>{{ slab }}</strong></td>
+                                <td class="text-center">{{ data.employee_count }}</td>
+                                <td class="text-end">৳{{ data.total_tax|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.total_tax|divisibleby:data.employee_count|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No tax slab data found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tax Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-1"></i> Tax Deduction Details
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="taxTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>PAN Number</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Financial Year</th>
+                                <th>Gross Salary</th>
+                                <th>Taxable Income</th>
+                                <th>Tax Deducted</th>
+                                <th>Annual Estimated Tax</th>
+                                <th>Tax Slab</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tax in report_data.tax_data %}
+                            <tr>
+                                <td><strong>{{ tax.employee_id }}</strong></td>
+                                <td>{{ tax.full_name }}</td>
+                                <td>{{ tax.pan_number }}</td>
+                                <td>{{ tax.department }}</td>
+                                <td>{{ tax.designation }}</td>
+                                <td>{{ tax.financial_year }}</td>
+                                <td class="text-end">৳{{ tax.gross_salary|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ tax.taxable_income|floatformat:2 }}</td>
+                                <td class="text-end"><strong>৳{{ tax.tax_deducted|floatformat:2 }}</strong></td>
+                                <td class="text-end">৳{{ tax.annual_estimated_tax|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if tax.tax_slab == 'No Tax' %}bg-success
+                                        {% elif tax.tax_slab == '5% Slab' %}bg-info
+                                        {% elif tax.tax_slab == '20% Slab' %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ tax.tax_slab }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center text-muted py-4">
+                                    <i class="fas fa-exclamation-circle me-2"></i>No tax data found for the selected criteria
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

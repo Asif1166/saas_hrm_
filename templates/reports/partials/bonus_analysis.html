@@ -1,0 +1,233 @@
+{% extends 'reports/analytics_base.html' %}
+{% load report_filters %}
+{% load humanize %}
+
+{% block analytics_content %}
+<!-- Bonus Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Bonus Cost
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_bonus_cost|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-gift fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Employees Receiving
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees_receiving_bonus }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Avg Bonus/Employee
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.avg_employee_bonus|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Bonus Frequency
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.bonus_frequency_rate|floatformat:1 }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bonus Trends -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Bonus Distribution by Period</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Period</th>
+                                <th class="text-end">Bonus Cost</th>
+                                <th class="text-end">Employees</th>
+                                <th class="text-end">Avg Bonus</th>
+                                <th class="text-end">% of Payroll</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period in report_data.bonus_data %}
+                            <tr>
+                                <td><strong>{{ period.period_name }}</strong></td>
+                                <td class="text-end">৳{{ period.bonus_cost|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ period.employee_count }}</td>
+                                <td class="text-end">৳{{ period.avg_bonus_per_employee|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ period.bonus_percentage|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department and Employee Analysis -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Bonus by Department</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th class="text-end">Total Bonus</th>
+                                <th class="text-end">Employees</th>
+                                <th class="text-end">Avg Bonus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in report_data.department_bonus %}
+                            <tr>
+                                <td>{{ dept.department }}</td>
+                                <td class="text-end">৳{{ dept.total_bonus|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ dept.employee_count }}</td>
+                                <td class="text-end">৳{{ dept.avg_bonus_per_employee|floatformat:0|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Top Bonus Recipients</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th class="text-end">Total Bonus</th>
+                                <th class="text-end">% of Salary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in report_data.employee_bonus %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ employee.full_name }}</div>
+                                    <small class="text-muted">{{ employee.employee_id }}</small>
+                                </td>
+                                <td>{{ employee.department }}</td>
+                                <td class="text-end fw-bold text-success">
+                                    ৳{{ employee.total_bonus|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end">{{ employee.bonus_to_salary_ratio|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bonus Type Analysis -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Bonus Type Analysis</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bonus Type</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Percentage</th>
+                                <th class="text-end">Average Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bonus_type in report_data.bonus_type_analysis %}
+                            <tr>
+                                <td><strong>{{ bonus_type.bonus_type }}</strong></td>
+                                <td class="text-end">৳{{ bonus_type.total_amount|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ bonus_type.percentage|floatformat:1 }}%</td>
+                                <td class="text-end">৳{{ bonus_type.avg_amount|floatformat:0|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock analytics_content %}

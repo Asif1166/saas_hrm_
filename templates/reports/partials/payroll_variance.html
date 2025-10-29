@@ -21,21 +21,21 @@
                     {% if key == 'employees' %}
                         {{ metric.current }}
                     {% else %}
-                        ₹{{ metric.current|floatformat:2 }}
+                        ৳{{ metric.current|floatformat:2 }}
                     {% endif %}
                 </td>
                 <td class="text-end">
                     {% if key == 'employees' %}
                         {{ metric.previous }}
                     {% else %}
-                        ₹{{ metric.previous|floatformat:2 }}
+                        ৳{{ metric.previous|floatformat:2 }}
                     {% endif %}
                 </td>
                 <td class="text-end {% if metric.variance_amount >= 0 %}text-success{% else %}text-danger{% endif %}">
                     {% if key == 'employees' %}
                         {{ metric.variance_amount }}
                     {% else %}
-                        ₹{{ metric.variance_amount|floatformat:2 }}
+                        ৳{{ metric.variance_amount|floatformat:2 }}
                     {% endif %}
                 </td>
                 <td class="text-end {% if metric.variance_percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
@@ -74,10 +74,10 @@
             {% for dept in report_data.department_variance %}
             <tr>
                 <td><strong>{{ dept.department }}</strong></td>
-                <td class="text-end text-primary">₹{{ dept.current_amount|floatformat:2 }}</td>
-                <td class="text-end">₹{{ dept.previous_amount|floatformat:2 }}</td>
+                <td class="text-end text-primary">৳{{ dept.current_amount|floatformat:2 }}</td>
+                <td class="text-end">৳{{ dept.previous_amount|floatformat:2 }}</td>
                 <td class="text-end {% if dept.variance_amount >= 0 %}text-success{% else %}text-danger{% endif %}">
-                    ₹{{ dept.variance_amount|floatformat:2 }}
+                    ৳{{ dept.variance_amount|floatformat:2 }}
                 </td>
                 <td class="text-end {% if dept.variance_percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
                     {{ dept.variance_percentage }}%

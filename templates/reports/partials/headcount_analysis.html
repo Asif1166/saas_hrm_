@@ -10,9 +10,12 @@
                     <strong>Generated On:</strong> {{ report_data.generated_on }}
                 </div>
                 <div class="report-summary">
-                    {% if report_data.filters.department %}
+                    {% if report_data.filters.department or report_data.filters.designation %}
                         <small class="text-muted">
-                            <strong>Filters:</strong> Department
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.department %}Department | {% endif %}
+                            {% if report_data.filters.designation %}Designation | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
                         </small>
                     {% endif %}
                 </div>
@@ -49,14 +52,14 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Departments
+                            Active Employees
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ report_data.summary.total_departments }}
+                            {{ report_data.summary.active_employees }}
                         </div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-building fa-2x text-gray-300"></i>
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -69,14 +72,14 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Designations
+                            New Hires
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ report_data.summary.total_designations }}
+                            {{ report_data.summary.new_hires }}
                         </div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-user-tie fa-2x text-gray-300"></i>
+                        <i class="fas fa-user-plus fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -89,14 +92,14 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Avg Basic Salary
+                            Growth Rate
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ৳{{ report_data.summary.avg_basic_salary|floatformat:2 }}
+                            {{ report_data.summary.growth_rate }}%
                         </div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -109,14 +112,14 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Total Payroll
+                            Attrition Rate
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ৳{{ report_data.summary.total_monthly_payroll|floatformat:2 }}
+                            {{ report_data.summary.attrition_rate }}%
                         </div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        <i class="fas fa-sign-out-alt fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -124,13 +127,64 @@
     </div>
 </div>
 
-<!-- Department Comparison -->
+<!-- Monthly Trend -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-building me-1"></i> Department-wise Salary Comparison
+                    <i class="fas fa-chart-line me-1"></i> Monthly Headcount Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Headcount</th>
+                                <th>MoM Growth</th>
+                                <th>New Hires</th>
+                                <th>Terminations</th>
+                                <th>Net Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in report_data.monthly_trend %}
+                            <tr>
+                                <td><strong>{{ month.month }}</strong></td>
+                                <td class="text-center">{{ month.headcount }}</td>
+                                <td class="text-end {% if month.mom_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ month.mom_growth }}%
+                                </td>
+                                <td class="text-center text-success">{{ month.new_hires }}</td>
+                                <td class="text-center text-danger">{{ month.terminations }}</td>
+                                <td class="text-end {% if month.new_hires >= month.terminations %}text-success{% else %}text-danger{% endif %}">
+                                    {{ month.new_hires|subtract:month.terminations }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    No monthly trend data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department-wise Headcount -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-building me-1"></i> Department-wise Headcount
                 </h6>
             </div>
             <div class="card-body">
@@ -140,29 +194,29 @@
                             <tr>
                                 <th>Department</th>
                                 <th>Employees</th>
-                                <th>Avg Basic</th>
-                                <th>Avg Gross</th>
-                                <th>Min Salary</th>
-                                <th>Max Salary</th>
-                                <th>Salary Range</th>
-                                <th>Total Payroll</th>
+                                <th>Percentage</th>
+                                <th>Avg Salary</th>
+                                <th>Avg Experience</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for dept in report_data.department_comparison %}
+                            {% for dept in report_data.department_headcount %}
                             <tr>
-                                <td><strong>{{ dept.department }}</strong></td>
-                                <td class="text-center">{{ dept.employee_count }}</td>
-                                <td class="text-end">৳{{ dept.avg_basic_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ dept.avg_gross_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ dept.min_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ dept.max_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ dept.salary_range|floatformat:2 }}</td>
-                                <td class="text-end"><strong>৳{{ dept.total_payroll|floatformat:2 }}</strong></td>
+                                <td><strong>{{ dept.department__name }}</strong></td>
+                                <td class="text-center">{{ dept.count }}</td>
+                                <td class="text-end">{{ dept.count|percentage:report_data.summary.total_employees|floatformat:1 }}%</td>
+                                <td class="text-end">৳{{ dept.avg_salary|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    {% if dept.avg_experience %}
+                                        {{ dept.avg_experience|floatformat:1 }} years
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-3">
+                                <td colspan="5" class="text-center text-muted py-3">
                                     No department data available
                                 </td>
                             </tr>
@@ -175,13 +229,13 @@
     </div>
 </div>
 
-<!-- Designation Comparison -->
-<div class="row mb-4">
+<!-- Designation-wise Headcount -->
+<div class="row">
     <div class="col-12">
-        <div class="card shadow mb-4">
+        <div class="card shadow">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-user-tie me-1"></i> Designation-wise Salary Comparison
+                    <i class="fas fa-user-tie me-1"></i> Designation-wise Headcount
                 </h6>
             </div>
             <div class="card-body">
@@ -192,118 +246,26 @@
                                 <th>Designation</th>
                                 <th>Level</th>
                                 <th>Employees</th>
-                                <th>Avg Basic</th>
-                                <th>Avg Gross</th>
-                                <th>Min Salary</th>
-                                <th>Max Salary</th>
-                                <th>Salary Range</th>
+                                <th>Percentage</th>
+                                <th>Avg Salary</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for desg in report_data.designation_comparison %}
+                            {% for desg in report_data.designation_headcount %}
                             <tr>
-                                <td><strong>{{ desg.designation }}</strong></td>
-                                <td class="text-center">{{ desg.level }}</td>
-                                <td class="text-center">{{ desg.employee_count }}</td>
-                                <td class="text-end">৳{{ desg.avg_basic_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ desg.avg_gross_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ desg.min_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ desg.max_salary|floatformat:2 }}</td>
-                                <td class="text-end">৳{{ desg.salary_range|floatformat:2 }}</td>
+                                <td><strong>{{ desg.designation__name }}</strong></td>
+                                <td class="text-center">{{ desg.designation__level }}</td>
+                                <td class="text-center">{{ desg.count }}</td>
+                                <td class="text-end">{{ desg.count|percentage:report_data.summary.total_employees|floatformat:1 }}%</td>
+                                <td class="text-end">৳{{ desg.avg_salary|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-3">
+                                <td colspan="5" class="text-center text-muted py-3">
                                     No designation data available
                                 </td>
                             </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Salary Distribution & Allowance Breakdown -->
-<div class="row">
-    <!-- Salary Distribution -->
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-chart-pie me-1"></i> Salary Distribution
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Salary Range</th>
-                                <th>Employees</th>
-                                <th>Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for dist in report_data.salary_distribution %}
-                            <tr>
-                                <td>{{ dist.range }}</td>
-                                <td class="text-center">{{ dist.count }}</td>
-                                <td class="text-end">{{ dist.percentage }}%</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Allowance Breakdown -->
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-chart-bar me-1"></i> Allowance Breakdown
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Allowance Type</th>
-                                <th>Total Amount</th>
-                                <th>Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for key, value in report_data.allowance_breakdown.items %}
-                            <tr>
-                                <td>
-                                    {% if key == 'house_rent' %}House Rent
-                                    {% elif key == 'transport' %}Transport
-                                    {% elif key == 'medical' %}Medical
-                                    {% elif key == 'other' %}Other Allowances
-                                    {% endif %}
-                                </td>
-                                <td class="text-end">৳{{ value|floatformat:2 }}</td>
-                                <td class="text-end">
-                                    {% if report_data.total_allowances > 0 %}
-                                        {{ value|divisibleby:report_data.total_allowances|multiply:100|floatformat:1 }}%
-                                    {% else %}
-                                        0%
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            <tr class="table-light">
-                                <td><strong>Total Allowances</strong></td>
-                                <td class="text-end"><strong>৳{{ report_data.total_allowances|floatformat:2 }}</strong></td>
-                                <td class="text-end"><strong>100%</strong></td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>

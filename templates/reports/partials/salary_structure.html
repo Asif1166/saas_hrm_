@@ -55,7 +55,7 @@
                             Avg Basic Salary
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.summary.avg_basic_salary|floatformat:2 }}
+                            ৳{{ report_data.summary.avg_basic_salary|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -75,7 +75,7 @@
                             Avg Net Salary
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.summary.avg_net_salary|floatformat:2 }}
+                            ৳{{ report_data.summary.avg_net_salary|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -95,7 +95,7 @@
                             Total Payroll
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.summary.total_monthly_payroll|floatformat:2 }}
+                            ৳{{ report_data.summary.total_monthly_payroll|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -133,11 +133,11 @@
                 <td>{{ salary.department }}</td>
                 <td>{{ salary.designation }}</td>
                 <td>{{ salary.effective_date }}</td>
-                <td class="text-end">₹{{ salary.basic_salary|floatformat:2 }}</td>
-                <td class="text-end">₹{{ salary.total_allowances|floatformat:2 }}</td>
-                <td class="text-end">₹{{ salary.total_deductions|floatformat:2 }}</td>
-                <td class="text-end"><strong>₹{{ salary.gross_salary|floatformat:2 }}</strong></td>
-                <td class="text-end"><strong class="text-success">₹{{ salary.net_salary|floatformat:2 }}</strong></td>
+                <td class="text-end">৳{{ salary.basic_salary|floatformat:2 }}</td>
+                <td class="text-end">৳{{ salary.total_allowances|floatformat:2 }}</td>
+                <td class="text-end">৳{{ salary.total_deductions|floatformat:2 }}</td>
+                <td class="text-end"><strong>৳{{ salary.gross_salary|floatformat:2 }}</strong></td>
+                <td class="text-end"><strong class="text-success">৳{{ salary.net_salary|floatformat:2 }}</strong></td>
                 <td>
                     <span class="badge {% if salary.is_active %}bg-success{% else %}bg-secondary{% endif %}">
                         {% if salary.is_active %}Active{% else %}Inactive{% endif %}
@@ -156,18 +156,18 @@
         <tfoot class="table-light">
             <tr>
                 <th colspan="5" class="text-end">Totals:</th>
-                <th class="text-end">₹{{ report_data.summary.total_monthly_payroll|floatformat:2 }}</th>
+                <th class="text-end">৳{{ report_data.summary.total_monthly_payroll|floatformat:2 }}</th>
                 <th class="text-end">
-                    ₹{{ report_data.salary_data|sum_attr:'total_allowances'|floatformat:2 }}
+                    ৳{{ report_data.salary_data|sum_attr:'total_allowances'|floatformat:2 }}
                 </th>
                 <th class="text-end">
-                    ₹{{ report_data.salary_data|sum_attr:'total_deductions'|floatformat:2 }}
+                    ৳{{ report_data.salary_data|sum_attr:'total_deductions'|floatformat:2 }}
                 </th>
                 <th class="text-end">
-                    ₹{{ report_data.salary_data|sum_attr:'gross_salary'|floatformat:2 }}
+                    ৳{{ report_data.salary_data|sum_attr:'gross_salary'|floatformat:2 }}
                 </th>
                 <th class="text-end">
-                    ₹{{ report_data.summary.total_monthly_payroll|floatformat:2 }}
+                    ৳{{ report_data.summary.total_monthly_payroll|floatformat:2 }}
                 </th>
                 <th></th>
             </tr>
@@ -210,16 +210,16 @@
                             {% for salary in report_data.salary_data %}
                             <tr>
                                 <td><small>{{ salary.employee_id }}</small></td>
-                                <td class="text-end">₹{{ salary.basic_salary|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.house_rent_allowance|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.transport_allowance|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.medical_allowance|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.other_allowances|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.provident_fund|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.tax_deduction|floatformat:2 }}</td>
-                                <td class="text-end">₹{{ salary.other_deductions|floatformat:2 }}</td>
-                                <td class="text-end"><strong>₹{{ salary.gross_salary|floatformat:2 }}</strong></td>
-                                <td class="text-end"><strong class="text-success">₹{{ salary.net_salary|floatformat:2 }}</strong></td>
+                                <td class="text-end">৳{{ salary.basic_salary|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.house_rent_allowance|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.transport_allowance|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.medical_allowance|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.other_allowances|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.provident_fund|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.tax_deduction|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ salary.other_deductions|floatformat:2 }}</td>
+                                <td class="text-end"><strong>৳{{ salary.gross_salary|floatformat:2 }}</strong></td>
+                                <td class="text-end"><strong class="text-success">৳{{ salary.net_salary|floatformat:2 }}</strong></td>
                             </tr>
                             {% endfor %}
                         </tbody>

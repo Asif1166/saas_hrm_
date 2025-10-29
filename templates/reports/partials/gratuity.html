@@ -1,0 +1,247 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.department or report_data.filters.employee_id %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.department %}Department | {% endif %}
+                            {% if report_data.filters.employee_id %}Employee ID: {{ report_data.filters.employee_id }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Eligible Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.eligible_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Liability
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_gratuity_liability|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Avg Years of Service
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.avg_years_of_service }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gratuity Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-1"></i> Gratuity Calculation
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="gratuityTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Hire Date</th>
+                                <th>Years of Service</th>
+                                <th>Last Basic Salary</th>
+                                <th>Gratuity Amount</th>
+                                <th>Eligibility Status</th>
+                                <th>Completion Date</th>
+                                <th>Years Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for gratuity in report_data.gratuity_data %}
+                            <tr>
+                                <td><strong>{{ gratuity.employee_id }}</strong></td>
+                                <td>{{ gratuity.full_name }}</td>
+                                <td>{{ gratuity.department }}</td>
+                                <td>{{ gratuity.designation }}</td>
+                                <td>{{ gratuity.hire_date }}</td>
+                                <td class="text-center">{{ gratuity.years_of_service }}</td>
+                                <td class="text-end">৳{{ gratuity.last_basic_salary|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    {% if gratuity.eligibility_status == 'Eligible' %}
+                                        <strong class="text-success">৳{{ gratuity.gratuity_amount|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if gratuity.eligibility_status == 'Eligible' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ gratuity.eligibility_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if gratuity.eligibility_status == 'Eligible' %}
+                                        {{ gratuity.completion_date }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if gratuity.eligibility_status == 'Not Eligible' and gratuity.years_remaining > 0 %}
+                                        <span class="text-warning">{{ gratuity.years_remaining }} years</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center text-muted py-4">
+                                    <i class="fas fa-exclamation-circle me-2"></i>No gratuity data found for the selected criteria
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if report_data.gratuity_data %}
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="6" class="text-end">Totals:</th>
+                                <th class="text-end">৳{{ report_data.gratuity_data|sum_attr:'last_basic_salary'|floatformat:2 }}</th>
+                                <th class="text-end">৳{{ report_data.summary.total_gratuity_liability|floatformat:2 }}</th>
+                                <th colspan="3"></th>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Eligibility Summary -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-bar me-1"></i> Eligibility Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Eligibility Status</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="badge bg-success">Eligible</span></td>
+                                        <td class="text-center">{{ report_data.summary.eligible_employees }}</td>
+                                        <td class="text-end">{{ report_data.summary.eligible_employees|percentage:report_data.summary.total_employees|floatformat:1 }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-warning">Not Eligible</span></td>
+                                        <td class="text-center">{{ report_data.summary.total_employees|subtract:report_data.summary.eligible_employees }}</td>
+                                        <td class="text-end">{{ report_data.summary.total_employees|subtract:report_data.summary.eligible_employees|percentage:report_data.summary.total_employees|floatformat:1 }}%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Gratuity Calculation</h6>
+                            <p class="mb-0">
+                                Gratuity = (Last drawn salary × 15/26) × Number of years of service<br>
+                                <small class="text-muted">Eligibility: Minimum 5 years of continuous service</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

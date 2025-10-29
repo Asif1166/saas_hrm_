@@ -1,0 +1,223 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.department or report_data.filters.employee_id %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.department %}Department | {% endif %}
+                            {% if report_data.filters.employee_id %}Employee ID: {{ report_data.filters.employee_id }} | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Cash Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_cash_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Cash Amount
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_cash_amount|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Payroll Periods
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.payroll_periods }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Avg Cash Payment
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.avg_cash_payment|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-building me-1"></i> Department-wise Cash Payments
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th>Employees</th>
+                                <th>Total Amount</th>
+                                <th>Avg per Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept, data in report_data.department_summary.items %}
+                            <tr>
+                                <td><strong>{{ dept }}</strong></td>
+                                <td class="text-center">{{ data.employee_count }}</td>
+                                <td class="text-end">৳{{ data.total_amount|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.avg_per_employee|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No cash payment data found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cash Payment Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-1"></i> Cash Payment Details
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="cashPaymentTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Payroll Period</th>
+                                <th>Net Salary</th>
+                                <th>Payment Method</th>
+                                <th>Payment Status</th>
+                                <th>Paid By</th>
+                                <th>Payment Date</th>
+                                <th>Receipt Number</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in report_data.cash_data %}
+                            <tr>
+                                <td><strong>{{ payment.employee_id }}</strong></td>
+                                <td>{{ payment.full_name }}</td>
+                                <td>{{ payment.department }}</td>
+                                <td>{{ payment.designation }}</td>
+                                <td>{{ payment.payroll_period }}</td>
+                                <td class="text-end"><strong>৳{{ payment.net_salary|floatformat:2 }}</strong></td>
+                                <td>
+                                    <span class="badge bg-warning">{{ payment.payment_method }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ payment.payment_status }}</span>
+                                </td>
+                                <td>{{ payment.paid_by }}</td>
+                                <td>{{ payment.payment_date }}</td>
+                                <td><small>{{ payment.receipt_number }}</small></td>
+                                <td>{{ payment.reason_for_cash }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="12" class="text-center text-muted py-4">
+                                    <i class="fas fa-exclamation-circle me-2"></i>No cash payment data found for the selected criteria
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if report_data.cash_data %}
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="5" class="text-end">Total:</th>
+                                <th class="text-end">৳{{ report_data.summary.total_cash_amount|floatformat:2 }}</th>
+                                <th colspan="6"></th>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

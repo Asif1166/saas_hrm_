@@ -30,7 +30,7 @@
                             Gross Salary
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.company_summary.total_gross|floatformat:2 }}
+                            ৳{{ report_data.company_summary.total_gross|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -49,7 +49,7 @@
                             Deductions
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.company_summary.total_deductions|floatformat:2 }}
+                            ৳{{ report_data.company_summary.total_deductions|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -68,7 +68,7 @@
                             Net Payable
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.company_summary.total_net|floatformat:2 }}
+                            ৳{{ report_data.company_summary.total_net|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -87,7 +87,7 @@
                             Avg Salary
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ₹{{ report_data.company_summary.avg_salary|floatformat:2 }}
+                            ৳{{ report_data.company_summary.avg_salary|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -120,12 +120,12 @@
             <tr>
                 <td><strong>{{ dept.department }}</strong></td>
                 <td class="text-center">{{ dept.employee_count }}</td>
-                <td class="text-end">₹{{ dept.total_basic|floatformat:2 }}</td>
-                <td class="text-end">₹{{ dept.total_allowances|floatformat:2 }}</td>
-                <td class="text-end text-primary">₹{{ dept.total_gross|floatformat:2 }}</td>
-                <td class="text-end text-danger">₹{{ dept.total_deductions|floatformat:2 }}</td>
-                <td class="text-end text-success"><strong>₹{{ dept.total_net|floatformat:2 }}</strong></td>
-                <td class="text-end">₹{{ dept.avg_salary|floatformat:2 }}</td>
+                <td class="text-end">৳{{ dept.total_basic|floatformat:2 }}</td>
+                <td class="text-end">৳{{ dept.total_allowances|floatformat:2 }}</td>
+                <td class="text-end text-primary">৳{{ dept.total_gross|floatformat:2 }}</td>
+                <td class="text-end text-danger">৳{{ dept.total_deductions|floatformat:2 }}</td>
+                <td class="text-end text-success"><strong>৳{{ dept.total_net|floatformat:2 }}</strong></td>
+                <td class="text-end">৳{{ dept.avg_salary|floatformat:2 }}</td>
             </tr>
             {% empty %}
             <tr>
@@ -181,25 +181,25 @@
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <small class="text-primary">Basic Salary: ₹{{ report_data.company_summary.total_basic|floatformat:2 }}</small>
+                    <small class="text-primary">Basic Salary: ৳{{ report_data.company_summary.total_basic|floatformat:2 }}</small>
                     <div class="progress mb-2" style="height: 10px;">
                         <div class="progress-bar bg-primary" style="width: {% widthratio report_data.company_summary.total_basic report_data.company_summary.total_gross 100 %}%"></div>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <small class="text-success">Allowances: ₹{{ report_data.company_summary.total_allowances|floatformat:2 }}</small>
+                    <small class="text-success">Allowances: ৳{{ report_data.company_summary.total_allowances|floatformat:2 }}</small>
                     <div class="progress mb-2" style="height: 10px;">
                         <div class="progress-bar bg-success" style="width: {% widthratio report_data.company_summary.total_allowances report_data.company_summary.total_gross 100 %}%"></div>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <small class="text-info">Overtime: ₹{{ report_data.company_summary.total_overtime|floatformat:2 }}</small>
+                    <small class="text-info">Overtime: ৳{{ report_data.company_summary.total_overtime|floatformat:2 }}</small>
                     <div class="progress mb-2" style="height: 10px;">
                         <div class="progress-bar bg-info" style="width: {% widthratio report_data.company_summary.total_overtime report_data.company_summary.total_gross 100 %}%"></div>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <small class="text-warning">Bonus: ₹{{ report_data.company_summary.total_bonus|floatformat:2 }}</small>
+                    <small class="text-warning">Bonus: ৳{{ report_data.company_summary.total_bonus|floatformat:2 }}</small>
                     <div class="progress mb-2" style="height: 10px;">
                         <div class="progress-bar bg-warning" style="width: {% widthratio report_data.company_summary.total_bonus report_data.company_summary.total_gross 100 %}%"></div>
                     </div>

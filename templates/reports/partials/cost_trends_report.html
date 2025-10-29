@@ -1,0 +1,483 @@
+{% extends 'reports/analytics_base.html' %}
+{% load report_filters %}
+{% load humanize %}
+
+{% block analytics_content %}
+<div class="analytics-content">
+    <!-- Report Header -->
+    <div class="report-header mb-4">
+        <div class="row">
+            <div class="col-12">
+                <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="report-info">
+                        <strong>Generated On:</strong> {{ report_data.generated_on }}
+                    </div>
+                    <div class="report-summary">
+                        {% if report_data.filters.department or report_data.filters.start_date %}
+                            <small class="text-muted">
+                                <strong>Filters:</strong>
+                                {% if report_data.filters.department %}Department | {% endif %}
+                                {% if report_data.filters.start_date %}{{ report_data.analysis_period.start_date }} to {{ report_data.analysis_period.end_date }}{% endif %}
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Payroll
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ৳{{ report_data.summary.total_gross_payroll|floatformat:0 }}
+                            </div>
+                            <small class="text-muted">{{ report_data.summary.total_months }} months</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Avg Monthly
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ৳{{ report_data.summary.avg_monthly_gross|floatformat:0 }}
+                            </div>
+                            <small class="text-muted">Monthly Average</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Growth Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800 {% if report_data.summary.overall_growth_rate >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ report_data.summary.overall_growth_rate|floatformat:1 }}%
+                            </div>
+                            <small class="text-muted">Overall Trend</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Deductions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ৳{{ report_data.summary.total_deductions|floatformat:0 }}
+                            </div>
+                            <small class="text-muted">All Periods</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Monthly Payroll Cost Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="monthlyTrendsChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Monthly Trends Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Month</th>
+                                    <th class="text-end">Gross Salary</th>
+                                    <th class="text-end">Net Salary</th>
+                                    <th class="text-end">Deductions</th>
+                                    <th class="text-end">Employees</th>
+                                    <th class="text-end">MoM Growth</th>
+                                    <th class="text-end">Deduction Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for month in report_data.monthly_trends %}
+                                <tr>
+                                    <td><strong>{{ month.month }}</strong></td>
+                                    <td class="text-end">৳{{ month.total_gross|floatformat:0 }}</td>
+                                    <td class="text-end">৳{{ month.total_net|floatformat:0 }}</td>
+                                    <td class="text-end">৳{{ month.total_deductions|floatformat:0 }}</td>
+                                    <td class="text-end">{{ month.employee_count }}</td>
+                                    <td class="text-end {% if month.mom_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        <i class="fas fa-arrow-{% if month.mom_growth >= 0 %}up{% else %}down{% endif %} me-1"></i>
+                                        {{ month.mom_growth|floatformat:1 }}%
+                                    </td>
+                                    <td class="text-end">{{ month.deduction_rate|floatformat:1 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if report_data.monthly_trends %}
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th>Total/Average</th>
+                                    <th class="text-end">৳{{ report_data.summary.total_gross_payroll|floatformat:0 }}</th>
+                                    <th class="text-end">৳{{ report_data.summary.total_net_payroll|floatformat:0 }}</th>
+                                    <th class="text-end">৳{{ report_data.summary.total_deductions|floatformat:0 }}</th>
+                                    <th class="text-end">{{ report_data.monthly_trends|length }}</th>
+                                    <th class="text-end">{{ report_data.summary.overall_growth_rate|floatformat:1 }}%</th>
+                                    <th class="text-end">
+                                        {% with total_deductions=report_data.summary.total_deductions total_gross=report_data.summary.total_gross_payroll %}
+                                        {{ total_deductions|div:total_gross|mul:100|floatformat:1 }}%
+                                        {% endwith %}
+                                    </th>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quarterly Trends and Cost Breakdown -->
+    <div class="row">
+        <!-- Quarterly Trends -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quarterly Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th class="text-end">Gross Salary</th>
+                                    <th class="text-end">Net Salary</th>
+                                    <th class="text-end">Deductions</th>
+                                    <th class="text-end">Avg Employees</th>
+                                    <th class="text-end">QoQ Growth</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quarter in report_data.quarterly_trends %}
+                                <tr>
+                                    <td><strong>{{ quarter.quarter }}</strong></td>
+                                    <td class="text-end">৳{{ quarter.total_gross|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">৳{{ quarter.total_net|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">৳{{ quarter.total_deductions|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ quarter.avg_employee_count|floatformat:0 }}</td>
+                                    <td class="text-end {% if quarter.qoq_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        <i class="fas fa-arrow-{% if quarter.qoq_growth >= 0 %}up{% else %}down{% endif %} me-1"></i>
+                                        {{ quarter.qoq_growth|floatformat:1 }}%
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Breakdown -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Cost Components</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="costBreakdownChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Breakdown Details -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Cost Breakdown Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Component</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Basic Salary</td>
+                                    <td class="text-end">৳{{ report_data.cost_breakdown.basic_salary|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ report_data.cost_breakdown.basic_salary_percentage|floatformat:1 }}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Allowances</td>
+                                    <td class="text-end">৳{{ report_data.cost_breakdown.allowances|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ report_data.cost_breakdown.allowances_percentage|floatformat:1 }}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Overtime</td>
+                                    <td class="text-end">৳{{ report_data.cost_breakdown.overtime|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ report_data.cost_breakdown.overtime_percentage|floatformat:1 }}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Bonus</td>
+                                    <td class="text-end">৳{{ report_data.cost_breakdown.bonus|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ report_data.cost_breakdown.bonus_percentage|floatformat:1 }}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Other Earnings</td>
+                                    <td class="text-end">৳{{ report_data.cost_breakdown.other_earnings|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">{{ report_data.cost_breakdown.other_earnings_percentage|floatformat:1 }}%</td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong>Total Earnings</strong></td>
+                                    <td class="text-end"><strong>৳{{ report_data.cost_breakdown.total_earnings|floatformat:0|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>100%</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year-over-Year Comparison -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Year-over-Year Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6>{{ report_data.yoy_comparison.previous_year }}</h6>
+                            <h4>৳{{ report_data.yoy_comparison.previous_year_gross|floatformat:0|intcomma }}</h4>
+                            <small class="text-muted">{{ report_data.yoy_comparison.previous_year_employees }} employees</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ report_data.yoy_comparison.current_year }}</h6>
+                            <h4>৳{{ report_data.yoy_comparison.current_year_gross|floatformat:0|intcomma }}</h4>
+                            <small class="text-muted">{{ report_data.yoy_comparison.current_year_employees }} employees</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Growth</h6>
+                            <h4 class="{% if report_data.yoy_comparison.gross_growth_rate >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ report_data.yoy_comparison.gross_growth_rate|floatformat:1 }}%
+                            </h4>
+                            <small class="text-muted">Payroll Growth</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Employee Growth</h6>
+                            <h4 class="{% if report_data.yoy_comparison.employee_growth_rate >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ report_data.yoy_comparison.employee_growth_rate|floatformat:1 }}%
+                            </h4>
+                            <small class="text-muted">Workforce Growth</small>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <div class="alert {% if report_data.yoy_comparison.absolute_growth >= 0 %}alert-success{% else %}alert-warning{% endif %}">
+                                <strong>
+                                    {% if report_data.yoy_comparison.absolute_growth >= 0 %}
+                                        Increase of ৳{{ report_data.yoy_comparison.absolute_growth|floatformat:0|intcomma }}
+                                    {% else %}
+                                        Decrease of ৳{{ report_data.yoy_comparison.absolute_growth|abs|floatformat:0|intcomma }}
+                                    {% endif %}
+                                </strong> in payroll costs compared to previous year
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Metadata -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="text-center text-muted">
+                <small>
+                    <i class="fas fa-clock me-1"></i>
+                    Report generated on: {{ report_data.generated_on }} | 
+                    Analysis period: {{ report_data.analysis_period.start_date }} to {{ report_data.analysis_period.end_date }} |
+                    Total periods analyzed: {{ report_data.summary.total_months }} months
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Charts -->
+<script>
+// Monthly Trends Chart
+const monthlyTrendsCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+const monthlyTrendsChart = new Chart(monthlyTrendsCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for month in report_data.monthly_trends %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [
+            {
+                label: 'Gross Salary',
+                data: [{% for month in report_data.monthly_trends %}{{ month.total_gross }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 2
+            },
+            {
+                label: 'Net Salary',
+                data: [{% for month in report_data.monthly_trends %}{{ month.total_net }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#1cc88a',
+                backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 2
+            }
+        ]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += '৳' + (context.parsed.y / 100000).toFixed(1) + 'L';
+                        }
+                        return label;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '৳' + (value/100000).toFixed(1) + 'L';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Cost Breakdown Chart
+const costBreakdownCtx = document.getElementById('costBreakdownChart').getContext('2d');
+const costBreakdownChart = new Chart(costBreakdownCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Basic Salary', 'Allowances', 'Overtime', 'Bonus', 'Other Earnings'],
+        datasets: [{
+            data: [
+                {{ report_data.cost_breakdown.basic_salary }},
+                {{ report_data.cost_breakdown.allowances }},
+                {{ report_data.cost_breakdown.overtime }},
+                {{ report_data.cost_breakdown.bonus }},
+                {{ report_data.cost_breakdown.other_earnings }}
+            ],
+            backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b', '#858796'],
+            hoverBackgroundColor: ['#2e59d9', '#17a673', '#d4a017', '#be2617', '#656773'],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: ৳${(value/100000).toFixed(1)}L (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

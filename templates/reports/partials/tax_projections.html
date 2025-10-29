@@ -1,0 +1,234 @@
+{% extends 'reports/analytics_base.html' %}
+{% load report_filters %}
+{% load humanize %}
+
+{% block analytics_content %}
+<!-- Tax Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Historical Tax
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_historical_tax|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Avg Tax Rate
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.avg_tax_rate|floatformat:1 }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Projected Tax
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_projected_tax|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Projection Growth
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 {% if report_data.summary.avg_projection_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ report_data.summary.avg_projection_growth|floatformat:1 }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-trending-up fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historical Tax Data -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Historical Tax Data</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Period</th>
+                                <th class="text-end">Total Tax</th>
+                                <th class="text-end">Total Gross</th>
+                                <th class="text-end">Employees</th>
+                                <th class="text-end">Tax Rate</th>
+                                <th class="text-end">Avg Tax/Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period in report_data.historical_tax_data %}
+                            <tr>
+                                <td><strong>{{ period.period_name }}</strong></td>
+                                <td class="text-end">৳{{ period.total_tax|floatformat:0|intcomma }}</td>
+                                <td class="text-end">৳{{ period.total_gross|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ period.employee_count }}</td>
+                                <td class="text-end">{{ period.tax_rate|floatformat:1 }}%</td>
+                                <td class="text-end">৳{{ period.avg_tax_per_employee|floatformat:0|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tax Projections -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Tax Liability Projections</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Projection</th>
+                                <th>Month</th>
+                                <th class="text-end">Projected Tax</th>
+                                <th class="text-end">Growth Rate</th>
+                                <th class="text-end">Confidence Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for projection in report_data.projection_data %}
+                            <tr>
+                                <td><strong>{{ projection.period }}</strong></td>
+                                <td>{{ projection.month }}</td>
+                                <td class="text-end">৳{{ projection.projected_tax|floatformat:0|intcomma }}</td>
+                                <td class="text-end {% if projection.growth_rate >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ projection.growth_rate|floatformat:1 }}%
+                                </td>
+                                <td class="text-end">{{ projection.confidence_level|floatformat:0 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tax Compliance and Analysis -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Tax Compliance Status</h6>
+            </div>
+            <div class="card-body">
+                {% for status in report_data.compliance_status %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 
+                            {% if status.status == 'Compliant' %}bg-light{% else %}bg-warning bg-opacity-10{% endif %} rounded">
+                    <div>
+                        <div class="fw-bold">{{ status.period }}</div>
+                        <small class="text-muted">
+                            Tax: ৳{{ status.tax_deducted|floatformat:0|intcomma }} | 
+                            Expected: ৳{{ status.expected_tax|floatformat:0|intcomma }}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-{% if status.status == 'Compliant' %}success{% else %}warning{% endif %} mb-1">
+                            {{ status.status }}
+                        </span>
+                        <div class="small text-muted">{{ status.compliance_rate|floatformat:1 }}%</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Top Taxpayers</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th class="text-end">Total Tax</th>
+                                <th class="text-end">Tax Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in report_data.employee_tax_analysis %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ employee.full_name }}</div>
+                                    <small class="text-muted">{{ employee.department }}</small>
+                                </td>
+                                <td class="text-end fw-bold text-danger">
+                                    ৳{{ employee.total_tax|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end">{{ employee.tax_rate|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock analytics_content %}

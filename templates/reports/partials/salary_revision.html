@@ -136,21 +136,21 @@
                 </td>
                 <td class="text-end">
                     {% if employee.revisions|length > 1 %}
-                        ₹{{ employee.first_salary|floatformat:2 }}
+                        ৳{{ employee.first_salary|floatformat:2 }}
                     {% else %}
                         <span class="text-muted">-</span>
                     {% endif %}
                 </td>
                 <td class="text-end">
                     {% if employee.revisions|length > 0 %}
-                        ₹{{ employee.revisions.0.net_salary|floatformat:2 }}
+                        ৳{{ employee.revisions.0.net_salary|floatformat:2 }}
                     {% else %}
                         <span class="text-muted">-</span>
                     {% endif %}
                 </td>
                 <td class="text-end">
                     {% if employee.revisions|length > 1 %}
-                        <span class="text-success">+₹{{ employee.total_increase|floatformat:2 }}</span>
+                        <span class="text-success">+৳{{ employee.total_increase|floatformat:2 }}</span>
                     {% else %}
                         <span class="text-muted">-</span>
                     {% endif %}
@@ -236,11 +236,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${rev.effective_date}</td>
-                    <td class="text-end">₹${parseFloat(rev.basic_salary).toFixed(2)}</td>
-                    <td class="text-end">₹${parseFloat(rev.total_allowances).toFixed(2)}</td>
-                    <td class="text-end">₹${parseFloat(rev.total_deductions).toFixed(2)}</td>
-                    <td class="text-end"><strong>₹${parseFloat(rev.gross_salary).toFixed(2)}</strong></td>
-                    <td class="text-end"><strong class="text-success">₹${parseFloat(rev.net_salary).toFixed(2)}</strong></td>
+                    <td class="text-end">৳${parseFloat(rev.basic_salary).toFixed(2)}</td>
+                    <td class="text-end">৳${parseFloat(rev.total_allowances).toFixed(2)}</td>
+                    <td class="text-end">৳${parseFloat(rev.total_deductions).toFixed(2)}</td>
+                    <td class="text-end"><strong>৳${parseFloat(rev.gross_salary).toFixed(2)}</strong></td>
+                    <td class="text-end"><strong class="text-success">৳${parseFloat(rev.net_salary).toFixed(2)}</strong></td>
                     <td>
                         <span class="badge ${rev.is_active ? 'bg-success' : 'bg-secondary'}">
                             ${rev.change_type}

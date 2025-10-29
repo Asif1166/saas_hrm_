@@ -1,0 +1,237 @@
+{% load report_filters %}
+
+<!-- Report Header -->
+<div class="report-header mb-4">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="text-center mb-3">{{ report_data.report_name }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="report-info">
+                    <strong>Generated On:</strong> {{ report_data.generated_on }}
+                </div>
+                <div class="report-summary">
+                    {% if report_data.filters.department or report_data.filters.designation or report_data.filters.employee_id %}
+                        <small class="text-muted">
+                            <strong>Filters:</strong>
+                            {% if report_data.filters.department %}Department | {% endif %}
+                            {% if report_data.filters.designation %}Designation | {% endif %}
+                            {% if report_data.filters.employee_id %}Employee ID: {{ report_data.filters.employee_id }} | {% endif %}
+                            {% if report_data.filters.start_date %}{{ report_data.filters.start_date }} to {{ report_data.filters.end_date }}{% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Payslips
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_payslips }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-invoice-dollar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Deductions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_deductions|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Statutory Deductions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.statutory_deductions|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-balance-scale fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Other Deductions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.non_statutory_deductions|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deductions Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-bar me-1"></i> Deductions Summary by Component
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Component Name</th>
+                                <th>Payhead Code</th>
+                                <th>Type</th>
+                                <th>Employees</th>
+                                <th>Total Amount</th>
+                                <th>Avg per Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component_name, data in report_data.deductions_summary.items %}
+                            <tr>
+                                <td><strong>{{ component_name }}</strong></td>
+                                <td>{{ data.payhead_code }}</td>
+                                <td>
+                                    <span class="badge {% if data.is_statutory %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {% if data.is_statutory %}Statutory{% else %}Other{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ data.employee_count }}</td>
+                                <td class="text-end">৳{{ data.total_amount|floatformat:2 }}</td>
+                                <td class="text-end">৳{{ data.avg_per_employee|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    No deductions data found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Deductions Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-1"></i> Detailed Deductions Breakdown
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="deductionsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Payroll Period</th>
+                                <th>Component</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Pay Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deduction in report_data.deductions_data %}
+                            <tr>
+                                <td><strong>{{ deduction.employee_id }}</strong></td>
+                                <td>{{ deduction.full_name }}</td>
+                                <td>{{ deduction.department }}</td>
+                                <td>{{ deduction.designation }}</td>
+                                <td>{{ deduction.payroll_period }}</td>
+                                <td>{{ deduction.component_name }}</td>
+                                <td>
+                                    <span class="badge {% if deduction.is_statutory %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {% if deduction.is_statutory %}Statutory{% else %}Other{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-end">৳{{ deduction.amount|floatformat:2 }}</td>
+                                <td>{{ deduction.pay_date }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    <i class="fas fa-exclamation-circle me-2"></i>No deductions data found for the selected criteria
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

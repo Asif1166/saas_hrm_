@@ -11,7 +11,7 @@
             <div class="panel">
                 <!-- Panel Header -->
                 <div class="panel-header d-flex justify-content-between align-items-center">
-                    <h5><i class="fas fa-file-contract me-2"></i>{{ page_title }}</h5>
+                    <h5><i class="fas fa-chart-line me-2"></i>{{ page_title }}</h5>
                     <div class="btn-box d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-primary" id="printInvoice">
                             <i class="fa-solid fa-print"></i> Print
@@ -31,21 +31,21 @@
                         <div class="card shadow">
                             <div class="card-body py-2">
                                 <div class="d-flex flex-wrap gap-2">
-                                    <a href="{% url 'report:provident_fund_report' %}" 
-                                       class="btn {% if report_type == 'provident-fund' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
-                                        <i class="fas fa-piggy-bank me-1"></i>Provident Fund
+                                    <a href="{% url 'report:headcount_analysis_report' %}" 
+                                       class="btn {% if report_type == 'headcount-analysis' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-users me-1"></i>Headcount Analysis
                                     </a>
-                                    <a href="{% url 'report:tax_deduction_report' %}" 
-                                       class="btn {% if report_type == 'tax-deduction' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
-                                        <i class="fas fa-receipt me-1"></i>Tax Deduction
+                                    <a href="{% url 'report:attrition_report' %}" 
+                                       class="btn {% if report_type == 'attrition' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Attrition Report
                                     </a>
-                                    <a href="{% url 'report:esi_report' %}" 
-                                       class="btn {% if report_type == 'esi' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
-                                        <i class="fas fa-hospital me-1"></i>ESI Report
+                                    <a href="{% url 'report:department_cost_analysis_report' %}" 
+                                       class="btn {% if report_type == 'department-cost-analysis' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-building me-1"></i>Dept Cost Analysis
                                     </a>
-                                    <a href="{% url 'report:gratuity_report' %}" 
-                                       class="btn {% if report_type == 'gratuity' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
-                                        <i class="fas fa-gift me-1"></i>Gratuity Report
+                                    <a href="{% url 'report:employee_cost_to_company_report' %}" 
+                                       class="btn {% if report_type == 'employee-ctc' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-money-bill me-1"></i>Employee CTC
                                     </a>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                             <div class="card-body">
                                 <form method="get" id="reportFilters" class="row g-3">
                                     <!-- Common Filters -->
-                                    {% if report_type == 'provident-fund' or report_type == 'tax-deduction' or report_type == 'esi' %}
+                                    {% if report_type == 'headcount-analysis' or report_type == 'attrition' or report_type == 'employee-ctc' %}
                                     <div class="col-md-3">
                                         <label class="form-label">Department</label>
                                         <select name="department" class="form-select form-select-sm">
@@ -76,27 +76,25 @@
                                                 </option>
                                             {% endfor %}
                                         </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Employee ID</label>
-                                        <input type="text" name="employee_id" class="form-control form-control-sm" 
-                                               placeholder="Enter Employee ID" value="{{ filters.employee_id|default:'' }}">
                                     </div>
                                     {% endif %}
 
-                                    <!-- Gratuity Specific -->
-                                    {% if report_type == 'gratuity' %}
+                                    {% if report_type == 'headcount-analysis' or report_type == 'attrition' or report_type == 'employee-ctc' %}
                                     <div class="col-md-3">
-                                        <label class="form-label">Department</label>
-                                        <select name="department" class="form-select form-select-sm">
-                                            <option value="">All Departments</option>
-                                            {% for dept in filter_options.departments %}
-                                                <option value="{{ dept.id }}" {% if filters.department == dept.id|stringformat:"s" %}selected{% endif %}>
-                                                    {{ dept.name }}
+                                        <label class="form-label">Designation</label>
+                                        <select name="designation" class="form-select form-select-sm">
+                                            <option value="">All Designations</option>
+                                            {% for desg in filter_options.designations %}
+                                                <option value="{{ desg.id }}" {% if filters.designation == desg.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ desg.name }}
                                                 </option>
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    {% endif %}
+
+                                    <!-- Employee CTC Specific -->
+                                    {% if report_type == 'employee-ctc' %}
                                     <div class="col-md-3">
                                         <label class="form-label">Employee ID</label>
                                         <input type="text" name="employee_id" class="form-control form-control-sm" 
@@ -105,7 +103,7 @@
                                     {% endif %}
 
                                     <!-- Date Range Filters -->
-                                    {% if report_type == 'provident-fund' or report_type == 'tax-deduction' or report_type == 'esi' %}
+                                    {% if report_type == 'headcount-analysis' or report_type == 'attrition' or report_type == 'department-cost-analysis' %}
                                     <div class="col-md-3">
                                         <label class="form-label">Start Date</label>
                                         <input type="date" name="start_date" class="form-control form-control-sm" 
@@ -137,14 +135,14 @@
                         <div class="col-12">
                             <div class="card shadow mb-4">
                                 <div class="card-body">
-                                    {% if report_type == 'provident-fund' %}
-                                        {% include 'reports/partials/provident_fund.html' %}
-                                    {% elif report_type == 'tax-deduction' %}
-                                        {% include 'reports/partials/tax_deduction.html' %}
-                                    {% elif report_type == 'esi' %}
-                                        {% include 'reports/partials/esi.html' %}
-                                    {% elif report_type == 'gratuity' %}
-                                        {% include 'reports/partials/gratuity.html' %}
+                                    {% if report_type == 'headcount-analysis' %}
+                                        {% include 'reports/partials/headcount_analysis.html' %}
+                                    {% elif report_type == 'attrition' %}
+                                        {% include 'reports/partials/attrition.html' %}
+                                    {% elif report_type == 'department-cost-analysis' %}
+                                        {% include 'reports/partials/department_cost_analysis.html' %}
+                                    {% elif report_type == 'employee-ctc' %}
+                                        {% include 'reports/partials/employee_ctc.html' %}
                                     {% endif %}
                                 </div>
                             </div>

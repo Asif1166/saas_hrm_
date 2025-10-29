@@ -1,0 +1,251 @@
+{% extends 'reports/analytics_base.html' %}
+{% load report_filters %}
+{% load humanize %}
+
+{% block analytics_content %}
+
+<!-- Overtime Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Overtime Cost
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.total_overtime_cost|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Hours
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_overtime_hours|floatformat:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Avg Hourly Rate
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ৳{{ report_data.summary.avg_hourly_rate|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Periods with Overtime
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_periods }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overtime Trends Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Overtime Cost Trends</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="overtimeTrendsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overtime Data Table -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Overtime by Period</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Period</th>
+                                <th class="text-end">Overtime Cost</th>
+                                <th class="text-end">Overtime Hours</th>
+                                <th class="text-end">Employees</th>
+                                <th class="text-end">Avg Cost/Employee</th>
+                                <th class="text-end">Avg Hours/Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period in report_data.overtime_data %}
+                            <tr>
+                                <td><strong>{{ period.period_name }}</strong></td>
+                                <td class="text-end">৳{{ period.overtime_cost|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ period.overtime_hours|floatformat:1 }}</td>
+                                <td class="text-end">{{ period.employee_count }}</td>
+                                <td class="text-end">৳{{ period.avg_cost_per_employee|floatformat:2 }}</td>
+                                <td class="text-end">{{ period.avg_hours_per_employee|floatformat:1 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department-wise Overtime -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Overtime by Department</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th class="text-end">Total Cost</th>
+                                <th class="text-end">Employees</th>
+                                <th class="text-end">Avg/Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in report_data.department_overtime %}
+                            <tr>
+                                <td>{{ dept.department }}</td>
+                                <td class="text-end">৳{{ dept.total_cost|floatformat:0|intcomma }}</td>
+                                <td class="text-end">{{ dept.employee_count }}</td>
+                                <td class="text-end">৳{{ dept.avg_cost_per_employee|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Top Overtime Earners</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th class="text-end">Total Overtime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for earner in report_data.top_overtime_earners %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ earner.full_name }}</div>
+                                    <small class="text-muted">{{ earner.employee_id }}</small>
+                                </td>
+                                <td>{{ earner.department }}</td>
+                                <td class="text-end fw-bold text-warning">
+                                    ৳{{ earner.total_overtime|floatformat:0|intcomma }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Overtime Trends Chart
+const overtimeTrendsCtx = document.getElementById('overtimeTrendsChart').getContext('2d');
+const overtimeTrendsChart = new Chart(overtimeTrendsCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for period in report_data.overtime_data %}'{{ period.period_name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Overtime Cost',
+            data: [{% for period in report_data.overtime_data %}{{ period.overtime_cost }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#f6c23e',
+            borderColor: '#d4a017',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '৳' + (value/1000).toFixed(0) + 'K';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+
+{% endblock analytics_content %}

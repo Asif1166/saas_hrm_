@@ -44,4 +44,26 @@ urlpatterns = [
     path('esi-report/', views.esi_report, name='esi_report'),
     path('gratuity-report/', views.gratuity_report, name='gratuity_report'),
     
+
+    path('bank-transfer/', views.bank_transfer_report, name='bank_transfer_report'),
+    path('cash-payment/', views.cash_payment_report, name='cash_payment_report'),
+    path('payment-status/', views.payment_status_report, name='payment_status_report'),
+    path('payment-reconciliation/', views.payment_reconciliation_report, name='payment_reconciliation_report'),
+
+
+    # HR Analytics Reports
+    path('headcount-analysis/', views.headcount_analysis_report, name='headcount_analysis_report'),
+    path('attrition-report/', views.attrition_report, name='attrition_report'),
+    path('department-cost-analysis/', views.department_cost_analysis_report, name='department_cost_analysis_report'),
+    path('employee-ctc-report/', views.employee_cost_to_company_report, name='employee_cost_to_company_report'),
+    
+    
+    # Payroll Analytics Reports
+    path('payroll_analytics_dashboard/', views.payroll_analytics_dashboard, name='analytics_dashboard'),
+    path('cost-trends/', views.payroll_cost_trends_report, name='cost_trends_report'),
+    path('overtime-analysis/', views.overtime_cost_analysis_report, name='overtime_analysis'),
+    path('bonus-analysis/', views.bonus_incentive_analysis_report, name='bonus_analysis'),
+    path('tax-projections/', views.tax_liability_projection_report, name='tax_projections'),
+    path('api/analytics/', views.payroll_analytics_api, name='analytics_api'),
+    
     ]
