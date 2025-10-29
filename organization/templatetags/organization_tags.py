@@ -1,7 +1,7 @@
 from django import template
 from django.db import models
 from django.utils.safestring import mark_safe
-from ..models import MenuItem
+from ..models import MenuItem, Organization
 import builtins
 
 register = template.Library()
@@ -147,3 +147,11 @@ def lookup(dictionary, key):
         return None
     except (KeyError, TypeError):
         return None
+
+
+@register.simple_tag
+def get_all_organizations():
+    """
+    Returns all organizations for global template use
+    """
+    return Organization.objects.all()
