@@ -120,7 +120,7 @@ input {
 }
 
 .btn-group .btn-primary {
-  border-color: #0072b7;
+  border-color: #0c578d;
 }
 
 .btn.show {
@@ -129,7 +129,7 @@ input {
 }
 
 .btn-primary {
-  background: #0D99FF;
+  background: #0c578d;
   border: 1px solid #0D99FF;
 }
 .btn-primary:hover {
