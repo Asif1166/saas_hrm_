@@ -1,0 +1,97 @@
+<!-- templates/reports/partials/early_departure.html -->
+<div class="table-responsive" id="earlyDepartureTable">
+    <table class="table table-bordered table-striped">
+        <thead class="table-secondary">
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Total Early Days</th>
+                <th>Average Early (min)</th>
+                <th>Maximum Early (min)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in report_data.early_employees %}
+            <tr>
+                <td><strong>{{ employee.employee_id }}</strong></td>
+                <td>{{ employee.full_name }}</td>
+                <td>{{ employee.department }}</td>
+                <td class="text-warning">
+                    <span class="badge bg-warning">{{ employee.total_early_days }}</span>
+                </td>
+                <td class="text-danger">{{ employee.avg_early_minutes }}</td>
+                <td class="text-danger">{{ employee.max_early_minutes }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="fas fa-walking fa-2x mb-3"></i><br>
+                    No early departure records found for the selected period
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Summary -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Period
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.period }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Total Early Occurrences
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_early_occurrences }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Employees with Early Departure
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_early_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

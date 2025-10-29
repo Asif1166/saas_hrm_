@@ -1,0 +1,127 @@
+<!-- templates/reports/partials/leave_balance.html -->
+<div class="table-responsive" id="leaveBalanceTable">
+    <table class="table table-bordered table-striped">
+        <thead class="table-secondary">
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Sick Leave Balance</th>
+                <th>Vacation Leave Balance</th>
+                <th>Personal Leave Balance</th>
+                <th>Total Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for balance in report_data.leave_balances %}
+            <tr>
+                <td><strong>{{ balance.employee_id }}</strong></td>
+                <td>{{ balance.full_name }}</td>
+                <td>{{ balance.department }}</td>
+                <td>
+                    <span class="badge {% if balance.sick_leave_balance > 7 %}bg-success{% elif balance.sick_leave_balance > 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ balance.sick_leave_balance }} days
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {% if balance.vacation_leave_balance > 14 %}bg-success{% elif balance.vacation_leave_balance > 7 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ balance.vacation_leave_balance }} days
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {% if balance.personal_leave_balance > 3 %}bg-success{% elif balance.personal_leave_balance > 1 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ balance.personal_leave_balance }} days
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {% if balance.total_balance > 21 %}bg-success{% elif balance.total_balance > 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ balance.total_balance }} days
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="fas fa-umbrella-beach fa-2x mb-3"></i><br>
+                    No leave balance data available
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Summary -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Employees with Leave Balance
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.employees_with_leave }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Balance Statistics -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Leave Balance Distribution</h6>
+            </div>
+            <div class="card-body">
+                {% with low_balance=report_data.leave_balances|length|divisibleby:3 high_balance=report_data.leave_balances|length|divisibleby:3 %}
+                <div class="mb-3">
+                    <small class="text-success">High Balance (>21 days): {{ high_balance }} employees</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-success" style="width: {% widthratio high_balance report_data.summary.total_employees 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-warning">Medium Balance (10-21 days): {{ report_data.leave_balances|length|divisibleby:3 }} employees</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-warning" style="width: {% widthratio report_data.leave_balances|length|divisibleby:3 report_data.summary.total_employees 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-danger">Low Balance (<10 days): {{ low_balance }} employees</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-danger" style="width: {% widthratio low_balance report_data.summary.total_employees 100 %}%"></div>
+                    </div>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>

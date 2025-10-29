@@ -1,0 +1,277 @@
+<!-- templates/reports/salary_reports.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <!-- Panel Header -->
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-money-check-alt me-2"></i>{{ page_title }}</h5>
+                    <div class="btn-box d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-primary" id="printInvoice">
+                            <i class="fa-solid fa-print"></i> Print
+                        </button>
+                        <button class="btn btn-sm btn-success" id="exportExcel">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-sm btn-danger" id="exportPDF">
+                            <i class="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Navigation -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-body py-2">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{% url 'report:salary_structure_report' %}" 
+                                       class="btn {% if report_type == 'salary-structure' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-list me-1"></i>Salary Structure
+                                    </a>
+                                    <a href="{% url 'report:salary_revision_report' %}" 
+                                       class="btn {% if report_type == 'salary-revision' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-history me-1"></i>Salary Revision
+                                    </a>
+                                    <a href="{% url 'report:comparative_salary_report' %}" 
+                                       class="btn {% if report_type == 'comparative-salary' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-chart-bar me-1"></i>Comparative Salary
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <!-- Filter Section -->
+                    <div class="table-filter-option mb-4">
+                        <div class="card shadow">
+                            <div class="card-header py-1 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-filter me-1"></i> Filters
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="get" id="reportFilters" class="row g-3">
+                                    <!-- Common Filters -->
+                                    {% if report_type == 'salary-structure' or report_type == 'salary-revision' or report_type == 'comparative-salary' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Department</label>
+                                        <select name="department" class="form-select form-select-sm">
+                                            <option value="">All Departments</option>
+                                            {% for dept in filter_options.departments %}
+                                                <option value="{{ dept.id }}" {% if filters.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ dept.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Salary Structure Specific -->
+                                    {% if report_type == 'salary-structure' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Designation</label>
+                                        <select name="designation" class="form-select form-select-sm">
+                                            <option value="">All Designations</option>
+                                            {% for desg in filter_options.designations %}
+                                                <option value="{{ desg.id }}" {% if filters.designation == desg.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ desg.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Employee ID</label>
+                                        <input type="text" name="employee_id" class="form-control form-control-sm" 
+                                               placeholder="Enter Employee ID" value="{{ filters.employee_id|default:'' }}">
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Salary Revision Specific -->
+                                    {% if report_type == 'salary-revision' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Employee ID</label>
+                                        <input type="text" name="employee_id" class="form-control form-control-sm" 
+                                               placeholder="Enter Employee ID" value="{{ filters.employee_id|default:'' }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" name="start_date" class="form-control form-control-sm" 
+                                               value="{{ filters.start_date|default:'' }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" name="end_date" class="form-control form-control-sm" 
+                                               value="{{ filters.end_date|default:'' }}">
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Action Buttons -->
+                                    <div class="col-12 d-flex justify-content-start align-items-center mt-2">
+                                        <button type="submit" class="btn btn-sm btn-primary me-2">
+                                            <i class="fas fa-search me-1"></i> Apply
+                                        </button>
+                                        <a href="" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-refresh me-1"></i> Clear
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Content -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-body">
+                                    {% if report_type == 'salary-structure' %}
+                                        {% include 'reports/partials/salary_structure.html' %}
+                                    {% elif report_type == 'salary-revision' %}
+                                        {% include 'reports/partials/salary_revision.html' %}
+                                    {% elif report_type == 'comparative-salary' %}
+                                        {% include 'reports/partials/comparative_salary.html' %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// Print functionality
+document.getElementById('printInvoice').addEventListener('click', function() {
+    printTableWithCanvas();
+});
+
+// Export to Excel
+document.getElementById('exportExcel').addEventListener('click', function() {
+    alert('Excel export functionality will be implemented');
+});
+
+// Export to PDF
+document.getElementById('exportPDF').addEventListener('click', function() {
+    alert('PDF export functionality will be implemented');
+});
+
+// Auto-submit form when select changes
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select[name]');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            document.getElementById('reportFilters').submit();
+        });
+    });
+});
+
+// Canvas-based printing function
+function printTableWithCanvas() {
+    const reportContent = document.querySelector('.card-body .table-responsive') || document.querySelector('.card-body table');
+    
+    if (!reportContent) {
+        alert('No content available for printing');
+        return;
+    }
+
+    // Create a temporary container for printing
+    const printContainer = document.createElement('div');
+    printContainer.style.cssText = `
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 10000;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow: auto;
+    `;
+    
+    // Create print header
+    const printHeader = document.createElement('div');
+    printHeader.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+            <h2 style="margin: 0 0 5px 0; font-size: 24px;">{{ report_data.report_name }}</h2>
+            <p style="margin: 0; color: #666; font-size: 14px;">
+                Generated on: {{ report_data.generated_on }}
+            </p>
+        </div>
+    `;
+    
+    // Clone the report content
+    const contentClone = reportContent.cloneNode(true);
+    
+    // Add to print container
+    printContainer.appendChild(printHeader);
+    printContainer.appendChild(contentClone);
+    
+    // Add to body
+    document.body.appendChild(printContainer);
+    
+    // Use html2canvas to capture the content
+    html2canvas(printContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        // Remove the temporary container
+        document.body.removeChild(printContainer);
+        
+        // Create print window
+        const printWindow = window.open('', '_blank');
+        
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>{{ report_data.report_name }}</title>
+                <style>
+                    body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background: white; }
+                    .print-container { width: 100%; text-align: center; }
+                    .print-image { max-width: 100%; height: auto; }
+                    @media print { body { margin: 0; padding: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="print-container">
+                    <img src="${canvas.toDataURL('image/png')}" class="print-image" alt="{{ report_data.report_name }}">
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+    }).catch(error => {
+        console.error('Error generating print image:', error);
+        if (document.body.contains(printContainer)) {
+            document.body.removeChild(printContainer);
+        }
+        // Fallback to browser print
+        window.print();
+    });
+}
+</script>
+{% endblock %}

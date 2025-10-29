@@ -4,6 +4,16 @@ from django import template
 register = template.Library()
 
 @register.filter
+def get_range(value):
+    """Create a range from 1 to value"""
+    try:
+        if value and int(value) > 0:
+            return range(1, int(value) + 1)
+        return range(0)
+    except (ValueError, TypeError):
+        return range(0)
+
+@register.filter
 def multiply(value, arg):
     """Multiply the value by the argument"""
     try:

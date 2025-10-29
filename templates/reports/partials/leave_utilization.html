@@ -1,0 +1,217 @@
+<!-- templates/reports/partials/leave_utilization.html -->
+<!-- Leave Type Summary -->
+<h5 class="mb-3">Leave Type Summary for {{ report_data.year }}</h5>
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Leave Type</th>
+                <th>Total Days Used</th>
+                <th>Total Requests</th>
+                <th>Average Days/Request</th>
+                <th>Percentage of Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave_type in report_data.leave_type_summary %}
+            <tr>
+                <td>
+                    <span class="badge 
+                        {% if leave_type.leave_type == 'sick' %}bg-info
+                        {% elif leave_type.leave_type == 'vacation' %}bg-success
+                        {% elif leave_type.leave_type == 'personal' %}bg-warning
+                        {% else %}bg-secondary{% endif %}">
+                        {{ leave_type.leave_type|title }}
+                    </span>
+                </td>
+                <td class="text-primary"><strong>{{ leave_type.total_days }}</strong></td>
+                <td>{{ leave_type.total_requests }}</td>
+                <td>{{ leave_type.avg_days|floatformat:1 }}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar 
+                            {% if leave_type.leave_type == 'sick' %}bg-info
+                            {% elif leave_type.leave_type == 'vacation' %}bg-success
+                            {% elif leave_type.leave_type == 'personal' %}bg-warning
+                            {% else %}bg-secondary{% endif %}" 
+                             role="progressbar" 
+                             style="width: {% widthratio leave_type.total_days report_data.summary.total_leave_days 100 %}%"
+                             aria-valuenow="{% widthratio leave_type.total_days report_data.summary.total_leave_days 100 %}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {% widthratio leave_type.total_days report_data.summary.total_leave_days 100 %}%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted py-3">
+                    No leave utilization data available for {{ report_data.year }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Monthly Trend -->
+<h5 class="mt-4 mb-3">Monthly Leave Trend</h5>
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Month</th>
+                <th>Total Leave Days</th>
+                <th>Total Requests</th>
+                <th>Trend</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for month in report_data.monthly_trend %}
+            <tr>
+                <td><strong>{{ month.month|date:"F Y" }}</strong></td>
+                <td class="text-primary">{{ month.total_days }}</td>
+                <td>{{ month.total_requests }}</td>
+                <td>
+                    <div class="progress" style="height: 15px;">
+                        <div class="progress-bar bg-info" 
+                             role="progressbar" 
+                             style="width: {% widthratio month.total_days report_data.summary.total_leave_days 100 %}%"
+                             aria-valuenow="{% widthratio month.total_days report_data.summary.total_leave_days 100 %}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted py-3">
+                    No monthly trend data available
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Department-wise Utilization -->
+<h5 class="mt-4 mb-3">Department-wise Leave Utilization</h5>
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Department</th>
+                <th>Total Leave Days</th>
+                <th>Employees on Leave</th>
+                <th>Average Days/Employee</th>
+                <th>Utilization Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in report_data.department_leave %}
+            <tr>
+                <td><strong>{{ dept.employee__department__name }}</strong></td>
+                <td class="text-primary">{{ dept.total_days }}</td>
+                <td>{{ dept.employee_count }}</td>
+                <td>{{ dept.avg_days_per_employee|floatformat:1 }}</td>
+                <td>
+                    <span class="badge 
+                        {% if dept.avg_days_per_employee > 15 %}bg-danger
+                        {% elif dept.avg_days_per_employee > 10 %}bg-warning
+                        {% else %}bg-success{% endif %}">
+                        {{ dept.avg_days_per_employee|floatformat:1 }} days/emp
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted py-3">
+                    No department leave data available
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Summary -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Year
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.year }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Leave Days
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_leave_days }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Leave Requests
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_leave_requests }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Employees on Leave
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.employees_on_leave }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

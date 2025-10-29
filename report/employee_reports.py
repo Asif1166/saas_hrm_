@@ -3,13 +3,28 @@ from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
 from hrm.models import Employee, Department, Designation, Branch
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 class EmployeeDirectoryReport:
-    def generate_employee_directory(self, organization, filters=None):
+    def generate_employee_directory(self, organization, filters=None, page_number=1, page_size=20, show_all=False):
         """
-        Generate comprehensive employee directory
+        Generate comprehensive employee directory with pagination
         """
         filters = filters or {}
+        
+        # Convert parameters to proper types
+        try:
+            page_number = int(page_number)
+        except (ValueError, TypeError):
+            page_number = 1
+        
+        try:
+            page_size = int(page_size)
+        except (ValueError, TypeError):
+            page_size = 20
+        
+        # Ensure page_number is at least 1
+        page_number = max(1, page_number)
         
         # Base queryset
         employees = Employee.objects.filter(
@@ -41,9 +56,41 @@ class EmployeeDirectoryReport:
                 Q(personal_email__icontains=search_term)
             )
         
+        # Get total count
+        total_employees = employees.count()
+        
+        # Handle pagination
+        if show_all:
+            # Show all employees without pagination
+            paginated_employees = list(employees)
+            total_pages = 1
+            current_page = 1
+            start_index = 1
+            end_index = total_employees
+        else:
+            # Apply pagination
+            from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+            paginator = Paginator(employees, page_size)
+            
+            try:
+                paginated_employees = paginator.page(page_number)
+            except PageNotAnInteger:
+                paginated_employees = paginator.page(1)
+                page_number = 1
+            except EmptyPage:
+                paginated_employees = paginator.page(paginator.num_pages)
+                page_number = paginator.num_pages
+            
+            total_pages = paginator.num_pages
+            current_page = page_number
+            
+            # Calculate start_index safely
+            start_index = (current_page - 1) * page_size + 1
+            end_index = start_index + len(paginated_employees) - 1
+        
         # Prepare report data
         report_data = []
-        for emp in employees:
+        for emp in paginated_employees:
             report_data.append({
                 'employee_id': emp.employee_id,
                 'full_name': emp.full_name,
@@ -63,10 +110,19 @@ class EmployeeDirectoryReport:
             'report_name': 'Employee Directory',
             'generated_on': timezone.now().strftime('%d-%m-%Y %H:%M:%S'),
             'filters': filters,
-            'total_employees': len(report_data),
-            'data': report_data
+            'total_employees': total_employees,
+            'data': report_data,
+            'pagination': {
+                'current_page': current_page,
+                'total_pages': total_pages,
+                'page_size': page_size,
+                'has_previous': paginated_employees.has_previous() if not show_all else False,
+                'has_next': paginated_employees.has_next() if not show_all else False,
+                'show_all': show_all,
+                'start_index': start_index,
+                'end_index': end_index
+            }
         }
-    
 
 
 class EmployeeProfileSummaryReport:

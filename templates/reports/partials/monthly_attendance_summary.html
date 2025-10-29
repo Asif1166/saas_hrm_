@@ -1,0 +1,147 @@
+<!-- templates/reports/partials/monthly_attendance_summary.html -->
+<div class="table-responsive" id="monthlySummaryTable">
+    <table class="table table-bordered table-striped">
+        <thead class="table-secondary">
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Present Days</th>
+                <th>Absent Days</th>
+                <th>Late Days</th>
+                <th>Half Days</th>
+                <th>Total Hours</th>
+                <th>Overtime Hours</th>
+                <th>Avg Hours/Day</th>
+                <th>Attendance %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in report_data.employee_summary %}
+            <tr>
+                <td><strong>{{ employee.employee_id }}</strong></td>
+                <td>{{ employee.full_name }}</td>
+                <td>{{ employee.department }}</td>
+                <td class="text-success">{{ employee.present_days }}</td>
+                <td class="text-danger">{{ employee.absent_days }}</td>
+                <td class="text-warning">{{ employee.late_days }}</td>
+                <td class="text-info">{{ employee.half_days }}</td>
+                <td>{{ employee.total_working_hours }}</td>
+                <td class="text-primary">{{ employee.total_overtime }}</td>
+                <td>{{ employee.avg_working_hours }}</td>
+                <td>
+                    <span class="badge {% if employee.attendance_percentage >= 90 %}bg-success{% elif employee.attendance_percentage >= 80 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ employee.attendance_percentage }}%
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center text-muted py-4">
+                    <i class="fas fa-calendar-alt fa-2x mb-3"></i><br>
+                    No attendance data found for the selected period
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Department Summary -->
+<h5 class="mt-4 mb-3">Department-wise Summary</h5>
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Department</th>
+                <th>Employees</th>
+                <th>Present Days</th>
+                <th>Absent Days</th>
+                <th>Attendance %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in report_data.department_summary %}
+            <tr>
+                <td><strong>{{ dept.department }}</strong></td>
+                <td>{{ dept.employee_count }}</td>
+                <td>{{ dept.present_days }}</td>
+                <td>{{ dept.absent_days }}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {% if dept.attendance_percentage >= 90 %}bg-success{% elif dept.attendance_percentage >= 80 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ dept.attendance_percentage }}%"
+                             aria-valuenow="{{ dept.attendance_percentage }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ dept.attendance_percentage }}%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Summary -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Period
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.period }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Working Days
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary.total_working_days }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-business-time fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

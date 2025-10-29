@@ -1,0 +1,228 @@
+<!-- templates/reports/partials/payroll_variance.html -->
+<!-- Summary Variance -->
+<h5 class="mb-3">Payroll Variance Summary</h5>
+<div class="table-responsive mb-4">
+    <table class="table table-bordered">
+        <thead class="table-secondary">
+            <tr>
+                <th>Metric</th>
+                <th>Current Period ({{ report_data.current_period }})</th>
+                <th>Previous Period ({{ report_data.previous_period }})</th>
+                <th>Variance Amount</th>
+                <th>Variance %</th>
+                <th>Trend</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, metric in report_data.summary_variance.items %}
+            <tr>
+                <td><strong>{{ key|title }}</strong></td>
+                <td class="text-end">
+                    {% if key == 'employees' %}
+                        {{ metric.current }}
+                    {% else %}
+                        ₹{{ metric.current|floatformat:2 }}
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    {% if key == 'employees' %}
+                        {{ metric.previous }}
+                    {% else %}
+                        ₹{{ metric.previous|floatformat:2 }}
+                    {% endif %}
+                </td>
+                <td class="text-end {% if metric.variance_amount >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {% if key == 'employees' %}
+                        {{ metric.variance_amount }}
+                    {% else %}
+                        ₹{{ metric.variance_amount|floatformat:2 }}
+                    {% endif %}
+                </td>
+                <td class="text-end {% if metric.variance_percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ metric.variance_percentage }}%
+                </td>
+                <td class="text-center">
+                    {% if metric.variance_percentage > 0 %}
+                        <i class="fas fa-arrow-up text-success"></i>
+                    {% elif metric.variance_percentage < 0 %}
+                        <i class="fas fa-arrow-down text-danger"></i>
+                    {% else %}
+                        <i class="fas fa-minus text-secondary"></i>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Department-wise Variance -->
+<h5 class="mt-4 mb-3">Department-wise Variance</h5>
+<div class="table-responsive" id="payrollVarianceTable">
+    <table class="table table-bordered table-striped">
+        <thead class="table-secondary">
+            <tr>
+                <th>Department</th>
+                <th>Current Period</th>
+                <th>Previous Period</th>
+                <th>Variance Amount</th>
+                <th>Variance %</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in report_data.department_variance %}
+            <tr>
+                <td><strong>{{ dept.department }}</strong></td>
+                <td class="text-end text-primary">₹{{ dept.current_amount|floatformat:2 }}</td>
+                <td class="text-end">₹{{ dept.previous_amount|floatformat:2 }}</td>
+                <td class="text-end {% if dept.variance_amount >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ₹{{ dept.variance_amount|floatformat:2 }}
+                </td>
+                <td class="text-end {% if dept.variance_percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ dept.variance_percentage }}%
+                </td>
+                <td class="text-center">
+                    {% if dept.variance_percentage > 5 %}
+                        <span class="badge bg-success">Significant Increase</span>
+                    {% elif dept.variance_percentage > 0 %}
+                        <span class="badge bg-info">Slight Increase</span>
+                    {% elif dept.variance_percentage > -5 %}
+                        <span class="badge bg-warning">Slight Decrease</span>
+                    {% else %}
+                        <span class="badge bg-danger">Significant Decrease</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="fas fa-chart-line fa-2x mb-3"></i><br>
+                    No variance data available for comparison
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Key Insights -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-left-primary shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Key Insights</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    {% with net_var=report_data.summary_variance.net_salary.variance_percentage %}
+                    <li class="mb-2">
+                        <i class="fas {% if net_var > 0 %}fa-arrow-up text-success{% elif net_var < 0 %}fa-arrow-down text-danger{% else %}fa-minus text-secondary{% endif %} me-2"></i>
+                        <strong>Net Payable:</strong> {{ net_var }}% change from previous period
+                    </li>
+                    {% endwith %}
+                    
+                    {% with emp_var=report_data.summary_variance.employees.variance_amount %}
+                    <li class="mb-2">
+                        <i class="fas {% if emp_var > 0 %}fa-user-plus text-success{% elif emp_var < 0 %}fa-user-minus text-danger{% else %}fa-users text-secondary{% endif %} me-2"></i>
+                        <strong>Employee Count:</strong> {{ emp_var }} change in workforce
+                    </li>
+                    {% endwith %}
+                    
+                    {% with gross_var=report_data.summary_variance.gross_salary.variance_percentage %}
+                    <li class="mb-2">
+                        <i class="fas {% if gross_var > 0 %}fa-chart-line text-success{% elif gross_var < 0 %}fa-chart-line-down text-danger{% else %}fa-chart-bar text-secondary{% endif %} me-2"></i>
+                        <strong>Gross Salary:</strong> {{ gross_var }}% variance
+                    </li>
+                    {% endwith %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-left-info shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-info">Period Comparison</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Current Period:</strong><br>
+                    {{ report_data.current_period }}<br>
+                    <small class="text-muted">{{ report_data.current_period_dates }}</small>
+                </div>
+                <div class="mb-3">
+                    <strong>Previous Period:</strong><br>
+                    {{ report_data.previous_period }}<br>
+                    <small class="text-muted">{{ report_data.previous_period_dates }}</small>
+                </div>
+                <div>
+                    <strong>Comparison:</strong><br>
+                    <span class="{% if report_data.summary_variance.net_salary.variance_percentage >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ report_data.summary_variance.net_salary.variance_percentage }}% change in net payroll
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card border-left-{% if report_data.summary_variance.net_salary.variance_percentage >= 0 %}success{% else %}danger{% endif %} shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-{% if report_data.summary_variance.net_salary.variance_percentage >= 0 %}success{% else %}danger{% endif %} text-uppercase mb-1">
+                            Net Payable Variance
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary_variance.net_salary.variance_percentage }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas {% if report_data.summary_variance.net_salary.variance_percentage >= 0 %}fa-arrow-up text-success{% else %}fa-arrow-down text-danger{% endif %} fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-{% if report_data.summary_variance.employees.variance_amount >= 0 %}success{% else %}danger{% endif %} shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-{% if report_data.summary_variance.employees.variance_amount >= 0 %}success{% else %}danger{% endif %} text-uppercase mb-1">
+                            Employee Change
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary_variance.employees.variance_amount }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas {% if report_data.summary_variance.employees.variance_amount >= 0 %}fa-user-plus text-success{% else %}fa-user-minus text-danger{% endif %} fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-{% if report_data.summary_variance.gross_salary.variance_percentage >= 0 %}success{% else %}danger{% endif %} shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-{% if report_data.summary_variance.gross_salary.variance_percentage >= 0 %}success{% else %}danger{% endif %} text-uppercase mb-1">
+                            Gross Salary Variance
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.summary_variance.gross_salary.variance_percentage }}%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas {% if report_data.summary_variance.gross_salary.variance_percentage >= 0 %}fa-chart-line text-success{% else %}fa-chart-line-down text-danger{% endif %} fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

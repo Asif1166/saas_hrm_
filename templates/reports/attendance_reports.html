@@ -1,0 +1,325 @@
+<!-- templates/reports/attendance_reports.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <!-- Panel Header -->
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-clock me-2"></i>{{ page_title }}</h5>
+                    <div class="btn-box d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-primary" id="printInvoice">
+                            <i class="fa-solid fa-print"></i> Print
+                        </button>
+                        <button class="btn btn-sm btn-success" id="exportExcel">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-sm btn-danger" id="exportPDF">
+                            <i class="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Navigation -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-body py-2">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{% url 'report:daily_attendance_report' %}" 
+                                       class="btn {% if report_type == 'daily-attendance' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-calendar-day me-1"></i>Daily
+                                    </a>
+                                    <a href="{% url 'report:monthly_attendance_summary' %}" 
+                                       class="btn {% if report_type == 'monthly-summary' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-calendar-alt me-1"></i>Monthly
+                                    </a>
+                                    <a href="{% url 'report:late_coming_report' %}" 
+                                       class="btn {% if report_type == 'late-coming' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-running me-1"></i>Late Coming
+                                    </a>
+                                    <a href="{% url 'report:early_departure_report' %}" 
+                                       class="btn {% if report_type == 'early-departure' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-walking me-1"></i>Early Departure
+                                    </a>
+                                    <a href="{% url 'report:overtime_report' %}" 
+                                       class="btn {% if report_type == 'overtime' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-business-time me-1"></i>Overtime
+                                    </a>
+                                    <a href="{% url 'report:leave_balance_report' %}" 
+                                       class="btn {% if report_type == 'leave-balance' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-umbrella-beach me-1"></i>Leave Balance
+                                    </a>
+                                    <a href="{% url 'report:leave_utilization_report' %}" 
+                                       class="btn {% if report_type == 'leave-utilization' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        <i class="fas fa-chart-pie me-1"></i>Leave Utilization
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <!-- Filter Section -->
+                    <div class="table-filter-option mb-4">
+                        <div class="card shadow">
+                            <div class="card-header py-1 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-filter me-1"></i> Filters
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="get" id="reportFilters" class="row g-3">
+                                    <!-- Common Filters -->
+                                    {% if report_type == 'daily-attendance' or report_type == 'monthly-summary' or report_type == 'late-coming' or report_type == 'early-departure' or report_type == 'overtime' or report_type == 'leave-balance' or report_type == 'leave-utilization' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Department</label>
+                                        <select name="department" class="form-select form-select-sm">
+                                            <option value="">All Departments</option>
+                                            {% for dept in filter_options.departments %}
+                                                <option value="{{ dept.id }}" {% if filters.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ dept.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Date-based Reports -->
+                                    {% if report_type == 'daily-attendance' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" name="date" class="form-control form-control-sm" 
+                                               value="{{ filters.date|default:'' }}">
+                                    </div>
+                                    {% endif %}
+
+                                    {% if report_type == 'monthly-summary' %}
+                                    <div class="col-md-2">
+                                        <label class="form-label">Year</label>
+                                        <select name="year" class="form-select form-select-sm">
+                                            <option value="">Select Year</option>
+                                            {% for year in filter_options.years %}
+                                                <option value="{{ year }}" {% if filters.year == year|stringformat:"s" %}selected{% endif %}>
+                                                    {{ year }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Month</label>
+                                        <select name="month" class="form-select form-select-sm">
+                                            <option value="">Select Month</option>
+                                            {% for month_num, month_name in filter_options.months %}
+                                                <option value="{{ month_num }}" {% if filters.month == month_num|stringformat:"s" %}selected{% endif %}>
+                                                    {{ month_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if report_type == 'late-coming' or report_type == 'early-departure' or report_type == 'overtime' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" name="start_date" class="form-control form-control-sm" 
+                                               value="{{ filters.start_date|default:'' }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" name="end_date" class="form-control form-control-sm" 
+                                               value="{{ filters.end_date|default:'' }}">
+                                    </div>
+                                    {% endif %}
+
+                                    {% if report_type == 'leave-utilization' %}
+                                    <div class="col-md-3">
+                                        <label class="form-label">Year</label>
+                                        <select name="year" class="form-select form-select-sm">
+                                            <option value="">Select Year</option>
+                                            {% for year in filter_options.years %}
+                                                <option value="{{ year }}" {% if filters.year == year|stringformat:"s" %}selected{% endif %}>
+                                                    {{ year }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Action Buttons -->
+                                    <div class="col-12 d-flex justify-content-start align-items-center mt-2">
+                                        <button type="submit" class="btn btn-sm btn-primary me-2">
+                                            <i class="fas fa-search me-1"></i> Apply
+                                        </button>
+                                        <a href="" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-refresh me-1"></i> Clear
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Content -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-body">
+                                    {% if report_type == 'daily-attendance' %}
+                                        {% include 'reports/partials/daily_attendance.html' %}
+                                    {% elif report_type == 'monthly-summary' %}
+                                        {% include 'reports/partials/monthly_attendance_summary.html' %}
+                                    {% elif report_type == 'late-coming' %}
+                                        {% include 'reports/partials/late_coming.html' %}
+                                    {% elif report_type == 'early-departure' %}
+                                        {% include 'reports/partials/early_departure.html' %}
+                                    {% elif report_type == 'overtime' %}
+                                        {% include 'reports/partials/overtime.html' %}
+                                    {% elif report_type == 'leave-balance' %}
+                                        {% include 'reports/partials/leave_balance.html' %}
+                                    {% elif report_type == 'leave-utilization' %}
+                                        {% include 'reports/partials/leave_utilization.html' %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// Print functionality
+document.getElementById('printInvoice').addEventListener('click', function() {
+    printTableWithCanvas();
+});
+
+// Export to Excel
+document.getElementById('exportExcel').addEventListener('click', function() {
+    alert('Excel export functionality will be implemented');
+});
+
+// Export to PDF
+document.getElementById('exportPDF').addEventListener('click', function() {
+    alert('PDF export functionality will be implemented');
+});
+
+// Auto-submit form when select changes
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select[name]');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            document.getElementById('reportFilters').submit();
+        });
+    });
+});
+
+// Canvas-based printing function
+function printTableWithCanvas() {
+    const reportContent = document.querySelector('.card-body .table-responsive') || document.querySelector('.card-body table');
+    
+    if (!reportContent) {
+        alert('No content available for printing');
+        return;
+    }
+
+    // Create a temporary container for printing
+    const printContainer = document.createElement('div');
+    printContainer.style.cssText = `
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 10000;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow: auto;
+    `;
+    
+    // Create print header
+    const printHeader = document.createElement('div');
+    printHeader.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+            <h2 style="margin: 0 0 5px 0; font-size: 24px;">{{ report_data.report_name }}</h2>
+            <p style="margin: 0; color: #666; font-size: 14px;">
+                Generated on: {{ report_data.generated_on }}
+                {% if report_data.period %} | Period: {{ report_data.period }}{% endif %}
+                {% if report_data.target_date %} | Date: {{ report_data.target_date }}{% endif %}
+            </p>
+        </div>
+    `;
+    
+    // Clone the report content
+    const contentClone = reportContent.cloneNode(true);
+    
+    // Add to print container
+    printContainer.appendChild(printHeader);
+    printContainer.appendChild(contentClone);
+    
+    // Add to body
+    document.body.appendChild(printContainer);
+    
+    // Use html2canvas to capture the content
+    html2canvas(printContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        // Remove the temporary container
+        document.body.removeChild(printContainer);
+        
+        // Create print window
+        const printWindow = window.open('', '_blank');
+        
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>{{ report_data.report_name }}</title>
+                <style>
+                    body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background: white; }
+                    .print-container { width: 100%; text-align: center; }
+                    .print-image { max-width: 100%; height: auto; }
+                    @media print { body { margin: 0; padding: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="print-container">
+                    <img src="${canvas.toDataURL('image/png')}" class="print-image" alt="{{ report_data.report_name }}">
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+    }).catch(error => {
+        console.error('Error generating print image:', error);
+        if (document.body.contains(printContainer)) {
+            document.body.removeChild(printContainer);
+        }
+        // Fallback to browser print
+        window.print();
+    });
+}
+</script>
+{% endblock %}

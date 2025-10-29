@@ -1,0 +1,222 @@
+<!-- templates/reports/partials/payroll_summary.html -->
+<!-- Company Summary -->
+<h5 class="mb-3">Company-wide Payroll Summary</h5>
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Employees
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ report_data.company_summary.total_employees }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Gross Salary
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ₹{{ report_data.company_summary.total_gross|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Deductions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ₹{{ report_data.company_summary.total_deductions|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Net Payable
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ₹{{ report_data.company_summary.total_net|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-wallet fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Avg Salary
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ₹{{ report_data.company_summary.avg_salary|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department-wise Summary -->
+<h5 class="mt-4 mb-3">Department-wise Payroll Summary</h5>
+<div class="table-responsive" id="payrollSummaryTable">
+    <table class="table table-bordered table-striped">
+        <thead class="table-secondary">
+            <tr>
+                <th>Department</th>
+                <th>Employees</th>
+                <th>Total Basic</th>
+                <th>Total Allowances</th>
+                <th>Total Gross</th>
+                <th>Total Deductions</th>
+                <th>Total Net</th>
+                <th>Average Salary</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in report_data.department_summary %}
+            <tr>
+                <td><strong>{{ dept.department }}</strong></td>
+                <td class="text-center">{{ dept.employee_count }}</td>
+                <td class="text-end">₹{{ dept.total_basic|floatformat:2 }}</td>
+                <td class="text-end">₹{{ dept.total_allowances|floatformat:2 }}</td>
+                <td class="text-end text-primary">₹{{ dept.total_gross|floatformat:2 }}</td>
+                <td class="text-end text-danger">₹{{ dept.total_deductions|floatformat:2 }}</td>
+                <td class="text-end text-success"><strong>₹{{ dept.total_net|floatformat:2 }}</strong></td>
+                <td class="text-end">₹{{ dept.avg_salary|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    <i class="fas fa-building fa-2x mb-3"></i><br>
+                    No department payroll data available
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Salary Distribution -->
+<h5 class="mt-4 mb-3">Salary Distribution</h5>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Salary Range Distribution</h6>
+            </div>
+            <div class="card-body">
+                {% for range in report_data.salary_distribution %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small>{{ range.range }}</small>
+                        <small>{{ range.count }} employees ({{ range.percentage }}%)</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 12px;">
+                        <div class="progress-bar 
+                            {% if forloop.counter == 1 %}bg-danger
+                            {% elif forloop.counter == 2 %}bg-warning
+                            {% elif forloop.counter == 3 %}bg-info
+                            {% elif forloop.counter == 4 %}bg-primary
+                            {% elif forloop.counter == 5 %}bg-success
+                            {% else %}bg-dark{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ range.percentage }}%"
+                             aria-valuenow="{{ range.percentage }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Payroll Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-primary">Basic Salary: ₹{{ report_data.company_summary.total_basic|floatformat:2 }}</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-primary" style="width: {% widthratio report_data.company_summary.total_basic report_data.company_summary.total_gross 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-success">Allowances: ₹{{ report_data.company_summary.total_allowances|floatformat:2 }}</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-success" style="width: {% widthratio report_data.company_summary.total_allowances report_data.company_summary.total_gross 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-info">Overtime: ₹{{ report_data.company_summary.total_overtime|floatformat:2 }}</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-info" style="width: {% widthratio report_data.company_summary.total_overtime report_data.company_summary.total_gross 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-warning">Bonus: ₹{{ report_data.company_summary.total_bonus|floatformat:2 }}</small>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-warning" style="width: {% widthratio report_data.company_summary.total_bonus report_data.company_summary.total_gross 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Period Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Payroll Period:</strong> {{ report_data.payroll_period }} | 
+            <strong>Period:</strong> {{ report_data.period }} | 
+            <strong>Pay Date:</strong> {{ report_data.pay_date }}
+        </div>
+    </div>
+</div>
