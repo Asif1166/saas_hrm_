@@ -108,6 +108,7 @@ class SalaryStructure(BaseOrganizationModel):
     
     effective_date = models.DateField()
     is_active = models.BooleanField(default=True)
+    objects = SoftDeleteManager()
     
     class Meta:
         ordering = ['-effective_date']

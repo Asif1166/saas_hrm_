@@ -1505,6 +1505,92 @@ def delete_holiday(request, holiday_id):
 
 
 
+
+
+# Payhead Management Views
+@login_required
+@organization_admin_required
+def employee_payhead_list(request):
+    """List payheads for the organization"""
+    organization = request.organization
+    
+    employee_payheads = EmployeePayhead.objects.filter(organization=organization).order_by('amount')
+    
+    paginator = Paginator(employee_payheads, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'organization': organization,
+        'page_obj': page_obj,
+    }
+    return render(request, 'hrm/employee_payhead_list.html', context)
+
+
+@login_required
+@organization_admin_required
+def employee_create_payhead(request):
+    """Create new payhead"""
+    organization=request.organization
+    print("DEBUG ORGANIZATION:", request.organization)
+
+    if not organization:
+        messages.error(request, "You are not associated with any organization.")
+        return redirect('organization_dashboard')
+
+    if request.method == 'POST':
+        form = EmployeePayheadForm(request.POST, organization=organization)
+        if form.is_valid():
+            employee_payhead = form.save(commit=False)
+            employee_payhead.organization = organization
+            employee_payhead.created_by = request.user
+            employee_payhead.save()
+            messages.success(request, f'Payhead for "{employee_payhead.employee}" created successfully!')
+            return redirect('hrm:employee_payhead_list')
+    else:
+        form = EmployeePayheadForm(organization=organization)
+    
+    context = {
+        'organization': organization,
+        'form': form,
+        'is_update': False,
+    }
+    return render(request, 'hrm/employee_payhead_form.html', context)
+
+
+
+@login_required
+@organization_admin_required
+def employee_update_payhead(request, employee_payhead_id):
+    """Update existing payhead"""
+    try:
+        emoloyee_payhead = get_object_or_404(EmployeePayhead, id=employee_payhead_id, organization=request.organization)
+    except EmployeePayhead.DoesNotExist:
+        messages.error(request, 'EmployeePayhead not found.')
+        return redirect('hrm:emoloyee_payhead_list')
+
+    if request.method == 'POST':
+        form = EmployeePayheadForm(request.POST, instance=emoloyee_payhead, organization=request.organization)
+        if form.is_valid():
+            emoloyee_payhead = form.save(commit=False)
+            emoloyee_payhead.updated_by = request.user
+            emoloyee_payhead.save()
+            messages.success(request, f'Payhead "{emoloyee_payhead}" updated successfully!')
+            return redirect('hrm:employee_payhead_list')
+    else:
+        form = EmployeePayheadForm(instance=emoloyee_payhead, organization=request.organization)
+
+    context = {
+        'organization': request.organization,
+        'form': form,
+        'emoloyee_payhead': emoloyee_payhead,
+        'is_update': True,
+    }
+    return render(request, 'hrm/employee_payhead_form.html', context)
+
+
+
+
 # --- DELETE MULTIPLE ---
 @login_required
 @organization_member_required

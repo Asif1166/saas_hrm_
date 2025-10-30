@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Salary Structure Trash{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <button id="restoreSelectedBtn"
+                                class="btn btn-success btn-sm"
+                                style="display:none;"
+                                data-restore-url="{% url 'payroll:restore_salary_structure' %}">
+                            <i class="fas fa-undo"></i> Restore Selected
+                        </button>
+
+                        <button id="deletePermanentlyBtn"
+                                class="btn btn-danger btn-sm"
+                                style="display:none;"
+                                data-delete-url="{% url 'payroll:delete_multiple_salary_structures' %}"
+                                data-type="hard">
+                            <i class="fas fa-trash-alt"></i> Delete Permanently
+                        </button>
+                    </div>
+
+                    <h5>Deleted Salary Structure</h5>
+                    <a href="{% url 'payroll:salary_structures' %}" class="btn btn-sm btn-primary">All Salary Structure</a>
+                </div>
+
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table id="salaryStructureTrashTable" class="table table-dashed table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="mark-all"></th>
+                                    <th>SL</th>
+                                    <th>Employee</th>
+                                    <th>Payroll Period</th>
+                                    <th>Net Salary</th>
+                                    <th>Deleted At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payslip in page_obj %}
+                                <tr>
+                                    <td><input class="row-checkbox" type="checkbox" value="{{ payslip.id }}"></td>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    <td>{{ payslip.employee.full_name }}</td>
+                                    <td>{{ payslip.payroll_period.name }}</td>
+                                    <td>৳{{ payslip.net_salary }}</td>
+                                    <td>{{ payslip.deleted_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">No deleted Salary Structure found.</div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% include "pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Include global table actions JS once in base.html or here -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initTableActions({
+        tableSelector: '#salaryStructureTrashTable',
+        markAllSelector: '.mark-all',
+        rowCheckboxSelector: '.row-checkbox',
+        restoreBtnSelector: '#restoreSelectedBtn',
+        deleteBtnSelector: '#deletePermanentlyBtn'
+    });
+});
+</script>
+
+
+{% endblock %}
+

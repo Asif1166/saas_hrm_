@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
+from hrm.utils import handle_bulk_delete, restore_objects_view, trash_list_view
 from organization.decorators import organization_member_required
 from payroll.forms import PayrollPeriodForm, PayslipForm
 from .models import PayrollPeriod, Payslip, SalaryStructure, Allowance, Deduction
@@ -94,7 +95,7 @@ def payroll_periods(request):
                 created_by=request.user
             )
             messages.success(request, f'Payroll period "{name}" created successfully!')
-            return redirect('payroll_periods')
+            return redirect('payroll:payroll_periods')
         except Exception as e:
             messages.error(request, f'Error creating payroll period: {str(e)}')
     
@@ -119,7 +120,7 @@ def create_payroll_period(request):
             period.created_by = request.user
             period.save()
             messages.success(request, f'Payroll period "{period.name}" created successfully!')
-            return redirect('payroll_periods')
+            return redirect('payroll:payroll_periods')
         else:
             messages.error(request, 'Please correct the errors below.')
 
@@ -142,7 +143,7 @@ def update_payroll_period(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Payroll period "{period.name}" updated successfully!')
-            return redirect('payroll_periods')
+            return redirect('payroll:payroll_periods')
         else:
             messages.error(request, 'Please correct the errors below.')
 
@@ -161,29 +162,48 @@ def run_payroll(request, period_id):
     period = get_object_or_404(PayrollPeriod, id=period_id, organization=organization)
     
     if request.method == 'POST':
+        action = request.POST.get('action', 'run')  # 'run' or 'rerun'
+        force_recalculate = request.POST.get('force_recalculate', False)
+        
         processor = PayrollProcessor(organization)
-        success, result = processor.run_payroll(period_id)
+        
+        if action == 'rerun':
+            success, result = processor.rerun_payroll(period_id, force_recalculate)
+            action_text = "rerun"
+        else:
+            success, result = processor.run_payroll(period_id, force_recalculate)
+            action_text = "run"
         
         if success:
             if result.get('status') == 'completed':
                 messages.success(request, 
-                    f'Payroll run completed successfully! Created {result["payslips_created"]} payslips for {result["total_employees"]} employees.'
+                    f'Payroll {action_text} completed successfully! '
+                    f'Created {result.get("payslips_created", 0)} payslips, '
+                    f'updated {result.get("payslips_updated", 0)} payslips for {result["total_employees"]} employees.'
                 )
-            else:  # partial success
+            elif result.get('status') == 'completed_with_errors':
                 messages.warning(request, 
-                    f'Payroll run completed with some issues. Created {result["payslips_created"]} out of {result["total_employees"]} payslips.'
+                    f'Payroll {action_text} completed with some issues. '
+                    f'Created {result.get("payslips_created", 0)} payslips, '
+                    f'updated {result.get("payslips_updated", 0)} out of {result["total_employees"]} employees.'
                 )
                 if result['errors']:
                     for error in result['errors'][:5]:  # Show first 5 errors
                         messages.error(request, error)
                     if len(result['errors']) > 5:
                         messages.info(request, f'... and {len(result["errors"]) - 5} more errors')
+            else:
+                messages.success(request, 
+                    f'Payroll {action_text} completed! '
+                    f'Created {result.get("payslips_created", 0)} payslips, '
+                    f'updated {result.get("payslips_updated", 0)} payslips.'
+                )
         else:
             messages.error(request, result)
         
         return redirect('payroll:payroll_periods')
     
-    # Get employee count and existing payslips for confirmation
+    # Get counts for confirmation page
     employee_count = Employee.objects.filter(
         organization=organization,
         employment_status='active',
@@ -195,13 +215,54 @@ def run_payroll(request, period_id):
         organization=organization
     ).count()
     
+    can_rerun = period.status in ['completed', 'processing']
+    
     context = {
         'organization': organization,
         'period': period,
         'employee_count': employee_count,
         'existing_payslips': existing_payslips,
+        'can_rerun': can_rerun,
     }
     return render(request, 'payroll/run_payroll.html', context)
+
+
+@login_required
+@organization_member_required
+def recalculate_employee_payroll(request, period_id, employee_id):
+    """Recalculate payroll for a single employee"""
+    organization = request.organization
+    period = get_object_or_404(PayrollPeriod, id=period_id, organization=organization)
+    employee = get_object_or_404(Employee, id=employee_id, organization=organization)
+    
+    if request.method == 'POST':
+        processor = PayrollProcessor(organization)
+        
+        # Delete existing payslip for this employee
+        Payslip.objects.filter(
+            organization=organization,
+            employee=employee,
+            payroll_period=period
+        ).delete()
+        
+        # Recalculate
+        payslip, error = processor.calculate_employee_salary(employee, period)
+        
+        if payslip:
+            payslip.save()
+            processor._save_payslip_components(payslip)
+            messages.success(request, f'Payroll recalculated successfully for {employee.full_name}')
+        else:
+            messages.error(request, f'Error recalculating payroll for {employee.full_name}: {error}')
+        
+        return redirect('payroll:payroll_period_detail', period_id=period_id)
+    
+    context = {
+        'organization': organization,
+        'period': period,
+        'employee': employee,
+    }
+    return render(request, 'payroll/recalculate_employee.html', context)
 
 # Add this new view for payroll summary
 @login_required
@@ -611,3 +672,29 @@ def payroll_reports(request):
         'end_date': end_date,
     }
     return render(request, 'payroll/reports.html', context)
+
+
+
+
+
+
+@login_required
+@organization_member_required
+def delete_multiple_salary_structures(request):
+    return handle_bulk_delete(request, SalaryStructure, 'salary structure')
+
+
+
+
+@login_required
+@organization_member_required
+def salary_structure_trash(request):
+    return trash_list_view(request, SalaryStructure, 'payroll/salary_structure_trash.html', 'salary_structures')
+
+
+
+# --- Restore ---
+@login_required
+@organization_member_required
+def restore_salary_structure(request):
+    return restore_objects_view(request, SalaryStructure, 'salary_structures')

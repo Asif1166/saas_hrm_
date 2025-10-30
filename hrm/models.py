@@ -534,12 +534,60 @@ class AttendanceRecord(BaseOrganizationModel):
             self.save()
             return
 
-        # Step 3: Ensure check-in/out times exist
-        if not self.check_in_time or not self.check_out_time:
+        # Step 3: UPDATED - Handle cases with only check-in OR check-out
+        if not self.check_in_time and not self.check_out_time:
             self.status = 'absent'
             self.save()
             return
+        
+        # Initialize variables for partial attendance
+        has_check_in_only = bool(self.check_in_time and not self.check_out_time)
+        has_check_out_only = bool(self.check_out_time and not self.check_in_time)
+        has_both_times = bool(self.check_in_time and self.check_out_time)
 
+        # For partial records, we can still calculate some status but not all hours
+        if not has_both_times:
+            # Create datetime objects for shift times (needed for both scenarios)
+            shift_start_dt = datetime.combine(self.date, shift.start_time)
+            shift_end_dt = datetime.combine(self.date, shift.end_time)
+            
+            # Handle overnight shifts for shift_end_dt
+            if shift_end_dt <= shift_start_dt:
+                shift_end_dt += timedelta(days=1)
+            
+            # Can still calculate late status if check-in exists
+            if has_check_in_only:
+                check_in_dt = datetime.combine(self.date, self.check_in_time)
+                
+                # Calculate late status
+                grace_minutes = shift.grace_period_minutes
+                grace_timedelta = timedelta(minutes=grace_minutes)
+                late_threshold = shift_start_dt + grace_timedelta
+                self.is_late = check_in_dt > late_threshold
+                
+                if self.is_late:
+                    self.late_minutes = max(0, int((check_in_dt - late_threshold).total_seconds() / 60))
+                    self.status = 'late'
+                else:
+                    self.late_minutes = 0
+                    self.status = 'present'
+            
+            # If only check-out exists, mark as present but can't calculate full hours
+            elif has_check_out_only:
+                self.status = 'present'
+            
+            # Set default values for missing calculations
+            self.total_hours = 0.00
+            self.working_hours = 0.00
+            self.break_hours = 0.00
+            self.overtime_hours = 0.00
+            self.is_early_departure = False
+            self.early_departure_minutes = 0
+            
+            self.save()
+            return
+
+        # Step 4: Continue with full calculation if both times exist
         check_in_dt = datetime.combine(self.date, self.check_in_time)
         check_out_dt = datetime.combine(self.date, self.check_out_time)
         shift_start_dt = datetime.combine(self.date, shift.start_time)
@@ -551,11 +599,11 @@ class AttendanceRecord(BaseOrganizationModel):
         if check_out_dt <= check_in_dt:
             check_out_dt += timedelta(days=1)
 
-        # Step 4: Calculate base hours
+        # Step 5: Calculate base hours
         total_seconds = (check_out_dt - check_in_dt).total_seconds()
         self.total_hours = round(total_seconds / 3600, 2)
 
-        # Step 5: Calculate break hours (either from record or shift)
+        # Step 6: Calculate break hours (either from record or shift)
         break_hours = 0.00
         if self.break_start_time and self.break_end_time:
             break_start_dt = datetime.combine(self.date, self.break_start_time)
@@ -573,24 +621,37 @@ class AttendanceRecord(BaseOrganizationModel):
         self.break_hours = break_hours
         self.working_hours = round(self.total_hours - self.break_hours, 2)
 
-        # Step 6: Late & early calculations
+        # Step 7: CORRECTED Late & early calculations
         grace_minutes = shift.grace_period_minutes
-        late_diff = (check_in_dt - shift_start_dt).total_seconds() / 60
-        early_diff = (shift_end_dt - check_out_dt).total_seconds() / 60
+        grace_timedelta = timedelta(minutes=grace_minutes)
+        
+        # Calculate if check-in is AFTER shift start time + grace period
+        late_threshold = shift_start_dt + grace_timedelta
+        self.is_late = check_in_dt > late_threshold
+        
+        # Calculate late minutes only if actually late
+        if self.is_late:
+            self.late_minutes = max(0, int((check_in_dt - late_threshold).total_seconds() / 60))
+        else:
+            self.late_minutes = 0
 
-        self.is_late = late_diff > grace_minutes
-        self.late_minutes = int(late_diff) if self.is_late else 0
+        # Calculate if check-out is BEFORE shift end time - grace period
+        early_threshold = shift_end_dt - grace_timedelta
+        self.is_early_departure = check_out_dt < early_threshold
+        
+        # Calculate early departure minutes only if actually early
+        if self.is_early_departure:
+            self.early_departure_minutes = max(0, int((early_threshold - check_out_dt).total_seconds() / 60))
+        else:
+            self.early_departure_minutes = 0
 
-        self.is_early_departure = early_diff > grace_minutes
-        self.early_departure_minutes = int(early_diff) if self.is_early_departure else 0
-
-        # Step 7: Overtime calculation
+        # Step 8: Overtime calculation
         if self.working_hours > float(shift.overtime_start_after_hours):
             self.overtime_hours = round(self.working_hours - float(shift.overtime_start_after_hours), 2)
         else:
             self.overtime_hours = 0.00
 
-        # Step 8: Determine attendance status
+        # Step 9: Determine attendance status
         if self.total_hours < (float(shift.working_hours) / 2):
             self.status = 'half_day'
         elif self.is_late:
@@ -599,7 +660,6 @@ class AttendanceRecord(BaseOrganizationModel):
             self.status = 'present'
 
         self.save()
-
 
 
 class Payhead(BaseOrganizationModel):

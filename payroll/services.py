@@ -387,13 +387,52 @@ class PayrollProcessor:
                     display_order=idx
                 )
     
-    @transaction.atomic
-    def run_payroll(self, period_id):
-        """Run payroll for all active employees"""
+
+
+    def rerun_payroll(self, period_id, force_recalculate=False):
+        """Rerun payroll for a period - delete existing payslips and recalculate"""
         try:
             period = PayrollPeriod.objects.get(id=period_id, organization=self.organization)
             
-            if period.status != 'draft':
+            # Allow rerun for completed periods
+            if period.status not in ['completed', 'processing']:
+                return False, "Payroll period must be completed or processing to rerun"
+            
+            # Delete existing payslips and components
+            with transaction.atomic():
+                payslips = Payslip.objects.filter(
+                    payroll_period=period, 
+                    organization=self.organization
+                )
+                
+                # Delete related components first
+                for payslip in payslips:
+                    PayslipComponent.objects.filter(payslip=payslip).delete()
+                
+                # Delete payslips
+                payslips_count = payslips.count()
+                payslips.delete()
+                
+                print(f"Deleted {payslips_count} existing payslips for period {period.name}")
+                
+                # Reset period status to draft for recalculation
+                period.status = 'draft'
+                period.save()
+            
+            # Now run payroll normally
+            return self.run_payroll(period_id)
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return False, f"Error rerunning payroll: {str(e)}"
+    
+    def run_payroll(self, period_id, force_recalculate=False):
+        """Run payroll for all active employees with optional force recalculate"""
+        try:
+            period = PayrollPeriod.objects.get(id=period_id, organization=self.organization)
+            
+            if period.status not in ['draft', 'processing'] and not force_recalculate:
                 return False, "Payroll period is not in draft status"
             
             # Get active employees
@@ -407,40 +446,89 @@ class PayrollProcessor:
                 return False, "No active employees found"
             
             payslips_created = 0
+            payslips_updated = 0
             errors = []
             
             period.status = 'processing'
             period.save()
             
             for employee in active_employees:
-                payslip, error = self.calculate_employee_salary(employee, period)
-                if payslip:
-                    payslip.save()
-                    # IMPORTANT: Save components after payslip is saved
-                    self._save_payslip_components(payslip)
-                    payslips_created += 1
+                # Check if payslip already exists
+                existing_payslip = Payslip.objects.filter(
+                    organization=self.organization,
+                    employee=employee,
+                    payroll_period=period
+                ).first()
+                
+                if existing_payslip and not force_recalculate:
+                    # Update existing payslip
+                    updated_payslip, error = self.calculate_employee_salary(employee, period)
+                    if updated_payslip:
+                        # Update existing payslip fields
+                        existing_payslip.salary_structure = updated_payslip.salary_structure
+                        existing_payslip.basic_salary = updated_payslip.basic_salary
+                        existing_payslip.allowances = updated_payslip.allowances
+                        existing_payslip.overtime_pay = updated_payslip.overtime_pay
+                        existing_payslip.bonus = updated_payslip.bonus
+                        existing_payslip.other_earnings = updated_payslip.other_earnings
+                        existing_payslip.provident_fund = updated_payslip.provident_fund
+                        existing_payslip.tax_deduction = updated_payslip.tax_deduction
+                        existing_payslip.late_attendance_deduction = updated_payslip.late_attendance_deduction
+                        existing_payslip.other_deductions = updated_payslip.other_deductions
+                        existing_payslip.gross_salary = updated_payslip.gross_salary
+                        existing_payslip.total_deductions = updated_payslip.total_deductions
+                        existing_payslip.net_salary = updated_payslip.net_salary
+                        existing_payslip.updated_at = timezone.now()
+                        existing_payslip.save()
+                        
+                        # Update components
+                        self._save_payslip_components(existing_payslip)
+                        payslips_updated += 1
+                    else:
+                        errors.append(error)
                 else:
-                    errors.append(error)
+                    # Create new payslip
+                    payslip, error = self.calculate_employee_salary(employee, period)
+                    if payslip:
+                        payslip.save()
+                        self._save_payslip_components(payslip)
+                        payslips_created += 1
+                    else:
+                        errors.append(error)
             
-            if errors and payslips_created == 0:
+            # Update period status
+            if errors and (payslips_created == 0 and payslips_updated == 0):
                 period.status = 'draft'
                 period.save()
-                return False, f"Payroll failed: {', '.join(errors)}"
+                return False, f"Payroll failed completely: {', '.join(errors)}"
             else:
                 period.status = 'completed'
                 period.save()
-                return True, {
+                
+                result_message = {
                     'payslips_created': payslips_created,
+                    'payslips_updated': payslips_updated,
                     'errors': errors,
                     'total_employees': active_employees.count(),
                     'status': 'completed'
                 }
+                
+                if errors:
+                    result_message['status'] = 'completed_with_errors'
+                
+                return True, result_message
             
         except Exception as e:
             import traceback
             traceback.print_exc()
+            # Reset period status on error
+            try:
+                period.status = 'draft'
+                period.save()
+            except:
+                pass
             return False, f"Error running payroll: {str(e)}"
-    
+
     def get_payroll_summary(self, period_id):
         """Get payroll summary"""
         try:

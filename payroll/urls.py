@@ -20,6 +20,11 @@ urlpatterns = [
     path('payslips/restore/', views.restore_payslip, name='restore_payslip'),
 
     path('salary-structures/', views.salary_structures, name='salary_structures'),
+    path('salary-structures/delete-multiple/', views.delete_multiple_salary_structures, name='delete_multiple_salary_structures'),
+    path('salary-structures/trash/', views.salary_structure_trash, name='salary_structure_trash'),
+    path('salary-structures/restore/', views.restore_salary_structure, name='restore_salary_structure'),
+
+
     path('allowances/', views.allowances, name='allowances'),
     path('deductions/', views.deductions, name='deductions'),
     path('reports/', views.payroll_reports, name='payroll_reports'),

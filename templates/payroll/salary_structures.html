@@ -19,6 +19,19 @@
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createStructureModal">
                             <i class="fa-solid fa-plus"></i> Add New
                         </button>
+
+                           <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'payroll:salary_structure_trash' %}'">
+    <i class="fa-solid fa-trash-can me-1"></i> View Trash
+                        </button>
+
+
+                        <button id="deleteSelectedBtn"
+        class="btn btn-danger btn-sm"
+        style="display:none;"
+        data-delete-url="{% url 'payroll:delete_multiple_salary_structures' %}">
+    <i class="fa-solid fa-trash-can"></i> Delete Selected
+</button>
+
                     </div>
                 </div>
                 <div class="panel-body">

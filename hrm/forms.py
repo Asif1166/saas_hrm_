@@ -499,7 +499,6 @@ class PayheadForm(forms.ModelForm):
         self.fields['code'].required = True
         self.fields['payhead_type'].required = True
 
-
 class EmployeePayheadForm(forms.ModelForm):
     class Meta:
         model = EmployeePayhead
@@ -519,8 +518,10 @@ class EmployeePayheadForm(forms.ModelForm):
         self.fields['employee'].required = True
         self.fields['payhead'].required = True
         self.fields['effective_from'].required = True
-        
+
+        # ✅ Assign organization early so that `clean()` in the model can access it
         if organization:
+            self.instance.organization = organization
             self.fields['employee'].queryset = Employee.objects.filter(organization=organization, is_active=True)
             self.fields['payhead'].queryset = Payhead.objects.filter(organization=organization, is_active=True)
 

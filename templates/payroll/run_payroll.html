@@ -67,14 +67,24 @@
                     </div>
 
                     <div class="text-center mt-4">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-lg btn-success me-3" 
-                                    onclick="return confirm('Are you sure you want to run payroll for this period?')">
-                                <i class="fa-solid fa-play me-2"></i> Run Payroll Now
+                        <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if can_rerun %}
+                            <input type="hidden" name="action" value="rerun">
+                            <button type="submit" class="btn btn-warning" 
+                                onclick="return confirm('Are you sure you want to rerun payroll? This will delete all existing payslips.')">
+                                🔄 Rerun Payroll
                             </button>
-                            <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-lg btn-secondary">Cancel</a>
-                        </form>
+                        {% else %}
+                            <input type="hidden" name="action" value="run">
+                            <button type="submit" class="btn btn-primary">
+                                🚀 Run Payroll
+                            </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
                     </div>
                 </div>
             </div>

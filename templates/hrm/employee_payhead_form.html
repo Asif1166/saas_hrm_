@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if is_update %}Update Employee Pay Head{% else %}Create Employee Pay Head{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>
+            {% if is_update %}Update{% else %}Create{% endif %} Employee Pay Head
+        </h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:employee_payhead_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back
+            </a>
+        
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="dataForm" novalidate>
+        {% csrf_token %}
+        
+        <!-- General Info Panel -->
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Pay Head Information</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-12 d-flex justify-content-end mt-3">
+            <a href="{% url 'hrm:employee_payhead_list' %}" class="btn btn-sm btn-secondary me-2">
+                <i class="fa-solid fa-xmark me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="fa-solid fa-save me-1"></i>
+                {% if is_update %}Update{% else %}Save{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

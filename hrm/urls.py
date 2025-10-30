@@ -112,7 +112,9 @@ urlpatterns = [
     path('leave-requests/delete-multiple/', views.delete_multiple_leave_requests, name='delete_multiple_leave_requests'),
 
 
-
+    path('employee-payheads/', views.employee_payhead_list, name='employee_payhead_list'),
+    path('employee-payheads/create/', views.employee_create_payhead, name='employee_create_payhead'),
+    path('employee-payheads/<int:employee_payhead_id>/update/', views.employee_update_payhead, name='employee_update_payhead'),
     path('employee-payheads/trash/', views.employee_payhead_trash, name='employee_payhead_trash'),
     path('employee-payheads/restore/', views.restore_employee_payhead, name='restore_employee_payhead'),
     path('employee-payheads/delete-multiple/', views.delete_multiple_employee_payheads, name='delete_multiple_employee_payheads'),
