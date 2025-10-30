@@ -7,8 +7,8 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
-
-from hrm.models import LeaveRequest
+from django.utils import timezone
+from hrm.models import AttendanceHoliday, AttendanceRecord, Branch, Department, Employee, LeaveRequest
 from .models import (
     Organization, OrganizationMembership, MenuCategory, MenuItem, UserMenuPermission,
     DynamicTable, TableColumn, RoleTablePermission, RoleColumnPermission, UserTablePreference
@@ -235,42 +235,89 @@ def organization_dashboard(request):
         return redirect('authentication:login')
     
     # Organization statistics
-    total_employees = User.objects.filter(
-        organizationmembership__organization=organization,
-        role='employee'
+    total_employees = Employee.objects.filter(
+        organization=organization,
+        is_active=True
     ).count()
     
-    total_departments = organization.department_set.count() if hasattr(organization, 'department_set') else 0
+    total_departments = Department.objects.filter(
+        organization=organization,
+        is_active=True
+    ).count()
     
-    # Recent activities (you can add more specific activities here)
-    recent_employees = User.objects.filter(
-        organizationmembership__organization=organization,
-        role='employee'
-    ).order_by('-date_joined')[:5]
-
- 
+    total_branches = Branch.objects.filter(
+        organization=organization,
+        is_active=True
+    ).count()
+    
+    # Attendance statistics for current month
+    today = timezone.now().date()
+    current_month_start = today.replace(day=1)
+    
+    current_month_attendance = AttendanceRecord.objects.filter(
+        organization=organization,
+        date__gte=current_month_start,
+        date__lte=today
+    )
+    
+    present_count = current_month_attendance.filter(status='present').count()
+    late_count = current_month_attendance.filter(status='late').count()
+    absent_count = current_month_attendance.filter(status='absent').count()
+    
+    # Leave statistics
     total_leaves = LeaveRequest.objects.filter(organization=organization).count()
-    pending_leaves = LeaveRequest.objects.filter(organization=organization, status='pending').count()
-    approved_leaves = LeaveRequest.objects.filter(organization=organization, status='approved').count()
-    rejected_leaves = LeaveRequest.objects.filter(organization=organization, status='rejected').count()
-
-    # --- Recent Leave Requests ---
+    pending_leaves = LeaveRequest.objects.filter(
+        organization=organization, 
+        status='pending'
+    ).count()
+    approved_leaves = LeaveRequest.objects.filter(
+        organization=organization, 
+        status='approved'
+    ).count()
+    rejected_leaves = LeaveRequest.objects.filter(
+        organization=organization, 
+        status='rejected'
+    ).count()
+    
+    # Recent data
+    recent_employees = Employee.objects.filter(
+        organization=organization
+    ).select_related('user', 'department', 'designation').order_by('-created_at')[:5]
+    
     recent_leaves = LeaveRequest.objects.filter(
         organization=organization
     ).select_related('employee').order_by('-created_at')[:5]
+    
+    # Today's attendance
+    today_attendance = AttendanceRecord.objects.filter(
+        organization=organization,
+        date=today
+    ).select_related('employee')[:10]
+    
+    # Upcoming holidays (next 7 days)
+    upcoming_holidays = AttendanceHoliday.objects.filter(
+        organization=organization,
+        date__gte=today,
+        date__lte=today + timezone.timedelta(days=7)
+    ).order_by('date')[:5]
     
     context = {
         'organization': organization,
         'total_employees': total_employees,
         'total_departments': total_departments,
-        'recent_employees': recent_employees,
-
-        # Leave statistics
+        'total_branches': total_branches,
+        'present_count': present_count,
+        'late_count': late_count,
+        'absent_count': absent_count,
         'total_leaves': total_leaves,
         'pending_leaves': pending_leaves,
         'approved_leaves': approved_leaves,
         'rejected_leaves': rejected_leaves,
+        'recent_employees': recent_employees,
         'recent_leaves': recent_leaves,
+        'today_attendance': today_attendance,
+        'upcoming_holidays': upcoming_holidays,
+        'today': today,
     }
     
     return render(request, 'organization/dashboard.html', context)

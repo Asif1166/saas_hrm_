@@ -1,702 +1,354 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Organization Dashboard{% endblock %}
+{% block title %}Dashboard - {{ organization.name }}{% endblock %}
 
 {% block content %}
-
-
-    <div class="main-content">
-        <div class="dashboard-breadcrumb mb-25">
-            <h2>Dashboard</h2>
-            <div class="input-group dashboard-filter">
-                <input type="text" class="form-control" name="basic" id="dashboardFilter" readonly>
-                <label for="dashboardFilter" class="input-group-text"><i class="fa-solid fa-calendar-days"></i></label>
-            </div>
-        </div>
-        <div class="row mb-25">
-            <div class="col-lg-3 col-6 col-xs-12">
-                <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
-                    <div class="left">
-                        <p class="d-flex justify-content-between mb-2">Total Employees</p>
-                        <h3 class="fw-normal">{{ total_employees }}</h3>
-                        <p class="text-muted"><small>Employee Limit {{ organization.max_employees }}</small></p>
-                    </div>
-                    <div class="right">
-                        <div class="part-icon text-solid rounded">
-                            <span><i class="fa-solid fa-user-plus"></i></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-<div class="col-lg-3 col-6 col-xs-12">
-    <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
-        <div class="left">
-            <p class="d-flex justify-content-between mb-2">Leave Applications</p>
-            
-            <!-- Total Leaves -->
-            <h3 class="fw-normal">{{ total_leaves }}  
-                
-                <span class="badge bg-warning me-1">P: {{ pending_leaves }}</span>
-            
-            <span class="badge bg-success me-1">A: {{ approved_leaves }}</span>
-                <span class="badge bg-danger">R: {{ rejected_leaves }}</span>
-
-            </h3>
-            
-         
-        </div>
-        
-        <div class="right">
-            <div class="part-icon text-solid rounded">
-                <span><i class="fa-solid fa-bullhorn"></i></span>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-            <div class="col-lg-3 col-6 col-xs-12">
-                <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
-                    <div class="left">
-                        <p class="d-flex justify-content-between mb-2">Annual Profit</p>
-                        <h3 class="fw-normal">$134,152</h3>
-                        <p class="text-muted"><small>124 for last month</small></p>
-                    </div>
-                    <div class="right">
-                        <div class="part-icon text-solid rounded">
-                            <span><i class="fa-solid fa-dollar-sign"></i></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-6 col-xs-12">
-                <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
-                    <div class="left">
-                        <p class="d-flex justify-content-between mb-2">Lead Conversation</p>
-                        <h3 class="fw-normal">52%</h3>
-                        <p class="text-muted"><small>124 for last month</small></p>
-                    </div>
-                    <div class="right">
-                        <div class="part-icon text-solid rounded">
-                            <span><i class="fa-solid fa-magnifying-glass-chart"></i></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xxl-8">
-                <div class="panel chart-panel-1">
-                    <div class="panel-header">
-                        <h5>Audience Overview</h5>
-                        <div class="btn-box">
-                            <button class="btn btn-sm btn-outline-primary">Week</button>
-                            <button class="btn btn-sm btn-outline-primary">Month</button>
-                            <button class="btn btn-sm btn-outline-primary">Year</button>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <div id="audienceOverview" class="chart-dark"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xxl-4 col-md-6">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Recent Activity</h5>
-                        <div class="btn-box">
-                            <a href="#" class="btn btn-sm btn-primary">View All</a>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <ul class="hr-recent-activity">
-                            <li>
-                                <div class="left">
-                                    <span class="activity-name">Leave Approval Request</span>
-                                    <span class="activity-short">From "RuthDyer" UiDesign Leave On Monday 12 Jan 2020.</span>
-                                </div>
-                                <div class="right">
-                                    <span class="activity-time">6 min ago</span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="left">
-                                    <span class="activity-name">Work Update</span>
-                                    <span class="activity-short">From "RuthDyer" UiDesign Leave On Monday 12 Jan 2020.</span>
-                                </div>
-                                <div class="right">
-                                    <span class="activity-time">16 min ago</span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="left">
-                                    <span class="activity-name">Leave Approval Request</span>
-                                    <span class="activity-short">From "RuthDyer" UiDesign Leave On Monday 12 Jan 2020.</span>
-                                </div>
-                                <div class="right">
-                                    <span class="activity-time">6 min ago</span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="left">
-                                    <span class="activity-name">Work Update</span>
-                                    <span class="activity-short">From "RuthDyer" UiDesign Leave On Monday 12 Jan 2020.</span>
-                                </div>
-                                <div class="right">
-                                    <span class="activity-time">16 min ago</span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="left">
-                                    <span class="activity-name">Leave Approval Request</span>
-                                    <span class="activity-short">From "RuthDyer" UiDesign Leave On Monday 12 Jan 2020.</span>
-                                </div>
-                                <div class="right">
-                                    <span class="activity-time">6 min ago</span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xxl-3 col-md-6">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Notice Board</h5>
-                    </div>
-                    <div class="panel-body">
-                        <ul class="hr-notice-board">
-                            <li>
-                                <div class="activity-box">
-                                    <div class="date-box date-box-lg">
-                                        <span>14</span>
-                                        <span>Feb</span>
-                                    </div>
-                                    <div class="part-txt">
-                                        <span>Meeting for campaign with sales team</span>
-                                        <span class="text-muted">12:00am - 03:30pm</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="activity-box">
-                                    <div class="date-box date-box-lg">
-                                        <span>14</span>
-                                        <span>Feb</span>
-                                    </div>
-                                    <div class="part-txt">
-                                        <span>Meeting for campaign with sales team</span>
-                                        <span class="text-muted">12:00am - 03:30pm</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="activity-box">
-                                    <div class="date-box date-box-lg">
-                                        <span>14</span>
-                                        <span>Feb</span>
-                                    </div>
-                                    <div class="part-txt">
-                                        <span>Meeting for campaign with sales team</span>
-                                        <span class="text-muted">12:00am - 03:30pm</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="activity-box">
-                                    <div class="date-box date-box-lg">
-                                        <span>14</span>
-                                        <span>Feb</span>
-                                    </div>
-                                    <div class="part-txt">
-                                        <span>Meeting for campaign with sales team</span>
-                                        <span class="text-muted">12:00am - 03:30pm</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="activity-box">
-                                    <div class="date-box date-box-lg">
-                                        <span>14</span>
-                                        <span>Feb</span>
-                                    </div>
-                                    <div class="part-txt">
-                                        <span>Meeting for campaign with sales team</span>
-                                        <span class="text-muted">12:00am - 03:30pm</span>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xxl-6 col-md-8">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Attendance</h5>
-                        <div id="tableSearch"></div>
-                    </div>
-                    <div class="panel-body">
-                        <table class="table table-hover attendance-table digi-dataTable" id="myTable">
-                            <thead>
-                                <tr>
-                                    <th>S.No</th>
-                                    <th>Employee</th>
-                                    <th>Status</th>
-                                    <th>Check In</th>
-                                    <th>Check Out</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>01</td>
-                                    <td>Diane Nolan</td>
-                                    <td>
-                                        <span class="badge bg-primary rounded px-2">Present</span>
-                                    </td>
-                                    <td>09:30 am</td>
-                                    <td>06:30 pm</td>
-                                    <td>
-                                        <div class="btn-box">
-                                            <button><i class="fa-solid fa-eye"></i></button>
-                                            <button><i class="fa-solid fa-pen"></i></button>
-                                            <button><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>02</td>
-                                    <td>Paul Reynolds</td>
-                                    <td>
-                                        <span class="badge bg-danger rounded px-2">Absent</span>
-                                    </td>
-                                    <td>09:30 am</td>
-                                    <td>06:30 pm</td>
-                                    <td>
-                                        <div class="btn-box">
-                                            <button><i class="fa-solid fa-eye"></i></button>
-                                            <button><i class="fa-solid fa-pen"></i></button>
-                                            <button><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>03</td>
-                                    <td>Adela Perez</td>
-                                    <td>
-                                        <span class="badge bg-primary rounded px-2">Present</span>
-                                    </td>
-                                    <td>09:30 am</td>
-                                    <td>06:30 pm</td>
-                                    <td>
-                                        <div class="btn-box">
-                                            <button><i class="fa-solid fa-eye"></i></button>
-                                            <button><i class="fa-solid fa-pen"></i></button>
-                                            <button><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>04</td>
-                                    <td>Logan van</td>
-                                    <td>
-                                        <span class="badge bg-primary rounded px-2">Present</span>
-                                    </td>
-                                    <td>09:30 am</td>
-                                    <td>06:30 pm</td>
-                                    <td>
-                                        <div class="btn-box">
-                                            <button><i class="fa-solid fa-eye"></i></button>
-                                            <button><i class="fa-solid fa-pen"></i></button>
-                                            <button><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>05</td>
-                                    <td>Diane Nolan</td>
-                                    <td>
-                                        <span class="badge bg-primary rounded px-2">Present</span>
-                                    </td>
-                                    <td>09:30 am</td>
-                                    <td>06:30 pm</td>
-                                    <td>
-                                        <div class="btn-box">
-                                            <button><i class="fa-solid fa-eye"></i></button>
-                                            <button><i class="fa-solid fa-pen"></i></button>
-                                            <button><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>06</td>
-                                    <td>Diane Nolan</td>
-                                    <td>
-                                        <span class="badge bg-primary rounded px-2">Present</span>
-                                    </td>
-                                    <td>09:30 am</td>
-                                    <td>06:30 pm</td>
-                                    <td>
-                                        <div class="btn-box">
-                                            <button><i class="fa-solid fa-eye"></i></button>
-                                            <button><i class="fa-solid fa-pen"></i></button>
-                                            <button><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="table-bottom-control"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xxl-3 col-md-4">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Upcoming Interviews</h5>
-                        <div class="btn-box">
-                            <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <ul class="upcoming-interview">
-                            <li>
-                                <div class="avatar avatar-lg">
-                                    <img src="assets/images/avatar-2.png" class="rounded" alt="user">
-                                </div>
-                                <div class="part-txt">
-                                    <span class="applicant-name">Natalie Gibson</span>
-                                    <span class="applicant-role">
-                                        <small><span class="text-muted">Ui/UX Designer</span></small>
-                                    </span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="avatar avatar-lg">
-                                    <img src="assets/images/avatar-3.png" class="rounded" alt="user">
-                                </div>
-                                <div class="part-txt">
-                                    <span class="applicant-name">Natalie Gibson</span>
-                                    <span class="applicant-role">
-                                        <small><span class="text-muted">Ui/UX Designer</span></small>
-                                    </span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="avatar avatar-lg">
-                                    <img src="assets/images/avatar-4.png" class="rounded" alt="user">
-                                </div>
-                                <div class="part-txt">
-                                    <span class="applicant-name">Natalie Gibson</span>
-                                    <span class="applicant-role">
-                                        <small><span class="text-muted">Ui/UX Designer</span></small>
-                                    </span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="avatar avatar-lg">
-                                    <img src="assets/images/avatar-5.png" class="rounded" alt="user">
-                                </div>
-                                <div class="part-txt">
-                                    <span class="applicant-name">Natalie Gibson</span>
-                                    <span class="applicant-role">
-                                        <small><span class="text-muted">Ui/UX Designer</span></small>
-                                    </span>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="avatar avatar-lg">
-                                    <img src="assets/images/avatar-6.png" class="rounded" alt="user">
-                                </div>
-                                <div class="part-txt">
-                                    <span class="applicant-name">Natalie Gibson</span>
-                                    <span class="applicant-role">
-                                        <small><span class="text-muted">Ui/UX Designer</span></small>
-                                    </span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-    </div>
-
-
 <div class="main-content">
-    <div class="page-content">
-        <div class="container-fluid">
-            <!-- start page title -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0">Dashboard</h4>
-                        <div class="page-title-right">
-                            <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="{% url 'organization:dashboard' %}">Dashboard</a></li>
-                                <li class="breadcrumb-item active">{{ organization.name }}</li>
-                            </ol>
-                        </div>
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Dashboard</h2>
+        <div class="input-group dashboard-filter">
+            <input type="text" class="form-control" name="basic" id="dashboardFilter" readonly value="{{ today|date:'F d, Y' }}">
+            <label for="dashboardFilter" class="input-group-text"><i class="fa-solid fa-calendar-days"></i></label>
+        </div>
+    </div>
+    
+    <div class="row mb-25">
+        <!-- Total Employees -->
+        <div class="col-lg-3 col-6 col-xs-12">
+            <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
+                <div class="left">
+                    <p class="d-flex justify-content-between mb-2">Total Employees</p>
+                    <h3 class="fw-normal">{{ total_employees }}</h3>
+                    <p class="text-muted"><small>{{ total_departments }} Departments</small></p>
+                </div>
+                <div class="right">
+                    <div class="part-icon text-solid rounded">
+                        <span><i class="fa-solid fa-users"></i></span>
                     </div>
                 </div>
             </div>
-            <!-- end page title -->
+        </div>
 
-            <!-- Organization Info Card -->
+        <!-- Attendance Summary -->
+        <div class="col-lg-3 col-6 col-xs-12">
+            <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
+                <div class="left">
+                    <p class="d-flex justify-content-between mb-2">This Month Attendance</p>
+                    <h3 class="fw-normal">
+                        <span class="badge bg-success me-1">P: {{ present_count }}</span>
+                        <span class="badge bg-warning me-1">L: {{ late_count }}</span>
+                        <span class="badge bg-danger">A: {{ absent_count }}</span>
+                    </h3>
+                    <p class="text-muted"><small>Current month</small></p>
+                </div>
+                <div class="right">
+                    <div class="part-icon text-solid rounded">
+                        <span><i class="fa-solid fa-calendar-check"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Applications -->
+        <div class="col-lg-3 col-6 col-xs-12">
+            <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
+                <div class="left">
+                    <p class="d-flex justify-content-between mb-2">Leave Applications</p>
+                    <h3 class="fw-normal">{{ total_leaves }}</h3>
+                    <p class="text-muted">
+                        <small>
+                            <span class="badge bg-warning me-1">P: {{ pending_leaves }}</span>
+                            <span class="badge bg-success me-1">A: {{ approved_leaves }}</span>
+                            <span class="badge bg-danger">R: {{ rejected_leaves }}</span>
+                        </small>
+                    </p>
+                </div>
+                <div class="right">
+                    <div class="part-icon text-solid rounded">
+                        <span><i class="fa-solid fa-calendar-minus"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branches -->
+        <div class="col-lg-3 col-6 col-xs-12">
+            <div class="dashboard-top-box dashboard-top-box-2 rounded border-0 panel-bg">
+                <div class="left">
+                    <p class="d-flex justify-content-between mb-2">Branches</p>
+                    <h3 class="fw-normal">{{ total_branches }}</h3>
+                    <p class="text-muted"><small>Active branches</small></p>
+                </div>
+                <div class="right">
+                    <div class="part-icon text-solid rounded">
+                        <span><i class="fa-solid fa-building"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Today's Attendance -->
+        <div class="col-xxl-8">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Today's Attendance ({{ today|date:"F d, Y" }})</h5>
+                    <div class="btn-box">
+                        <a href="{% url 'hrm:attendance_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    {% if today_attendance %}
+                    <table class="table table-hover attendance-table digi-dataTable" id="todayAttendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Status</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in today_attendance %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if record.employee.profile_picture %}
+                                        <img src="{{ record.employee.profile_picture.url }}" class="rounded-circle me-2" width="32" height="32" alt="{{ record.employee.full_name }}">
+                                        {% else %}
+                                        <div class="avatar-placeholder rounded-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            {{ record.employee.first_name|first }}{{ record.employee.last_name|first }}
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ record.employee.full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ record.employee.employee_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if record.employee.department %}
+                                    {{ record.employee.department.name }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.check_in_time|default:"-" }}</td>
+                                <td>{{ record.check_out_time|default:"-" }}</td>
+                                <td>
+                                    {% if record.status == 'present' %}
+                                    <span class="badge bg-success rounded px-2">Present</span>
+                                    {% elif record.status == 'late' %}
+                                    <span class="badge bg-warning rounded px-2">Late</span>
+                                    {% elif record.status == 'absent' %}
+                                    <span class="badge bg-danger rounded px-2">Absent</span>
+                                    {% elif record.status == 'half_day' %}
+                                    <span class="badge bg-info rounded px-2">Half Day</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary rounded px-2">{{ record.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ record.working_hours }}h</strong>
+                                    {% if record.overtime_hours > 0 %}
+                                    <br>
+                                    <small class="text-success">+{{ record.overtime_hours }}h OT</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-calendar-xmark fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No attendance records for today</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities & Upcoming Holidays -->
+        <div class="col-xxl-4">
             <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                {% if organization.logo %}
-                                    <img src="{{ organization.logo.url }}" alt="" class="avatar-lg rounded me-3">
-                                {% else %}
-                                    <div class="avatar-lg rounded bg-primary-subtle me-3">
-                                        <span class="avatar-title rounded bg-primary text-white font-size-20">
-                                            {{ organization.name|first|upper }}
+                <!-- Recent Leave Requests -->
+                <div class="col-xxl-12 col-md-6">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h5>Recent Leave Requests</h5>
+                            <div class="btn-box">
+                                <a href="{% url 'hrm:leave_list' %}" class="btn btn-sm btn-primary">View All</a>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            {% if recent_leaves %}
+                            <ul class="hr-recent-activity">
+                                {% for leave in recent_leaves %}
+                                <li>
+                                    <div class="left">
+                                        <span class="activity-name">{{ leave.employee.full_name }}</span>
+                                        <span class="activity-short">
+                                            {{ leave.get_leave_type_display }} - 
+                                            {{ leave.start_date }} to {{ leave.end_date }}
+                                            ({{ leave.days_requested }} days)
                                         </span>
                                     </div>
-                                {% endif %}
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-1">{{ organization.name }}</h5>
-                                    <p class="text-muted mb-0">{{ organization.description|default:"No description provided" }}</p>
-                                    <div class="mt-2">
-                                        <span class="badge bg-{% if organization.status == 'active' %}success{% elif organization.status == 'inactive' %}warning{% else %}danger{% endif %}-subtle text-{% if organization.status == 'active' %}success{% elif organization.status == 'inactive' %}warning{% else %}danger{% endif %}">
-                                            {{ organization.get_status_display }}
-                                        </span>
-                                        <span class="badge bg-primary-subtle text-primary ms-2">
-                                            {{ organization.subscription_plan|title }} Plan
+                                    <div class="right">
+                                        <span class="activity-time">{{ leave.created_at|timesince }} ago</span>
+                                        <span class="badge 
+                                            {% if leave.status == 'pending' %}bg-warning
+                                            {% elif leave.status == 'approved' %}bg-success
+                                            {% elif leave.status == 'rejected' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ leave.get_status_display }}
                                         </span>
                                     </div>
-                                </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted">No recent leave requests</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-xl-4 col-md-6">
-                    <div class="card card-animate">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Employees</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-end justify-content-between mt-4">
-                                <div>
-                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_employees }}</h4>
-                                    <span class="badge bg-info-subtle text-info mb-0">
-                                        <i class="ri-arrow-up-line align-middle"></i> Active
-                                    </span>
-                                </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-info-subtle rounded fs-3">
-                                        <i class="ri-team-line text-info"></i>
-                                    </span>
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-4 col-md-6">
-                    <div class="card card-animate">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Departments</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-end justify-content-between mt-4">
-                                <div>
-                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_departments }}</h4>
-                                    <span class="badge bg-success-subtle text-success mb-0">
-                                        <i class="ri-arrow-up-line align-middle"></i> Departments
-                                    </span>
-                                </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-success-subtle rounded fs-3">
-                                        <i class="ri-building-2-line text-success"></i>
-                                    </span>
-                                </div>
-                            </div>
+                <!-- Upcoming Holidays -->
+                <div class="col-xxl-12 col-md-6">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h5>Upcoming Holidays</h5>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-4 col-md-6">
-                    <div class="card card-animate">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Employee Limit</p>
-                                </div>
+                        <div class="panel-body">
+                            {% if upcoming_holidays %}
+                            <ul class="hr-notice-board">
+                                {% for holiday in upcoming_holidays %}
+                                <li>
+                                    <div class="activity-box">
+                                        <div class="date-box date-box-lg">
+                                            <span>{{ holiday.date|date:"d" }}</span>
+                                            <span>{{ holiday.date|date:"M" }}</span>
+                                        </div>
+                                        <div class="part-txt">
+                                            <span>{{ holiday.name }}</span>
+                                            <span class="text-muted">{{ holiday.date|date:"l" }}</span>
+                                            {% if holiday.is_recurring %}
+                                            <small class="text-info">Yearly</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted">No upcoming holidays</p>
                             </div>
-                            <div class="d-flex align-items-end justify-content-between mt-4">
-                                <div>
-                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ organization.max_employees }}</h4>
-                                    <span class="badge bg-warning-subtle text-warning mb-0">
-                                        <i class="ri-user-line align-middle"></i> Max Allowed
-                                    </span>
-                                </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-warning-subtle rounded fs-3">
-                                        <i class="ri-user-settings-line text-warning"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="d-flex align-items-center">
-                                <h5 class="card-title mb-0 flex-grow-1">Recent Employees</h5>
-                                <div class="flex-shrink-0">
-                                    <a href="#" class="btn btn-primary btn-sm">
-                                        View All
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-nowrap align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Employee</th>
-                                            <th scope="col">Position</th>
-                                            <th scope="col">Department</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col">Joined</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for employee in recent_employees %}
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-xs rounded-circle bg-primary-subtle me-2">
-                                                        <span class="avatar-title rounded-circle bg-primary text-white font-size-12">
-                                                            {{ employee.first_name|first|upper }}{{ employee.last_name|first|upper }}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-0">{{ employee.get_full_name }}</h6>
-                                                        <p class="text-muted mb-0">{{ employee.email }}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ employee.employee_profile.position|default:"N/A" }}</td>
-                                            <td>{{ employee.employee_profile.department.name|default:"N/A" }}</td>
-                                            <td>
-                                                {% if employee.is_active %}
-                                                    <span class="badge bg-success-subtle text-success">Active</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ employee.date_joined|date:"M d, Y" }}</td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="5" class="text-center">No employees found</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Quick Actions</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a href="#" class="btn btn-primary">
-                                    <i class="ri-user-add-line me-1"></i> Add Employee
-                                </a>
-                                <a href="#" class="btn btn-outline-primary">
-                                    <i class="ri-building-2-line me-1"></i> Manage Departments
-                                </a>
-                                <a href="#" class="btn btn-outline-success">
-                                    <i class="ri-calendar-line me-1"></i> View Attendance
-                                </a>
-                                <a href="#" class="btn btn-outline-info">
-                                    <i class="ri-money-dollar-circle-line me-1"></i> Payroll Management
-                                </a>
-                                <a href="#" class="btn btn-outline-warning">
-                                    <i class="ri-settings-line me-1"></i> Organization Settings
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Organization Information</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Contact Information</h6>
-                                    <p><strong>Email:</strong> {{ organization.email }}</p>
-                                    {% if organization.phone %}
-                                        <p><strong>Phone:</strong> {{ organization.phone }}</p>
-                                    {% endif %}
-                                    {% if organization.website %}
-                                        <p><strong>Website:</strong> <a href="{{ organization.website }}" target="_blank">{{ organization.website }}</a></p>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>Address</h6>
-                                    {% if organization.address_line1 %}
-                                        <p>{{ organization.address_line1 }}</p>
-                                    {% endif %}
-                                    {% if organization.address_line2 %}
-                                        <p>{{ organization.address_line2 }}</p>
-                                    {% endif %}
-                                    {% if organization.city or organization.state or organization.postal_code %}
-                                        <p>
-                                            {% if organization.city %}{{ organization.city }}{% endif %}
-                                            {% if organization.state %}, {{ organization.state }}{% endif %}
-                                            {% if organization.postal_code %} {{ organization.postal_code }}{% endif %}
-                                        </p>
-                                    {% endif %}
-                                    {% if organization.country %}
-                                        <p>{{ organization.country }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Recent Employees -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Recently Added Employees</h5>
+                    <div class="btn-box">
+                        <a href="{% url 'hrm:employee_list' %}" class="btn btn-sm btn-outline-primary">View All Employees</a>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    {% if recent_employees %}
+                    <div class="row">
+                        {% for employee in recent_employees %}
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                            <div class="employee-card text-center">
+                                <div class="employee-avatar mb-3">
+                                    {% if employee.profile_picture %}
+                                    <img src="{{ employee.profile_picture.url }}" class="rounded-circle" width="80" height="80" alt="{{ employee.full_name }}">
+                                    {% else %}
+                                    <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; font-size: 24px;">
+                                        {{ employee.first_name|first }}{{ employee.last_name|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <h6 class="mb-1">{{ employee.full_name }}</h6>
+                                <p class="text-muted small mb-1">{{ employee.employee_id }}</p>
+                                <p class="text-muted small mb-2">
+                                    {% if employee.designation %}
+                                    {{ employee.designation.name }}
+                                    {% else %}
+                                    <span class="text-muted">No designation</span>
+                                    {% endif %}
+                                </p>
+                                <span class="badge 
+                                    {% if employee.employment_status == 'active' %}bg-success
+                                    {% elif employee.employment_status == 'on_leave' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ employee.get_employment_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-users fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No employees found</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<style>
+.avatar-placeholder {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.employee-card {
+    padding: 20px;
+    border: 1px solid #e0e6ef;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.employee-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+.hr-recent-activity li {
+    padding: 12px 0;
+    border-bottom: 1px solid #e0e6ef;
+}
+.hr-recent-activity li:last-child {
+    border-bottom: none;
+}
+</style>
 
-
-
+<script>
+$(document).ready(function() {
+    // Initialize DataTable for today's attendance
+    $('#todayAttendanceTable').DataTable({
+        "pageLength": 5,
+        "lengthMenu": [5, 10, 25, 50],
+        "order": [],
+        "responsive": true
+    });
+});
+</script>
 {% endblock %}
