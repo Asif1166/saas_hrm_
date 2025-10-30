@@ -104,6 +104,9 @@ urlpatterns = [
 
     # Leave Management
     path('leaves/', views.leave_list, name='leave_list'),
+    path('leaves/create/', views.leave_create, name='leave_create'),
+    path('leaves/<int:pk>/update/', views.leave_edit, name='leave_edit'),
+
     path('leaves/<int:pk>/', views.leave_detail, name='leave_detail'),
     path('leaves/<int:pk>/approve/', views.leave_approve, name='leave_approve'),
     path('leaves/<int:pk>/reject/', views.leave_reject, name='leave_reject'),

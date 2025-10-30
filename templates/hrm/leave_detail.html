@@ -1,99 +1,144 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Leave Request Details{% endblock %}
+
+{% block title %}Leave Details - {{ organization.name }}{% endblock %}
 
 {% block content %}
-<div class="main-content py-4">
-    <div class="container">
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>Leave Details</h2>
+        <div class="btn-box">
+            <a href="{% url 'hrm:leave_list' %}" class="btn btn-outline-primary">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
 
-        <div class="card shadow-lg border-0 rounded-4">
-            <div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #4f46e5, #3b82f6);">
-                <h5 class="mb-0"><i class="fa-solid fa-plane-departure me-2"></i>Leave Request Details</h5>
-                <a href="{% url 'hrm:leave_list' %}" class="btn btn-light btn-sm">
-                    <i class="fa-solid fa-arrow-left me-1"></i> Back to List
-                </a>
-            </div>
-
-            <div class="card-body p-4">
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Employee</h6>
-                        <p class="fw-semibold">{{ leave.employee.full_name }}</p>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Leave Type</h6>
-                        <p class="fw-semibold">{{ leave.get_leave_type_display }}</p>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Start Date</h6>
-                        <p class="fw-semibold"><i class="fa-regular fa-calendar me-1 text-primary"></i>{{ leave.start_date }}</p>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">End Date</h6>
-                        <p class="fw-semibold"><i class="fa-regular fa-calendar me-1 text-primary"></i>{{ leave.end_date }}</p>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Days Requested</h6>
-                        <p class="fw-semibold">{{ leave.days_requested }}</p>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Status</h6>
-                        {% if leave.status == 'approved' %}
-                            <span class="badge bg-success px-3 py-2">Approved</span>
-                        {% elif leave.status == 'rejected' %}
-                            <span class="badge bg-danger px-3 py-2">Rejected</span>
-                        {% elif leave.status == 'cancelled' %}
-                            <span class="badge bg-secondary px-3 py-2">Cancelled</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Leave Request Information</h5>
+                    <div class="btn-box">
+                        {% if is_editable %}
+                        <a href="{% url 'hrm:leave_edit' leave_request.pk %}" class="btn btn-sm btn-warning">
+                            <i class="fa-solid fa-edit me-1"></i>Edit
+                        </a>
+                        {% endif %}
+                        {% if is_deletable %}
+                        <a href="{% url 'hrm:leave_delete' leave_request.pk %}" class="btn btn-sm btn-danger">
+                            <i class="fa-solid fa-trash me-1"></i>Delete
+                        </a>
                         {% endif %}
                     </div>
-
-                    <div class="col-12 mb-3">
-                        <h6 class="text-muted mb-1">Reason</h6>
-                        <div class="p-3 bg-light rounded border">{{ leave.reason|linebreaks }}</div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Leave Type</label>
+                            <p class="form-control-plaintext">{{ leave_request.leave_type }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <p>
+                                {% if leave_request.status == 'approved' %}
+                                    <span class="badge bg-success rounded px-2">Approved</span>
+                                {% elif leave_request.status == 'pending' %}
+                                    <span class="badge bg-warning rounded px-2">Pending</span>
+                                {% elif leave_request.status == 'rejected' %}
+                                    <span class="badge bg-danger rounded px-2">Rejected</span>
+                                {% elif leave_request.status == 'cancelled' %}
+                                    <span class="badge bg-secondary rounded px-2">Cancelled</span>
+                                {% endif %}
+                            </p>
+                        </div>
                     </div>
 
-                    {% if leave.rejection_reason %}
-                    <div class="col-12 mb-3">
-                        <h6 class="text-muted mb-1">Rejection Reason</h6>
-                        <div class="p-3 bg-light rounded border text-danger">{{ leave.rejection_reason }}</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Start Date</label>
+                            <p class="form-control-plaintext">{{ leave_request.start_date|date:"F d, Y" }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">End Date</label>
+                            <p class="form-control-plaintext">{{ leave_request.end_date|date:"F d, Y" }}</p>
+                        </div>
                     </div>
-                    {% endif %}
 
-                    {% if leave.approved_by %}
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Approved By</h6>
-                        <p class="fw-semibold">
-                            <i class="fa-solid fa-user-check text-success me-1"></i>
-                            {{ leave.approved_by.get_full_name|default:leave.approved_by.username }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Days Requested</label>
+                            <p class="form-control-plaintext">{{ leave_request.days_requested }} day(s)</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Applied On</label>
+                            <p class="form-control-plaintext">{{ leave_request.created_at|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Reason</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ leave_request.reason|linebreaks }}
+                        </div>
+                    </div>
+
+                    {% if leave_request.status == 'approved' %}
+                    <div class="alert alert-success">
+                        <h6><i class="fa-solid fa-check-circle me-2"></i>Approved</h6>
+                        <p class="mb-0">
+                            Approved by: {{ leave_request.approved_by.get_full_name|default:leave_request.approved_by.username }}
+                            on {{ leave_request.approved_at|date:"F d, Y" }}
                         </p>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <h6 class="text-muted mb-1">Approved At</h6>
-                        <p class="fw-semibold">
-                            <i class="fa-regular fa-clock text-primary me-1"></i>
-                            {{ leave.approved_at|date:"M d, Y h:i A" }}
+                    {% elif leave_request.status == 'rejected' %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fa-solid fa-times-circle me-2"></i>Rejected</h6>
+                        <p class="mb-0">
+                            Rejected by: {{ leave_request.approved_by.get_full_name|default:leave_request.approved_by.username }}
+                            on {{ leave_request.approved_at|date:"F d, Y" }}
                         </p>
+                        {% if leave_request.rejection_reason %}
+                        <hr>
+                        <strong>Reason for rejection:</strong>
+                        <p class="mb-0">{{ leave_request.rejection_reason }}</p>
+                        {% endif %}
+                    </div>
+                    {% elif leave_request.status == 'pending' %}
+                    <div class="alert alert-warning">
+                        <h6><i class="fa-solid fa-clock me-2"></i>Pending Approval</h6>
+                        <p class="mb-0">Your leave request is awaiting approval from management.</p>
                     </div>
                     {% endif %}
                 </div>
-
-                {% if not request.user.is_employee and leave.status == 'pending' %}
-                <div class="d-flex gap-3 justify-content-end mt-4">
-                    <a href="{% url 'hrm:leave_approve' leave.id %}" class="btn btn-success px-4">
-                        <i class="fa-solid fa-check me-1"></i> Approve
-                    </a>
-                    <a href="{% url 'hrm:leave_reject' leave.id %}" class="btn btn-danger px-4">
-                        <i class="fa-solid fa-xmark me-1"></i> Reject
-                    </a>
-                </div>
-                {% endif %}
             </div>
         </div>
 
+        <div class="col-lg-4">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hrm:leave_list' %}" class="btn btn-outline-primary">
+                            <i class="fa-solid fa-list me-2"></i>View All Leaves
+                        </a>
+                        {% if leave_request.status == 'pending' %}
+                        <a href="{% url 'hrm:leave_cancel' leave_request.pk %}" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-times me-2"></i>Cancel Request
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'hrm:leave_create' %}" class="btn btn-primary">
+                            <i class="fa-solid fa-plus me-2"></i>Apply New Leave
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

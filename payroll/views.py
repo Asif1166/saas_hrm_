@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
 from hrm.utils import handle_bulk_delete, restore_objects_view, trash_list_view
 from organization.decorators import organization_member_required
+from organization.models import OrganizationMembership
 from payroll.forms import PayrollPeriodForm, PayslipForm
 from .models import PayrollPeriod, Payslip, SalaryStructure, Allowance, Deduction
 from hrm.models import Employee
@@ -287,51 +288,73 @@ def payroll_summary(request, period_id):
         }, status=400)
 
 
-
-
 @login_required
 @organization_member_required
 def payslips(request):
     """Manage payslips for the organization"""
     organization = request.organization
+    
+    # Check using OrganizationMembership
+    try:
+        membership = OrganizationMembership.objects.get(
+            user=request.user, 
+            organization=organization,
+            is_active=True
+        )
+        # If user is not admin in this organization, treat as employee
+        is_employee = not membership.is_admin
+        print(f"Membership check - Is Admin: {membership.is_admin}, Is Employee: {is_employee}")
+    except OrganizationMembership.DoesNotExist:
+        # No membership found, treat as employee by default
+        is_employee = True
+        print("No organization membership found, treating as employee")
+    
+    if is_employee:
+        # Try to get employee profile
+        try:
+            employee = Employee.objects.get(user=request.user, organization=organization, is_active=True)
+            payslips = Payslip.objects.filter(organization=organization, employee=employee)
+            print(f"Employee view: {employee.full_name}")
+        except Employee.DoesNotExist:
+            # User is marked as employee but no employee profile exists
+            payslips = Payslip.objects.none()
+            print("Employee profile not found")
+    else:
+        # HR/Admin view with filters
+        payslips = Payslip.objects.filter(organization=organization)
+        
+        # Apply filters
+        period_id = request.GET.get('period')
+        employee_id = request.GET.get('employee')
+        status = request.GET.get('status')
 
-    # Filter parameters
-    period_id = request.GET.get('period')
-    employee_id = request.GET.get('employee')
-    status = request.GET.get('status')
-
-    payslips = Payslip.objects.filter(organization=organization)
-
-    all_payslip=Payslip.objects.all_with_deleted().count()
-    print("all_payslip", all_payslip)
-
-    # Apply filters
-    if period_id:
-        payslips = payslips.filter(payroll_period_id=period_id)
-    if employee_id:
-        payslips = payslips.filter(employee_id=employee_id)
-    if status:
-        payslips = payslips.filter(is_generated=(status == 'generated'))
+        if period_id:
+            payslips = payslips.filter(payroll_period_id=period_id)
+        if employee_id:
+            payslips = payslips.filter(employee_id=employee_id)
+        if status:
+            payslips = payslips.filter(is_generated=(status == 'generated'))
 
     payslips = payslips.select_related('employee', 'payroll_period').order_by('-payroll_period__start_date')
 
-    # Pagination setup
-    paginator = Paginator(payslips, 10)  # show 10 payslips per page
+    # Pagination
+    paginator = Paginator(payslips, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Available filters
+    # Context
     periods = PayrollPeriod.objects.filter(organization=organization)
     employees = Employee.objects.filter(organization=organization, employment_status='active')
 
     context = {
         'organization': organization,
-        'page_obj': page_obj,  # pagination object
+        'page_obj': page_obj,
         'periods': periods,
         'employees': employees,
-        'period_filter': period_id,
-        'employee_filter': employee_id,
-        'status_filter': status,
+        'period_filter': request.GET.get('period') if not is_employee else None,
+        'employee_filter': request.GET.get('employee') if not is_employee else None,
+        'status_filter': request.GET.get('status') if not is_employee else None,
+        'is_employee': is_employee,
     }
     return render(request, 'payroll/payslips.html', context)
 

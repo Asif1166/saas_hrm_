@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - {{ user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="dashboard-breadcrumb mb-25">
+        <h2>My Profile</h2>
+        <div class="btn-box">
+            {% if organization %}
+                <a href="{% url 'hrm:employee_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- Profile Summary Card -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <!-- Profile Picture -->
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" 
+                             class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 150px; height: 150px; font-size: 3rem;">
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    
+                    <h4 class="mb-1">{{ user.get_full_name }}</h4>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                        <span class="badge bg-primary-subtle text-primary">
+                            @{{ user.username }}
+                        </span>
+                        {% if organization %}
+                            <span class="badge bg-success-subtle text-success">
+                                {{ organization.name }}
+                            </span>
+                        {% endif %}
+                        {% if is_org_admin %}
+                            <span class="badge bg-warning-subtle text-warning">
+                                Admin
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Organization Info -->
+                    {% if organization %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-2">Organization</h6>
+                        <p class="mb-1 small">{{ organization.name }}</p>
+                        {% if organization.address %}
+                            <p class="mb-0 small text-muted">{{ organization.address }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Account Info</h6>
+                </div>
+                <div class="card-body">
+                    <div class="vstack gap-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Member since</span>
+                            <span>{{ user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Last login</span>
+                            <span>{{ user.last_login|date:"M d, Y"|default:"Never" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Status</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Profile Update Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fa-solid fa-user-edit me-2"></i>Edit Profile
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'authentication:update_profile' %}">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ user.phone|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                                <small class="text-muted">Username cannot be changed</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h6 class="mb-3">Change Password</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="current_password" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="new_password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fa-solid fa-info-circle me-2"></i>
+                            Leave password fields blank if you don't want to change your password.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-save me-2"></i>Update Profile
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Employee Information (if available) -->
+            {% if organization and not user.is_super_admin %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fa-solid fa-id-card me-2"></i>Employee Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% with employee=user.employee %}
+                        {% if employee %}
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <strong>Employee ID:</strong> {{ employee.employee_id }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>Department:</strong> {{ employee.department.name|default:"Not assigned" }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>Designation:</strong> {{ employee.designation.name|default:"Not assigned" }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>Status:</strong> 
+                                    <span class="badge bg-{% if employee.employment_status == 'active' %}success{% else %}warning{% endif %}">
+                                        {{ employee.get_employment_status_display }}
+                                    </span>
+                                </div>
+                                {% if employee.hire_date %}
+                                <div class="col-md-6 mb-2">
+                                    <strong>Hire Date:</strong> {{ employee.hire_date|date:"M d, Y" }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No employee profile found.</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password validation
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    function validatePasswords() {
+        if (newPassword.value && confirmPassword.value) {
+            if (newPassword.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        }
+    }
+    
+    if (newPassword && confirmPassword) {
+        newPassword.addEventListener('input', validatePasswords);
+        confirmPassword.addEventListener('input', validatePasswords);
+    }
+    
+    // Form submission confirmation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const currentPassword = document.getElementById('current_password').value;
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        // Check if password fields are partially filled
+        if ((currentPassword || newPassword || confirmPassword) && 
+            (!currentPassword || !newPassword || !confirmPassword)) {
+            e.preventDefault();
+            alert('Please fill all password fields to change your password, or leave all blank to keep current password.');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -93,7 +93,6 @@ def profile_view(request):
     
     return render(request, 'authentication/profile.html', context)
 
-
 @login_required
 def update_profile(request):
     """
@@ -108,6 +107,10 @@ def update_profile(request):
         user.email = request.POST.get('email', user.email)
         user.phone = request.POST.get('phone', user.phone)
         
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            user.profile_picture = request.FILES['profile_picture']
+        
         # Handle password change if provided
         current_password = request.POST.get('current_password')
         new_password = request.POST.get('new_password')
@@ -117,6 +120,9 @@ def update_profile(request):
             if user.check_password(current_password):
                 if new_password == confirm_password:
                     user.set_password(new_password)
+                    # Update session to prevent logout
+                    from django.contrib.auth import update_session_auth_hash
+                    update_session_auth_hash(request, user)
                     messages.success(request, 'Password updated successfully.')
                 else:
                     messages.error(request, 'New passwords do not match.')

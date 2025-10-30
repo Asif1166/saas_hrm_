@@ -12,37 +12,47 @@
         <div class="col-12">
             <div class="panel">
                 <div class="panel-header">
-                    <h5>All Payslips</h5>
+                    <h5>
+                        {% if is_employee %}
+                            My Payslips
+                        {% else %}
+                            All Payslips
+                        {% endif %}
+                    </h5>
                     <div class="btn-box d-flex flex-wrap gap-2">
                         <div id="tableSearch"></div>
                         <a href="{% url 'payroll:payslips' %}" class="btn btn-sm btn-icon btn-outline-primary"><i class="fa-solid fa-arrows-rotate"></i></a>
-                      <button class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'payroll:payslip_create' %}'">
+                        
+                        <!-- Only show Add New button for HR/Admin -->
+                        {% if not is_employee %}
+                        <button class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'payroll:payslip_create' %}'">
                             <i class="fa-solid fa-plus"></i> Add New
                         </button>
+                        {% endif %}
 
-
-                           <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'payroll:payslips_trash' %}'">
-    <i class="fa-solid fa-trash-can me-1"></i> View Trash
+                        <!-- Only show Trash button for HR/Admin -->
+                        {% if not is_employee %}
+                        <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'payroll:payslips_trash' %}'">
+                            <i class="fa-solid fa-trash-can me-1"></i> View Trash
                         </button>
 
-
                         <button id="deleteSelectedBtn"
-        class="btn btn-danger btn-sm"
-        style="display:none;"
-        data-delete-url="{% url 'payroll:delete_multiple_payslips' %}">
-    <i class="fa-solid fa-trash-can"></i> Delete Selected
-</button>
-                    
+                                class="btn btn-danger btn-sm"
+                                style="display:none;"
+                                data-delete-url="{% url 'payroll:delete_multiple_payslips' %}">
+                            <i class="fa-solid fa-trash-can"></i> Delete Selected
+                        </button>
+                        {% endif %}
                     </div>
                    
                 </div>
                 <div class="panel-body">
-                    <!-- Filter Section -->
+                    <!-- Filter Section - Only for HR/Admin -->
+                    {% if not is_employee %}
                     <div class="table-filter-option">
                         <form method="get" class="row g-3">
                             <div class="col-xl-10 col-9 col-xs-12">
                                 <div class="row g-3">
-
                                     <div class="col">
                                         <select name="period" class="form-control form-control-sm">
                                             <option value="">All Periods</option>
@@ -83,27 +93,27 @@
                             </div>
                         </form>
                     </div>
+                    {% endif %}
 
                     <div class="table-responsive">
                         <table class="table table-dashed table-hover digi-dataTable all-payslip-table table-striped" id="allPayslipTable">
                             <thead>
-
-
-
-
-
                                 <tr id="tableHeader">
-                                      <th class="no-sort">
+                                    <!-- Only show checkbox for HR/Admin -->
+                                    {% if not is_employee %}
+                                    <th class="no-sort">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="markAllPayslips">
                                         </div>
                                     </th>
+                                    {% endif %}
                                     <th>SL</th>
-
-                                  
                                     <th>Action</th>
+                                    <!-- Only show employee columns for HR/Admin -->
+                                    {% if not is_employee %}
                                     <th>Employee</th>
                                     <th>Employee ID</th>
+                                    {% endif %}
                                     <th>Payroll Period</th>
                                     <th>Basic Salary</th>
                                     <th>Allowances</th>
@@ -114,19 +124,19 @@
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                            {% for payslip in page_obj %}
-
-
-
-
+                                {% for payslip in page_obj %}
                                 <tr>
-                                      <td>
+                                    <!-- Only show checkbox for HR/Admin -->
+                                    {% if not is_employee %}
+                                    <td>
                                         <div class="form-check">
-<input class="form-check-input row-checkbox" type="checkbox" value="{{ payslip.id }}">
+                                            <input class="form-check-input row-checkbox" type="checkbox" value="{{ payslip.id }}">
                                         </div>
                                     </td>
-<td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                                  
+                                    {% endif %}
+                                    
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    
                                     <td>
                                         <div class="digi-dropdown dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">
@@ -143,17 +153,24 @@
                                                         <span class="dropdown-icon"><i class="fa-solid fa-file-pdf"></i></span> Generate PDF
                                                     </a>
                                                 </li>
+                                                <!-- Only show Edit option for HR/Admin -->
+                                                {% if not is_employee %}
                                                 <li>
                                                     <a href="{% url 'payroll:payslip_update' payslip.id %}" class="dropdown-item">
                                                         <span class="dropdown-icon"><i class="fa-solid fa-pen-to-square"></i></span> Edit
                                                     </a>
                                                 </li>
-                                               
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </td>
+                                    
+                                    <!-- Only show employee columns for HR/Admin -->
+                                    {% if not is_employee %}
                                     <td>{{ payslip.employee.full_name }}</td>
                                     <td>{{ payslip.employee.employee_id }}</td>
+                                    {% endif %}
+                                    
                                     <td>{{ payslip.payroll_period.name }}</td>
                                     <td>৳{{ payslip.basic_salary }}</td>
                                     <td>৳{{ payslip.allowances }}</td>
@@ -176,42 +193,134 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="11" class="text-center py-4">
+                                    <td colspan="{% if is_employee %}8{% else %}11{% endif %}" class="text-center py-4">
                                         <div class="text-muted">
                                             <i class="fa-solid fa-file-invoice-dollar fa-2x mb-3"></i>
-                                            <p>No payslips found.</p>
+                                            <p>
+                                                {% if is_employee %}
+                                                    No payslips found for you.
+                                                {% else %}
+                                                    No payslips found.
+                                                {% endif %}
+                                            </p>
+                                            {% if not is_employee %}
                                             <a href="{% url 'payroll:payroll_periods' %}" class="btn btn-sm btn-primary">Run Payroll</a>
+                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
-
-  
                             </tbody>
-
-                            
                         </table>
-
-                        
                     </div>
 
-                                                                                  <!-- Pagination -->
-{% include "pagination.html" %}
+                    <!-- Pagination -->
+                    {% include "pagination.html" %}
                 </div>
             </div>
         </div>
     </div>
-
-
-
-
 </div>
 
+<script>
+// Only initialize bulk delete functionality for HR/Admin
+{% if not is_employee %}
+document.addEventListener('DOMContentLoaded', function() {
+    const markAllCheckbox = document.getElementById('markAllPayslips');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
 
+    // Mark all checkboxes
+    if (markAllCheckbox) {
+        markAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            toggleDeleteButton();
+        });
+    }
 
+    // Individual checkbox change
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            toggleDeleteButton();
+            updateMarkAllCheckbox();
+        });
+    });
 
+    function toggleDeleteButton() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length > 0) {
+            deleteSelectedBtn.style.display = 'inline-block';
+        } else {
+            deleteSelectedBtn.style.display = 'none';
+        }
+    }
 
+    function updateMarkAllCheckbox() {
+        if (markAllCheckbox) {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const totalBoxes = rowCheckboxes.length;
+            markAllCheckbox.checked = checkedBoxes.length === totalBoxes && totalBoxes > 0;
+            markAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < totalBoxes;
+        }
+    }
 
+    // Bulk delete functionality
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const payslipIds = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            if (payslipIds.length === 0) {
+                alert('Please select at least one payslip to delete.');
+                return;
+            }
 
+            if (confirm(`Are you sure you want to delete ${payslipIds.length} selected payslip(s)?`)) {
+                const deleteUrl = this.getAttribute('data-delete-url');
+                
+                fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({payslip_ids: payslipIds})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error deleting payslips: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting payslips.');
+                });
+            }
+        });
+    }
 
+    // CSRF token helper function
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+{% endif %}
+</script>
 {% endblock %}

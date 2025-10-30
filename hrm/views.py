@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from hrm.utils import handle_bulk_delete, restore_objects_view, trash_list_view
 from organization.decorators import organization_member_required, organization_admin_required
 from organization.utils import DynamicTableManager
+from payroll.models import Payslip, SalaryStructure
 from .models import Branch, Department, Designation, EmployeeRole, Employee, AttendanceRecord, HolidayCalendar, LeaveRequest, Shift, Timetable, AttendanceDevice, Payhead, EmployeePayhead, AttendanceHoliday
 from .forms import EmployeeForm, BranchForm, DepartmentForm, DesignationForm, EmployeeRoleForm, EmployeeUpdateForm, ShiftForm, TimetableForm, AttendanceDeviceForm, PayheadForm, EmployeePayheadForm, AttendanceHolidayForm, AttendanceFilterForm
 from .zkteco_utils import *
@@ -682,28 +683,84 @@ def employee_detail(request, employee_id):
 @login_required
 @organization_member_required
 def employee_dashboard(request):
-    """Employee dashboard for logged-in employees"""
+    """Enhanced Employee dashboard for logged-in employees"""
     try:
         employee = Employee.objects.get(user=request.user, organization=request.organization)
     except Employee.DoesNotExist:
         messages.error(request, 'Employee profile not found.')
         return redirect('authentication:login')
     
-    # Get recent attendance
-    # recent_attendance = Attendance.objects.filter(employee=employee).order_by('-date')[:10]
+    # Get current date and time
+    today = timezone.now().date()
+    current_month = today.month
+    current_year = today.year
+    
+    # Get recent attendance (last 7 days)
+    recent_attendance = AttendanceRecord.objects.filter(
+        employee=employee, 
+        date__gte=today - timedelta(days=7)
+    ).order_by('-date')[:10]
+    
+    # Get today's attendance
+    today_attendance = AttendanceRecord.objects.filter(
+        employee=employee, 
+        date=today
+    ).first()
     
     # Get recent leave requests
     recent_leaves = LeaveRequest.objects.filter(employee=employee).order_by('-created_at')[:5]
     
-    # Today's attendance
-    # today_attendance = Attendance.objects.filter(employee=employee, date=date.today()).first()
+    # Get monthly attendance summary
+    monthly_attendance = AttendanceRecord.objects.filter(
+        employee=employee,
+        date__year=current_year,
+        date__month=current_month
+    )
     
+    # Calculate stats
+    present_days = monthly_attendance.filter(status__in=['present', 'late']).count()
+    absent_days = monthly_attendance.filter(status='absent').count()
+    late_days = monthly_attendance.filter(status='late').count()
+    total_working_days = present_days + absent_days
+    
+    # Get upcoming holidays
+    upcoming_holidays = AttendanceHoliday.objects.filter(
+        organization=request.organization,
+        date__gte=today
+    ).order_by('date')[:3]
+    
+    # Get current salary info
+    current_salary = SalaryStructure.objects.filter(
+        employee=employee,
+        is_active=True
+    ).order_by('-effective_date').first()
+    
+    # Get recent payslips
+    recent_payslips = Payslip.objects.filter(
+        employee=employee
+    ).order_by('-payroll_period__start_date')[:3]
+    
+    # Calculate experience
+    experience_years = 0
+    if employee.hire_date:
+        delta = today - employee.hire_date
+        experience_years = delta.days // 365
+
     context = {
         'organization': request.organization,
         'employee': employee,
-        # 'recent_attendance': recent_attendance,
+        'recent_attendance': recent_attendance,
         'recent_leaves': recent_leaves,
-        # 'today_attendance': today_attendance,
+        'today_attendance': today_attendance,
+        'upcoming_holidays': upcoming_holidays,
+        'current_salary': current_salary,
+        'recent_payslips': recent_payslips,
+        'present_days': present_days,
+        'absent_days': absent_days,
+        'late_days': late_days,
+        'total_working_days': total_working_days,
+        'experience_years': experience_years,
+        'today': today,
     }
     return render(request, 'hrm/employee_dashboard.html', context)
 
@@ -836,9 +893,153 @@ def leave_list(request):
 
 @login_required
 @organization_member_required
+def leave_create(request):
+    """Create a new leave request"""
+    try:
+        employee = Employee.objects.get(user=request.user, organization=request.organization)
+    except Employee.DoesNotExist:
+        messages.error(request, 'Employee profile not found.')
+        return redirect('authentication:login')
+    
+    if request.method == 'POST':
+        form_data = request.POST.copy()
+        
+        # Calculate days requested
+        start_date = form_data.get('start_date')
+        end_date = form_data.get('end_date')
+        
+        if start_date and end_date:
+            start = date.fromisoformat(start_date)
+            end = date.fromisoformat(end_date)
+            days_requested = (end - start).days + 1
+            form_data['days_requested'] = days_requested
+        
+        # Create leave request
+        leave_request = LeaveRequest(
+            organization=request.organization,
+            employee=employee,
+            leave_type=form_data.get('leave_type'),
+            start_date=start_date,
+            end_date=end_date,
+            days_requested=days_requested,
+            reason=form_data.get('reason'),
+            status='pending',
+            created_by=request.user
+        )
+        
+        try:
+            leave_request.save()
+            messages.success(request, 'Leave request submitted successfully!')
+            return redirect('hrm:leave_list')
+        except Exception as e:
+            messages.error(request, f'Error creating leave request: {str(e)}')
+    
+    # Get available leave balances (you can implement this based on your policy)
+    leave_balances = {
+        'sick': 10,  # Example values
+        'vacation': 15,
+        'personal': 5,
+    }
+    
+    context = {
+        'organization': request.organization,
+        'employee': employee,
+        'leave_type_choices': LeaveRequest.LEAVE_TYPE_CHOICES,
+        'leave_balances': leave_balances,
+        'min_date': date.today().isoformat(),
+    }
+    return render(request, 'hrm/leave_create.html', context)
+
+
+
+@login_required
+@organization_member_required
+def leave_edit(request, pk):
+    """Edit a leave request (only if pending)"""
+    try:
+        employee = Employee.objects.get(user=request.user, organization=request.organization)
+    except Employee.DoesNotExist:
+        messages.error(request, 'Employee profile not found.')
+        return redirect('authentication:login')
+    
+    leave_request = get_object_or_404(
+        LeaveRequest, 
+        pk=pk, 
+        employee=employee,
+        organization=request.organization
+    )
+    
+    # Check if editable
+    if leave_request.status != 'pending':
+        messages.error(request, 'Cannot edit leave request that has already been processed.')
+        return redirect('hrm:leave_detail', pk=pk)
+    
+    if request.method == 'POST':
+        form_data = request.POST.copy()
+        
+        # Calculate days requested
+        start_date = form_data.get('start_date')
+        end_date = form_data.get('end_date')
+        
+        if start_date and end_date:
+            start = date.fromisoformat(start_date)
+            end = date.fromisoformat(end_date)
+            days_requested = (end - start).days + 1
+            
+            # Update leave request
+            leave_request.leave_type = form_data.get('leave_type')
+            leave_request.start_date = start_date
+            leave_request.end_date = end_date
+            leave_request.days_requested = days_requested
+            leave_request.reason = form_data.get('reason')
+            
+            try:
+                leave_request.save()
+                messages.success(request, 'Leave request updated successfully!')
+                return redirect('hrm:leave_detail', pk=pk)
+            except Exception as e:
+                messages.error(request, f'Error updating leave request: {str(e)}')
+    
+    context = {
+        'organization': request.organization,
+        'employee': employee,
+        'leave_request': leave_request,
+        'leave_type_choices': LeaveRequest.LEAVE_TYPE_CHOICES,
+        'min_date': date.today().isoformat(),
+    }
+    return render(request, 'hrm/leave_edit.html', context)
+
+
+
+@login_required
+@organization_member_required
 def leave_detail(request, pk):
-    leave = get_object_or_404(LeaveRequest, pk=pk, organization=request.organization)
-    return render(request, 'hrm/leave_detail.html', {'leave': leave})
+    """View leave request details"""
+    try:
+        employee = Employee.objects.get(user=request.user, organization=request.organization)
+    except Employee.DoesNotExist:
+        messages.error(request, 'Employee profile not found.')
+        return redirect('authentication:login')
+    
+    leave_request = get_object_or_404(
+        LeaveRequest, 
+        pk=pk, 
+        employee=employee,
+        organization=request.organization
+    )
+    
+    # Check if editable (only pending requests can be edited)
+    is_editable = leave_request.status == 'pending'
+    is_deletable = leave_request.status == 'pending'
+    
+    context = {
+        'organization': request.organization,
+        'employee': employee,
+        'leave_request': leave_request,
+        'is_editable': is_editable,
+        'is_deletable': is_deletable,
+    }
+    return render(request, 'hrm/leave_detail.html', context)
 
 
 @login_required

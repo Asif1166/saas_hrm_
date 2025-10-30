@@ -15,6 +15,8 @@ from django.conf import settings
 import logging
 import datetime
 
+from organization.models import OrganizationMembership
+
 logger = logging.getLogger(__name__)
 
 
@@ -399,6 +401,10 @@ class AttendanceSyncManager:
                         employee.device_user_id = str(device_user['uid'])
                         employee.device_enrollment_id = str(device_user['user_id'])
                         employee.save()
+
+                        # Ensure OrganizationMembership exists for existing employee
+                        self._ensure_organization_membership(employee.user, self.device.organization)
+
                         synced_count += 1
                         logger.info(f"✓ Synced user: {device_user['name']} -> {employee.full_name}")
                     
@@ -453,6 +459,9 @@ class AttendanceSyncManager:
                                 device_user_id=str(device_user['uid']),
                                 device_enrollment_id=str(device_user['user_id']),
                             )
+
+                            # ✅ Create OrganizationMembership for the new employee
+                            self._create_organization_membership(user, self.device.organization)
                             
                             created_count += 1
                             logger.info(f"✓ Created employee: {employee.full_name} (ID: {employee_id}, Username: {username}, Password: {password})")
@@ -481,6 +490,68 @@ class AttendanceSyncManager:
             return {'synced': 0, 'created': 0, 'failed': 0}
         finally:
             self.zk_device.disconnect()
+
+
+    def _create_organization_membership(self, user, organization, is_admin=False):
+        """
+        Create organization membership for user
+        """
+        try:
+            
+            
+            membership, created = OrganizationMembership.objects.get_or_create(
+                user=user,
+                organization=organization,
+                defaults={
+                    'is_admin': is_admin,
+                    'is_active': True
+                }
+            )
+            
+            if created:
+                logger.info(f"✓ Created OrganizationMembership: {user.username} -> {organization.name}")
+            else:
+                # Update existing membership if needed
+                if not membership.is_active:
+                    membership.is_active = True
+                    membership.save()
+                    logger.info(f"✓ Reactivated OrganizationMembership: {user.username} -> {organization.name}")
+            
+            return membership
+            
+        except Exception as e:
+            logger.error(f"✗ Failed to create OrganizationMembership for {user.username}: {str(e)}")
+            return None
+
+    def _ensure_organization_membership(self, user, organization, is_admin=False):
+        """
+        Ensure organization membership exists for user (for existing employees)
+        """
+        try:
+            
+            membership, created = OrganizationMembership.objects.get_or_create(
+                user=user,
+                organization=organization,
+                defaults={
+                    'is_admin': is_admin,
+                    'is_active': True
+                }
+            )
+            
+            if created:
+                logger.info(f"✓ Created OrganizationMembership for existing employee: {user.username} -> {organization.name}")
+            elif not membership.is_active:
+                membership.is_active = True
+                membership.save()
+                logger.info(f"✓ Reactivated OrganizationMembership for existing employee: {user.username} -> {organization.name}")
+            
+            return membership
+            
+        except Exception as e:
+            logger.error(f"✗ Failed to ensure OrganizationMembership for {user.username}: {str(e)}")
+            return None
+
+
 
     def sync_attendance(self, start_date: datetime.date = None, end_date: datetime.date = None) -> int:
         """

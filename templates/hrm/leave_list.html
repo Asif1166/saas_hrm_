@@ -11,23 +11,38 @@
 
                 <!-- Panel Header -->
                 <div class="panel-header d-flex justify-content-between align-items-center">
-                    <h5>All Leave Requests</h5>
+                    <h5>
+                        {% if request.user.is_employee %}
+                            My Leave Requests
+                        {% else %}
+                            All Leave Requests
+                        {% endif %}
+                    </h5>
                     <div class="btn-box d-flex gap-2">
                         <a href="{% url 'hrm:leave_list' %}" class="btn btn-sm btn-outline-primary">
                             <i class="fa-solid fa-arrows-rotate"></i> Refresh
                         </a>
 
+                        <!-- Only show trash button for non-employees (HR/Admin) -->
+                        {% if not request.user.is_employee %}
                         <button class="btn btn-sm btn-warning" onclick="window.location.href='{% url 'hrm:leave_request_trash' %}'">
-       <i class="fa-solid fa-trash-can me-1"></i> View Trash
-</button>
+                            <i class="fa-solid fa-trash-can me-1"></i> View Trash
+                        </button>
 
-<button id="deleteSelectedBtn"
-        class="btn btn-danger btn-sm"
-        style="display:none;"
-        data-delete-url="{% url 'hrm:delete_multiple_leave_requests' %}">
-    <i class="fa-solid fa-trash-can"></i> Delete Selected
-</button>
+                        <button id="deleteSelectedBtn"
+                                class="btn btn-danger btn-sm"
+                                style="display:none;"
+                                data-delete-url="{% url 'hrm:delete_multiple_leave_requests' %}">
+                            <i class="fa-solid fa-trash-can"></i> Delete Selected
+                        </button>
+                        {% endif %}
 
+                        <!-- Add new leave button for employees -->
+                        {% if request.user.is_employee %}
+                        <a href="{% url 'hrm:leave_create' %}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-plus me-1"></i> Apply for Leave
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -59,28 +74,38 @@
                         <table class="table table-dashed table-hover table-striped digi-dataTable" id="leaveTable">
                             <thead>
                                 <tr>
+                                    <!-- Only show checkbox for non-employees -->
+                                    {% if not request.user.is_employee %}
                                     <th class="no-sort">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="markAllLeave">
                                         </div>
                                     </th>
+                                    {% endif %}
                                     <th>Action</th>
+                                    {% if not request.user.is_employee %}
                                     <th>Employee</th>
+                                    {% endif %}
                                     <th>Leave Type</th>
                                     <th>Dates</th>
                                     <th>Days</th>
                                     <th>Status</th>
+                                    {% if not request.user.is_employee %}
                                     <th>Approved By</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for leave in page_obj %}
                                 <tr>
+                                    <!-- Only show checkbox for non-employees -->
+                                    {% if not request.user.is_employee %}
                                     <td>
                                         <div class="form-check">
                                             <input class="form-check-input row-checkbox" type="checkbox" value="{{ leave.id }}">
                                         </div>
                                     </td>
+                                    {% endif %}
                                     <td>
                                         <div class="digi-dropdown dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="dropdown" aria-expanded="false">
@@ -92,24 +117,46 @@
                                                         <span class="dropdown-icon"><i class="fa-solid fa-eye"></i></span> View
                                                     </a>
                                                 </li>
-                                                {% if not request.user.is_employee %}
+                                                
+                                                <!-- Different actions based on user type -->
+                                                {% if request.user.is_employee %}
+                                                    <!-- Employee actions -->
                                                     {% if leave.status == 'pending' %}
-                                                        <li>
-                                                            <a href="{% url 'hrm:leave_approve' leave.id %}" class="dropdown-item text-success">
-                                                                <span class="dropdown-icon"><i class="fa-solid fa-check"></i></span> Approve
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="{% url 'hrm:leave_reject' leave.id %}" class="dropdown-item text-danger">
-                                                                <span class="dropdown-icon"><i class="fa-solid fa-xmark"></i></span> Reject
-                                                            </a>
-                                                        </li>
+                                                    <li>
+                                                        <a href="{% url 'hrm:leave_edit' leave.id %}" class="dropdown-item text-warning">
+                                                            <span class="dropdown-icon"><i class="fa-solid fa-edit"></i></span> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{% url 'hrm:leave_reject' leave.id %}" class="dropdown-item text-danger">
+                                                            <span class="dropdown-icon"><i class="fa-solid fa-times"></i></span> Cancel
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <!-- HR/Admin actions -->
+                                                    {% if leave.status == 'pending' %}
+                                                    <li>
+                                                        <a href="{% url 'hrm:leave_approve' leave.id %}" class="dropdown-item text-success">
+                                                            <span class="dropdown-icon"><i class="fa-solid fa-check"></i></span> Approve
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{% url 'hrm:leave_reject' leave.id %}" class="dropdown-item text-danger">
+                                                            <span class="dropdown-icon"><i class="fa-solid fa-xmark"></i></span> Reject
+                                                        </a>
+                                                    </li>
                                                     {% endif %}
                                                 {% endif %}
                                             </ul>
                                         </div>
                                     </td>
+                                    
+                                    <!-- Only show employee column for non-employees -->
+                                    {% if not request.user.is_employee %}
                                     <td>{{ leave.employee.full_name }}</td>
+                                    {% endif %}
+                                    
                                     <td>{{ leave.get_leave_type_display }}</td>
                                     <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
                                     <td>{{ leave.days_requested }}</td>
@@ -124,6 +171,9 @@
                                             <span class="badge bg-warning text-dark">Pending</span>
                                         {% endif %}
                                     </td>
+                                    
+                                    <!-- Only show approved by column for non-employees -->
+                                    {% if not request.user.is_employee %}
                                     <td>
                                         {% if leave.approved_by %}
                                             {{ leave.approved_by.get_full_name|default:leave.approved_by.username }}
@@ -131,12 +181,19 @@
                                             -
                                         {% endif %}
                                     </td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">
+                                    <td colspan="{% if request.user.is_employee %}6{% else %}8{% endif %}" class="text-center py-4 text-muted">
                                         <i class="fa-solid fa-file-circle-exclamation fa-2x mb-2"></i>
-                                        <div>No leave requests found.</div>
+                                        <div>
+                                            {% if request.user.is_employee %}
+                                                No leave requests found. <a href="{% url 'hrm:leave_create' %}">Apply for your first leave</a>
+                                            {% else %}
+                                                No leave requests found.
+                                            {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -151,4 +208,106 @@
         </div>
     </div>
 </div>
+
+<script>
+// Only initialize bulk delete functionality for non-employees
+{% if not request.user.is_employee %}
+document.addEventListener('DOMContentLoaded', function() {
+    const markAllCheckbox = document.getElementById('markAllLeave');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+    // Mark all checkboxes
+    if (markAllCheckbox) {
+        markAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            toggleDeleteButton();
+        });
+    }
+
+    // Individual checkbox change
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            toggleDeleteButton();
+            updateMarkAllCheckbox();
+        });
+    });
+
+    function toggleDeleteButton() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length > 0) {
+            deleteSelectedBtn.style.display = 'inline-block';
+        } else {
+            deleteSelectedBtn.style.display = 'none';
+        }
+    }
+
+    function updateMarkAllCheckbox() {
+        if (markAllCheckbox) {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const totalBoxes = rowCheckboxes.length;
+            markAllCheckbox.checked = checkedBoxes.length === totalBoxes && totalBoxes > 0;
+            markAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < totalBoxes;
+        }
+    }
+
+    // Bulk delete functionality
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const leaveIds = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            if (leaveIds.length === 0) {
+                alert('Please select at least one leave request to delete.');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${leaveIds.length} selected leave request(s)?`)) {
+                const deleteUrl = this.getAttribute('data-delete-url');
+                
+                fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({leave_ids: leaveIds})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error deleting leave requests: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting leave requests.');
+                });
+            }
+        });
+    }
+
+    // CSRF token helper function
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+{% endif %}
+</script>
 {% endblock %}
