@@ -122,4 +122,9 @@ urlpatterns = [
     path('employee-payheads/restore/', views.restore_employee_payhead, name='restore_employee_payhead'),
     path('employee-payheads/delete-multiple/', views.delete_multiple_employee_payheads, name='delete_multiple_employee_payheads'),
 
+
+    path('attendance/manual-entry/', views.manual_attendance_entry, name='manual_attendance_entry'),
+    path('attendance/save-manual/', views.save_manual_attendance, name='save_manual_attendance'),
+    path('attendance/get-attendance-data/', views.get_employee_attendance_data, name='get_attendance_data'),
+
 ]

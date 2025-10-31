@@ -19,6 +19,7 @@ from django.urls import reverse
 from datetime import timedelta
 from django.utils.dateparse import parse_date
 import json
+from django.views.decorators.http import require_http_methods
 
 User = get_user_model()
 
@@ -1788,6 +1789,201 @@ def employee_update_payhead(request, employee_payhead_id):
         'is_update': True,
     }
     return render(request, 'hrm/employee_payhead_form.html', context)
+
+
+
+
+
+
+
+
+
+
+def manual_attendance_entry(request):
+    """Manual attendance entry view"""
+    selected_date = request.GET.get('date') or timezone.now().date().isoformat()
+    
+    try:
+        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        selected_date = timezone.now().date()
+    
+    # Get all active employees for the organization
+    employees = Employee.objects.filter(
+        organization=request.organization,
+        is_active=True,
+        employment_status='active'
+    ).select_related('department', 'designation').order_by('first_name', 'last_name')
+    
+    # Get existing attendance records for the selected date
+    existing_records = AttendanceRecord.objects.filter(
+        organization=request.organization,
+        date=selected_date
+    ).select_related('employee')
+    
+    # Create a dictionary for easy lookup
+    attendance_dict = {record.employee_id: record for record in existing_records}
+    
+    # Prepare employee data with attendance info
+    employee_data = []
+    for employee in employees:
+        record = attendance_dict.get(employee.id)
+        employee_data.append({
+            'employee': employee,
+            'record': record,
+            'has_record': record is not None
+        })
+    
+    context = {
+        'selected_date': selected_date,
+        'employee_data': employee_data,
+        'today': timezone.now().date(),
+    }
+    
+    return render(request, 'hrm/manual_attendance.html', context)
+
+@require_http_methods(["POST"])
+@transaction.atomic
+def save_manual_attendance(request):
+    """Save manual attendance records"""
+    try:
+        data = request.POST
+        selected_date = data.get('selected_date')
+        employee_ids = data.getlist('employee_ids[]')
+        
+        if not selected_date or not employee_ids:
+            return JsonResponse({
+                'success': False,
+                'message': 'Missing required data'
+            })
+        
+        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+        organization = request.organization
+        
+        saved_count = 0
+        updated_count = 0
+        
+        for employee_id in employee_ids:
+            employee = get_object_or_404(Employee, id=employee_id, organization=organization)
+            
+            # Get form data for this employee
+            check_in = data.get(f'check_in_{employee_id}')
+            check_out = data.get(f'check_out_{employee_id}')
+            is_present = data.get(f'is_present_{employee_id}') == 'on'
+            is_absent = data.get(f'is_absent_{employee_id}') == 'on'
+            is_late = data.get(f'is_late_{employee_id}') == 'on'
+            on_leave = data.get(f'on_leave_{employee_id}') == 'on'
+            
+            # Determine status based on checkboxes
+            if on_leave:
+                status = 'on_leave'
+            elif is_absent:
+                status = 'absent'
+            elif is_late:
+                status = 'late'
+            elif is_present:
+                status = 'present'
+            else:
+                # Default to present if check-in/out times exist
+                status = 'present' if (check_in or check_out) else 'absent'
+            
+            # Get or create attendance record
+            record, created = AttendanceRecord.objects.get_or_create(
+                organization=organization,
+                employee=employee,
+                date=selected_date,
+                defaults={
+                    'check_in_time': check_in if check_in else None,
+                    'check_out_time': check_out if check_out else None,
+                    'status': status,
+                    'is_late': is_late,
+                    'created_by': request.user,
+                }
+            )
+            
+            if not created:
+                # Update existing record
+                record.check_in_time = check_in if check_in else None
+                record.check_out_time = check_out if check_out else None
+                record.status = status
+                record.is_late = is_late
+                record.updated_at = timezone.now()
+                updated_count += 1
+            else:
+                saved_count += 1
+            
+            # Calculate hours if both check-in and check-out are provided
+            if check_in and check_out:
+                record.calculate_hours()
+            else:
+                record.save()
+        
+        message = f"Attendance saved successfully! {saved_count} new records, {updated_count} updated records."
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': message
+            })
+        else:
+            messages.success(request, message)
+            return redirect('hrm:manual_attendance_entry')
+            
+    except Exception as e:
+        error_message = f"Error saving attendance: {str(e)}"
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': error_message
+            })
+        else:
+            messages.error(request, error_message)
+            return redirect('hrm:manual_attendance_entry')
+
+def get_employee_attendance_data(request):
+    """Get attendance data for a specific date - AJAX endpoint"""
+    selected_date = request.GET.get('date')
+    
+    if not selected_date:
+        return JsonResponse({'error': 'Date is required'}, status=400)
+    
+    try:
+        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date format'}, status=400)
+    
+    employees = Employee.objects.filter(
+        organization=request.organization,
+        is_active=True,
+        employment_status='active'
+    ).select_related('department', 'designation').order_by('first_name', 'last_name')
+    
+    existing_records = AttendanceRecord.objects.filter(
+        organization=request.organization,
+        date=selected_date
+    ).select_related('employee')
+    
+    attendance_dict = {record.employee_id: record for record in existing_records}
+    
+    data = []
+    for employee in employees:
+        record = attendance_dict.get(employee.id)
+        
+        data.append({
+            'id': employee.id,
+            'name': employee.full_name,
+            'employee_id': employee.employee_id,
+            'department': employee.department.name if employee.department else '-',
+            'designation': employee.designation.name if employee.designation else '-',
+            'check_in': record.check_in_time.strftime('%H:%M') if record and record.check_in_time else '',
+            'check_out': record.check_out_time.strftime('%H:%M') if record and record.check_out_time else '',
+            'status': record.status if record else '',
+            'is_late': record.is_late if record else False,
+            'has_record': record is not None
+        })
+    
+    return JsonResponse({'employees': data})
 
 
 

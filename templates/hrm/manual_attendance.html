@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manual Attendance Entry{% endblock %}
+
+{% block content %}
+<!-- main content start -->
+<div class="main-content">
+
+    <div class="row">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Manual Attendance Entry</h5>
+                    <div class="btn-box d-flex flex-wrap gap-2">
+                        <a href="{% url 'hrm:attendance_list' %}" class="btn btn-sm btn-icon btn-outline-primary">
+                            <i class="fa-solid fa-list"></i> 
+                        </a>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <!-- Date Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Select Date</h6>
+                                    <form id="dateSelectionForm" method="get" class="row g-3">
+                                        <div class="col-md-8">
+                                            <input type="date" 
+                                                   name="date" 
+                                                   id="attendanceDate" 
+                                                   class="form-control" 
+                                                   value="{{ selected_date|date:'Y-m-d' }}"
+                                                   max="{{ today|date:'Y-m-d' }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fa-solid fa-search me-1"></i> Load
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Attendance Summary</h6>
+                                    <div class="row text-center">
+                                        <div class="col-3">
+                                            <span class="badge bg-success">{{ selected_date|date:"M d, Y" }}</span>
+                                        </div>
+                                        <div class="col-9">
+                                            <small class="text-muted">
+                                                Showing {{ employee_data|length }} active employees
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Form -->
+                    <form id="attendanceForm" method="post" action="{% url 'hrm:save_manual_attendance' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+                        
+                        <div class="table-responsive">
+                            <table class="table table-dashed table-hover digi-dataTable attendance-entry-table table-striped" id="attendanceEntryTable">
+                                <thead>
+                                    <tr>
+                                        <th class="no-sort">SL</th>
+                                        <th>Employee</th>
+                                        <th>Department</th>
+                                        <th>Designation</th>
+                                        <th>Check In</th>
+                                        <th>Check Out</th>
+                                        <th>Present</th>
+                                        <th>Absent</th>
+                                        <th>Late</th>
+                                        <th>On Leave</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in employee_data %}
+                                    {% with employee=data.employee record=data.record %}
+                                    <tr>
+                                        <input type="hidden" name="employee_ids[]" value="{{ employee.id }}">
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                               
+                                                <div>
+                                                    <h6 class="mb-0">{{ employee.full_name }}</h6>
+                                                    <small class="text-muted">{{ employee.employee_id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if employee.department %}
+                                                {{ employee.department.name }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if employee.designation %}
+                                                {{ employee.designation.name }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <input type="time" 
+                                                   name="check_in_{{ employee.id }}" 
+                                                   class="form-control form-control-sm" 
+                                                   value="{% if record %}{{ record.check_in_time|time:'H:i' }}{% endif %}">
+                                        </td>
+                                        <td>
+                                            <input type="time" 
+                                                   name="check_out_{{ employee.id }}" 
+                                                   class="form-control form-control-sm" 
+                                                   value="{% if record %}{{ record.check_out_time|time:'H:i' }}{% endif %}">
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input present-checkbox" 
+                                                       type="checkbox" 
+                                                       name="is_present_{{ employee.id }}"
+                                                       {% if record and record.status == 'present' %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input absent-checkbox" 
+                                                       type="checkbox" 
+                                                       name="is_absent_{{ employee.id }}"
+                                                       {% if record and record.status == 'absent' %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input late-checkbox" 
+                                                       type="checkbox" 
+                                                       name="is_late_{{ employee.id }}"
+                                                       {% if record and record.is_late %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input leave-checkbox" 
+                                                       type="checkbox" 
+                                                       name="on_leave_{{ employee.id }}"
+                                                       {% if record and record.status == 'on_leave' %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if data.has_record %}
+                                                <span class="badge 
+                                                    {% if record.status == 'present' %}bg-success
+                                                    {% elif record.status == 'absent' %}bg-danger
+                                                    {% elif record.status == 'late' %}bg-warning
+                                                    {% elif record.status == 'on_leave' %}bg-info
+                                                    {% else %}bg-secondary{% endif %}">
+                                                    {{ record.get_status_display }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Saved</small>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">Not Saved</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="11" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fa-solid fa-users fa-2x mb-3"></i>
+                                                <p>No active employees found.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        {% if employee_data %}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted">
+                                            Total Employees: {{ employee_data|length }}
+                                        </span>
+                                    </div>
+                                    <div class="btn-box">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                            <i class="fa-solid fa-rotate-left me-1"></i> Reset
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" id="saveButton">
+                                            <i class="fa-solid fa-floppy-disk me-1"></i> 
+                                            <span id="saveButtonText">
+                                                {% if employee_data.0.has_record %}Update{% else %}Save{% endif %} Attendance
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- main content end -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('.attendance-entry-table').DataTable({
+        "pageLength": 25,
+        "lengthMenu": [10, 25, 50, 100],
+        "order": [],
+        "responsive": true,
+        "dom": '<"table-top-control"lf>rt<"table-bottom-control"ip>',
+        "columnDefs": [
+            { "orderable": false, "targets": "no-sort" }
+        ]
+    });
+
+    // Handle checkbox mutual exclusivity
+    $('.present-checkbox, .absent-checkbox, .leave-checkbox').change(function() {
+        const row = $(this).closest('tr');
+        const presentCheckbox = row.find('.present-checkbox');
+        const absentCheckbox = row.find('.absent-checkbox');
+        const leaveCheckbox = row.find('.leave-checkbox');
+        
+        if ($(this).hasClass('present-checkbox') && this.checked) {
+            absentCheckbox.prop('checked', false);
+            leaveCheckbox.prop('checked', false);
+        } else if ($(this).hasClass('absent-checkbox') && this.checked) {
+            presentCheckbox.prop('checked', false);
+            leaveCheckbox.prop('checked', false);
+        } else if ($(this).hasClass('leave-checkbox') && this.checked) {
+            presentCheckbox.prop('checked', false);
+            absentCheckbox.prop('checked', false);
+        }
+    });
+
+    // Auto-check present if time is entered
+    $('input[type="time"]').change(function() {
+        const row = $(this).closest('tr');
+        const checkIn = row.find('input[name^="check_in"]').val();
+        const checkOut = row.find('input[name^="check_out"]').val();
+        
+        if (checkIn || checkOut) {
+            row.find('.present-checkbox').prop('checked', true);
+            row.find('.absent-checkbox').prop('checked', false);
+            row.find('.leave-checkbox').prop('checked', false);
+        }
+    });
+
+    // Form submission with AJAX
+    $('#attendanceForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitButton = $('#saveButton');
+        const originalText = submitButton.html();
+        
+        // Show loading state
+        submitButton.prop('disabled', true);
+        submitButton.html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...');
+        
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    // Update button text to "Update" after first save
+                    $('#saveButtonText').text('Update Attendance');
+                    // Reload the page after 1 second to reflect changes
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert('error', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                showAlert('error', 'Error saving attendance: ' + error);
+            },
+            complete: function() {
+                submitButton.prop('disabled', false);
+                submitButton.html(originalText);
+            }
+        });
+    });
+
+    // Date change handler
+    $('#attendanceDate').change(function() {
+        const selectedDate = $(this).val();
+        if (selectedDate) {
+            // Show loading
+            $('.panel-body').addClass('loading');
+            window.location.href = `?date=${selectedDate}`;
+        }
+    });
+
+    // Reset form
+    window.resetForm = function() {
+        if (confirm('Are you sure you want to reset all changes?')) {
+            $('input[type="time"]').val('');
+            $('input[type="checkbox"]').prop('checked', false);
+            showAlert('info', 'Form reset successfully');
+        }
+    };
+
+    // Alert function
+    function showAlert(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        $('.panel-body').prepend(alertHtml);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+});
+</script>
+
+<style>
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+}
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.attendance-entry-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.attendance-entry-table input[type="time"] {
+    min-width: 100px;
+}
+
+.attendance-entry-table .form-check-input {
+    transform: scale(1.2);
+}
+
+.table-top-control {
+    margin-bottom: 15px;
+}
+
+.table-bottom-control {
+    margin-top: 15px;
+}
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+</style>
+{% endblock %}
